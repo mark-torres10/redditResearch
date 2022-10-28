@@ -16,11 +16,15 @@ REDIRECT_URI = os.getenv("REDDIT_REDIRECT_URI")
 # TODO: get lab username + PW at some point
 USERNAME = os.getenv("REDDIT_USERNAME")
 PASSWORD = os.getenv("REDDIT_PASSWORD")
+DEFAULT_USER_AGENT = "Reddit Research v1"
 
 ERROR_STATUS_CODES = [400, 429]
 
 
 def lazy_load_access_token(func):
+    """Lazy loads an access token for functions that require v1 access
+    (which is gated behind OAuth).
+    """
     def inner(api_instance):
         if api_instance.access_token is None:
             api_instance.access_token = api_instance._generate_access_token()
@@ -35,7 +39,7 @@ class RedditAPI:
         # Reddit API recommends having a state hash to prevent XSRF attacks.
         self.state_uuid = str(uuid4())
         self.auth = requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
-        
+
         # TODO: only generate auth token if doing requests that need auth.
         # lots of requests don't need auth requests. Lazy loading the access
         # token should help circumvent rate limits.
@@ -72,17 +76,26 @@ class RedditAPI:
         else:
             return token_data["access_token"]
 
-    def generate_request_header(self) -> Dict[str, str]:
+    def generate_request_header(self, add_access_token: bool=False) -> Dict[str, str]:
         """Generate header needed in request."""
-        return {
-            "Authorization": f"bearer {self.access_token}"
-        }
+        # need to use our own user-agent so as to avoid using the default
+        # python one, see https://www.reddit.com/r/redditdev/comments/3qbll8/429_too_many_requests/
+        base_header = {'User-agent': DEFAULT_USER_AGENT}
+        if add_access_token:
+            header = {
+                **base_header,
+                **{"Authorization": f"bearer {self.access_token}"}
+            }
+        else:
+            header = base_header
+        return header
 
-    def make_request(self, request_type: str, url: str, headers: Dict):
+    def make_request(self, request_type: str, **kwargs):
         """Make a request to the Reddit API."""
-        response = requests.get(
-            url, headers=headers
-        )
+        if request_type == "GET":
+            response = requests.get(**kwargs)
+        elif request_type == "POST":
+            response = requests.post(**kwargs)
 
         if response.status_code in ERROR_STATUS_CODES:
             raise ValueError(f"Request unsuccessful: {response.status_code}\t{response.reason}")
@@ -90,28 +103,29 @@ class RedditAPI:
         return response.json()
     
     
-    def get(self, url: str, headers: Dict):
+    def get(self, url: str, **kwargs):
         """Make GET request."""
-        return self.make_request("GET", url, headers)
+        return self.make_request("GET", url=url, **kwargs)
     
-    def post(self, url, headers=None):
+    def post(self, url, **kwargs):
         """Make POST request."""
-        return self.make_request("POST", url, headers)
+        return self.make_request("POST", url=url, **kwargs)
 
     @lazy_load_access_token
     def get_own_profile_info(self) -> Dict:
         """Get info about the current user logged in."""
-        breakpoint()
         url = "https://oauth.reddit.com/api/v1/me"
-        headers = self.generate_request_header()
-        return self.get(url, headers)
-
+        headers = self.generate_request_header(add_access_token=True)
+        return self.get(url=url, headers=headers)
     
     def search_subreddits(self, query_string):
         """Search subreddits that begin with a certain string."""
-        
-
-
+        url = "https://www.reddit.com/api/search_reddit_names.json"
+        params = {
+            "query": query_string
+        }
+        headers = self.generate_request_header()
+        return self.get(url=url, params=params, headers=headers)
     
     def get_subreddit_threads(self):
         """Get the current threads in a subreddit."""
@@ -120,6 +134,7 @@ class RedditAPI:
 
 if __name__ == '__main__':
     reddit = RedditAPI()
-    token = reddit._generate_access_token()
-    profile = reddit.get_own_profile_info()
+    politics_subreddits = reddit.search_subreddits("politics")
+    #token = reddit._generate_access_token()
+    #profile = reddit.get_own_profile_info()
     breakpoint()
