@@ -28,8 +28,7 @@ def lazy_load_access_token(func):
     def inner(api_instance):
         if api_instance.access_token is None:
             api_instance.access_token = api_instance._generate_access_token()
-        else:
-            return func(api_instance)
+        return func(api_instance)
     return inner
 
 class RedditAPI:
