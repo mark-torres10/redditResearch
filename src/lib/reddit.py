@@ -129,7 +129,7 @@ class RedditAPI:
     def get_subreddit_threads(self):
         """Get the current threads in a subreddit."""
         pass
-    
+
 
 if __name__ == '__main__':
     reddit = RedditAPI()
