@@ -126,9 +126,26 @@ class RedditAPI:
         headers = self.generate_request_header()
         return self.get(url=url, params=params, headers=headers)
     
-    def get_subreddit_threads(self):
-        """Get the current threads in a subreddit."""
-        pass
+    def get_hottest_threads_in_subreddit(self, subreddit: str):
+        url = f"https://www.reddit.com/r/{subreddit}/hot/.json"
+        headers = self.generate_request_header()
+        return self.get(url=url, headers=headers)
+    
+    def get_newest_threads_in_subreddit(self, subreddit: str):
+        url = f"https://www.reddit.com/r/{subreddit}/new/.json"
+        headers = self.generate_request_header()
+        return self.get(url=url, headers=headers)
+    
+    def get_latest_posts_in_thread(self, subreddit: str, thread_id: str):
+        url = f"https://www.reddit.com/r/{subreddit}/comments/{thread_id}/.json"  # noqa
+        headers = self.generate_request_header()
+        return self.get(url=url, headers=headers)
+        
+
+
+def unpack_t3_res(t3_dict: Dict) -> Dict:
+    """Unpacks result of type `t3` and returns just the resulting data."""
+    return t3_dict["data"]
 
 
 if __name__ == '__main__':

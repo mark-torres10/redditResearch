@@ -65,4 +65,3 @@ if __name__ == "__main__":
     text = "this is an example text"
     prob, label = main(text)
     print(f"Outrage probability: {prob}\tLabel: {label}")
-
