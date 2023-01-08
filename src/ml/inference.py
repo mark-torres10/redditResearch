@@ -11,9 +11,9 @@ import pandas as pd
 from lib.helper import ROOT_DIR
 from preprocess.strings import obtain_string_features_dict
 
-MODEL_NAME = os.path.join(ROOT_DIR, "model_files/")
+MODEL_NAME = os.path.join(ROOT_DIR, "model_files/GRU.h5")
 TOKENIZER_JOBLIB_FILE = os.path.join(
-    ROOT_DIR, "model_files/GAB_overlap_vocab.joblib"
+    ROOT_DIR, "model_files/26k_training_data.joblib"
 )
 THRESHOLD = 0.70
 
@@ -44,6 +44,8 @@ def classify_text(text: str) -> Tuple[float, int]:
         MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
     )
 
+    text_features = {key: [value] for key, value in text_features.items()}
+
     df = pd.DataFrame(text_features)
     
     tweet_emb_processed = pad_sequences(
@@ -62,6 +64,6 @@ def main(text: str) -> Tuple[float, int]:
 
 
 if __name__ == "__main__":
-    text = "this is an example text"
+    text = "I am so mad that this is happening today."
     prob, label = main(text)
     print(f"Outrage probability: {prob}\tLabel: {label}")

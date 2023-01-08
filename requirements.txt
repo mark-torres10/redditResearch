@@ -60,6 +60,8 @@ keras==2.11.0
     # via
     #   -r requirements.in
     #   tensorflow
+keras-preprocessing==1.1.2
+    # via -r requirements.in
 libclang==14.0.6
     # via tensorflow
 markdown==3.4.1
@@ -72,6 +74,7 @@ numpy==1.24.1
     # via
     #   -r requirements.in
     #   h5py
+    #   keras-preprocessing
     #   opt-einsum
     #   pandas
     #   scikit-learn
@@ -137,6 +140,7 @@ six==1.16.0
     #   astunparse
     #   google-auth
     #   google-pasta
+    #   keras-preprocessing
     #   python-dateutil
     #   tensorflow
 tensorboard==2.11.0
