@@ -1,6 +1,7 @@
 import pickle
 
 def get_nb_vectorizer(nb_model, nb_vectorizer):
+    """Loads Naive Bayes model and vectorizer"""
     try:
         nb_model = pickle.load(open(nb_model, 'rb'))
     except:

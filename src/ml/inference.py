@@ -1,11 +1,46 @@
+import nltk
+import ssl
+
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+nltk.download('omw-1.4')
+#breakpoint()
+
+
 from joblib import load
+import os
 from typing import Tuple
 
+from keras import backend as K
 from keras.models import load_model
-from keras.preprocessing.sequence import pad_sequences
+from keras.utils import pad_sequences
+
 import pandas as pd
 
+from lib.helper import ROOT_DIR
 from preprocess.strings import obtain_string_features_dict
+
+MODEL_NAME = os.path.join(ROOT_DIR, "model_files/")
+TOKENIZER_JOBLIB_FILE = os.path.join(
+    ROOT_DIR, "model_files/GAB_overlap_vocab.joblib"
+)
+THRESHOLD = 0.70
+
+def threshold_acc(y_true, y_pred):
+    if K.backend() == 'tensorflow':
+        return K.mean(
+            K.equal(
+                y_true, K.cast(K.greater_equal(y_pred, THRESHOLD), y_true.dtype)
+            )
+        )
+    else:
+        return K.mean(K.equal(y_true, K.greater_equal(y_pred, THRESHOLD)))
+
 
 def load_embedding_and_tokenizer(
     model_name, tokenizer_joblib_file, threshold_acc
@@ -19,7 +54,9 @@ def classify_text(text: str) -> Tuple[float, int]:
     """Take single text, return inferred outrage classification."""
     
     text_features = obtain_string_features_dict(text)
-    embedding, tokenizer = load_embedding_and_tokenizer()
+    embedding, tokenizer = load_embedding_and_tokenizer(
+        MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
+    )
 
     df = pd.DataFrame(text_features)
     

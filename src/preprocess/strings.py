@@ -1,6 +1,7 @@
 """Helper code + functions for preprocessing."""
 from collections import Counter
 import csv
+import os
 import re
 import string
 from typing import Dict
@@ -12,10 +13,11 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import TweetTokenizer, word_tokenize
 import numpy as np
 
-from model_loader import get_nb_vectorizer
+from lib.helper import ROOT_DIR
 from preprocess.emoji_helper import (
     emoji_name_to_unicode_map, emoji_unicode_to_name_map, TOP_EMOJIS
 )
+from preprocess.model_loader import get_nb_vectorizer
 from preprocess.valence_helper import valence_array as VALENCE_ARRAY
 
 PUNCTUATION_REGEX = r'[%s]' % re.escape("""!"$%&()*+,-./:;<=>?@[\]^_`{|}~""")
@@ -26,9 +28,11 @@ STOPWORDS = stopwords.words("english")
 MIN_WORD_LENGTH = 3
 POS = ['adj', 'verb', 'noun', 'adv', 'pronoun', 'wh', 'other']
 
-exp_outrage = '../model_files/expanded_outrage_dictionary_stemmed.csv'
-nb_model_fp = '../model_files/NB_sentiment_model.pkl'
-nb_vectorizer_fp = '../model_files/NB_vectorizer.pkl'
+exp_outrage = os.path.join(
+    ROOT_DIR, 'model_files/expanded_outrage_dictionary_stemmed.csv'
+)
+nb_model_fp = os.path.join(ROOT_DIR, 'model_files/NB_sentiment_model.pkl')
+nb_vectorizer_fp = os.path.join(ROOT_DIR, 'model_files/NB_vectorizer.pkl')
 NB_MODEL, NB_VECTORIZER = get_nb_vectorizer(nb_model_fp, nb_vectorizer_fp)
 
 def char_is_emoji(char: str) -> bool:
@@ -299,10 +303,9 @@ def get_expanded_outrage(stemmed):
 
     return expanded_outrage_count
 
-
 def obtain_string_features_dict(string: str) -> Dict:
     string_features_map = {}
-    string_features_map["text"] = string.astype("str")
+    string_features_map["text"] = str(string)
     string_features_map["hashtag"] = get_hashtags_from_string(string)
     string_features_map["wn_lemmatize"] = preprocess_text(string)
     string_features_map["wn_lemmatize_hashtag"] = (
@@ -338,7 +341,7 @@ def obtain_string_features_dict(string: str) -> Dict:
         [1 if char_is_emoji(char) else 0 for char in string]
     )
     string_features_map["len_processed"] = (
-        string_features_map["wn_lemmatize"].str.len()
+        len(string_features_map["wn_lemmatize"])
     )
     
    # get top emojis and extract them into features

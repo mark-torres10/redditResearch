@@ -1,6 +1,9 @@
 import collections
+import os
 
 import pandas as pd
+
+from lib.helper import ROOT_DIR
 
 def get_valance_array(model):
     df = pd.read_csv(model)
@@ -15,6 +18,6 @@ def get_valance_array(model):
     del df, words, arousal_mean, arousal_sd
     return val_ar
 
-valence_arousal = 'model_files/valence_arousal.csv'
+valence_arousal = os.path.join(ROOT_DIR, 'model_files/valence_arousal.csv')
 
 valence_array = get_valance_array(valence_arousal)
