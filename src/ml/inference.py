@@ -15,12 +15,12 @@ def load_embedding_and_tokenizer(
     return gru_model, embedding_tokenizer
 
 
-def main(text: str) -> Tuple[float, int]: 
+def classify_text(text: str) -> Tuple[float, int]: 
     """Take single text, return inferred outrage classification."""
     
     text_features = obtain_string_features_dict(text)
     embedding, tokenizer = load_embedding_and_tokenizer()
-    
+
     df = pd.DataFrame(text_features)
     
     tweet_emb_processed = pad_sequences(
@@ -32,7 +32,11 @@ def main(text: str) -> Tuple[float, int]:
     gru_binary = 1 if gru_prob > .51 else 0
 
     return gru_prob, gru_binary
-    
+
+
+def main(text: str) -> Tuple[float, int]:
+    return classify_text(text)
+
 
 if __name__ == "__main__":
     text = "this is an example text"
