@@ -66,4 +66,3 @@ if __name__ == '__main__':
         reddit_client=reddit_client, subreddit=subreddit, 
         thread_id=hottest_thread_id, num_posts=num_posts
     )
-    breakpoint()

@@ -36,13 +36,16 @@ def load_embedding_and_tokenizer(
     return gru_model, embedding_tokenizer
 
 
-def classify_text(text: str) -> Tuple[float, int]: 
+def load_default_embedding_and_tokenizer():
+    return load_embedding_and_tokenizer(
+        MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
+    )
+
+
+def classify_text(text: str, embedding, tokenizer) -> Tuple[float, int]: 
     """Take single text, return inferred outrage classification."""
     
     text_features = obtain_string_features_dict(text)
-    embedding, tokenizer = load_embedding_and_tokenizer(
-        MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
-    )
 
     text_features = {key: [value] for key, value in text_features.items()}
 
@@ -59,11 +62,10 @@ def classify_text(text: str) -> Tuple[float, int]:
     return gru_prob, gru_binary
 
 
-def main(text: str) -> Tuple[float, int]:
-    return classify_text(text)
-
-
 if __name__ == "__main__":
     text = "I am so mad that this is happening today."
-    prob, label = main(text)
+    embedding, tokenizer = load_embedding_and_tokenizer(
+        MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
+    )
+    prob, label = classify_text(text, embedding, tokenizer)
     print(f"Outrage probability: {prob}\tLabel: {label}")
