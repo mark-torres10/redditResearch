@@ -294,14 +294,16 @@ def get_sentiment(nb_model, nb_vectorizer, stemmed):
     return sentiment_score
 
 def get_expanded_outrage(stemmed):
-    with open(exp_outrage, 'r') as f:
-        exp_outrage_list = list(csv.reader(f))[0]
 
-    expanded_outrage_count = 0
-    for stem in stemmed:
-        expanded_outrage_count += len(set([stem]) & set(exp_outrage_list))
+    #with open(exp_outrage, 'r') as f:
+    #    exp_outrage_list = list(csv.reader(f))[0]
 
-    return expanded_outrage_count
+    #expanded_outrage_count = 0
+    #for stem in stemmed:
+    #    expanded_outrage_count += len(set([stem]) & set(exp_outrage_list))
+
+    #return expanded_outrage_count
+    return 0
 
 def obtain_string_features_dict(string: str) -> Dict:
     string_features_map = {}

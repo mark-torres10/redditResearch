@@ -1,1 +1,1 @@
-ROOT_DIR = "/Users/marktorres/Documents/research/reddit/src"
+ROOT_DIR = "/Users/mark/Documents/work/redditResearch/"

@@ -1,5 +1,7 @@
 from pprint import pprint
 
+import pandas as pd
+
 from lib.reddit import RedditAPI
 from ml.inference import classify_text, load_default_embedding_and_tokenizer
 from scrape.get_reddit_data import (
@@ -28,8 +30,8 @@ if __name__ == "__main__":
     """
     reddit_client = RedditAPI()
     subreddit = "politics"
-    num_threads = 2
-    num_posts = 5
+    num_threads = 5
+    num_posts = 40
 
     hottest_threads = get_hottest_threads_in_subreddit(
         reddit_client=reddit_client, subreddit=subreddit,
@@ -46,17 +48,32 @@ if __name__ == "__main__":
             reddit_client=reddit_client, subreddit=subreddit,
             thread_id=thread["id"], num_posts=num_posts
         ):
-            post_text = post["body"]
+            post_text = post.get("body", "")
             prob, label = classify_text(
                 text=post_text,
                 embedding=embedding,
                 tokenizer=tokenizer
             )
             map_thread_to_posts[thread["id"]][post["id"]] = {
-                "threadBody": thread["body"], # unsure if correct key?
-                "postBody": post_text, # unsure if correct key?
+                "threadBody": thread["selftext"],
+                "postBody": post_text,
                 "prob": prob,
                 "label": label
             }
 
-    pprint(map_thread_to_posts)
+    rows = []
+
+    for thread_id in map_thread_to_posts:
+        for post_id in map_thread_to_posts[thread_id]:
+            rows.append(
+                {
+                    "threadId": thread_id,
+                    "postId": post_id,
+                    **map_thread_to_posts[thread_id][post_id]
+                }
+            )
+
+    df = pd.DataFrame(rows)
+
+    df.to_csv("labeled_samples.csv")
+
