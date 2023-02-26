@@ -12,6 +12,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 
 from analysis.perform_analysis import generate_analyses
+from lib.init_session import init_pipeline_run_parameters
 from message.handle_messages import receive_messages, send_messages
 from ml.inference import classify_reddit_text
 from scrape.get_labeled_samples import scrape_reddit_threads
@@ -33,6 +34,12 @@ dag = DAG(
     'reddit_dag',
     default_args=default_args,
     description='DAG for running Reddit research ETL pipeline.'
+)
+
+init_run_parameters = PythonOperator(
+    task_id="init_run_parameters",
+    python_callable=init_pipeline_run_parameters,
+    dag=dag
 )
 
 scrape_threads = PythonOperator(
@@ -65,4 +72,11 @@ generate_study_analyses = PythonOperator(
     dag=dag
 )
 
-scrape_threads >> classify_threads >> send_reddit_messages >> receive_reddit_messages >> generate_study_analyses
+(
+    init_run_parameters
+    >> scrape_threads
+    >> classify_threads
+    >> send_reddit_messages
+    >> receive_reddit_messages
+    >> generate_study_analyses
+)
