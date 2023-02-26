@@ -62,10 +62,13 @@ def classify_text(text: str, embedding, tokenizer) -> Tuple[float, int]:
     return gru_prob, gru_binary
 
 
-if __name__ == "__main__":
-    text = "I am so mad that this is happening today."
+def classify_reddit_text(text: str) -> None:
     embedding, tokenizer = load_embedding_and_tokenizer(
         MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
     )
     prob, label = classify_text(text, embedding, tokenizer)
     print(f"Outrage probability: {prob}\tLabel: {label}")
+
+if __name__ == "__main__":
+    text = "I am so mad that this is happening today."
+    classify_reddit_text(text)

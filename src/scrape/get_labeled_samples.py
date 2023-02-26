@@ -8,6 +8,11 @@ from scrape.get_reddit_data import (
     get_hottest_threads_in_subreddit, get_latest_posts_in_thread
 )
 
+
+def scrape_reddit_threads():
+    pass
+
+
 if __name__ == "__main__":
     """
     Generate a dictionary of labeled samples in the form of:
