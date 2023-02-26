@@ -39,6 +39,7 @@ dag = DAG(
 init_run_parameters = PythonOperator(
     task_id="init_run_parameters",
     python_callable=init_pipeline_run_parameters,
+    op_kwargs={'kwarg1': 'foo', 'kwarg2': 'bar'},
     dag=dag
 )
 
