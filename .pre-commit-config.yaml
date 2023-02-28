@@ -1,3 +1,7 @@
+# to run pre-commit hooks, do the following steps:
+# 1. Install: pip-install pre-commit (should be a part of dev_requirements.txt)
+# 2. Navigate to root project directory (the directory that this file is in).
+# 3. Run `pre-commit install`. 
 repos:
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.910
