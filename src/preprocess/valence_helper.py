@@ -16,7 +16,7 @@ def get_valance_array(model: Model) -> Dict:
     val_ar: Dict = {}
     val_ar = collections.defaultdict(
         lambda: {"arousal": {"mean": 0, "sd": 0}}, val_ar
-    ) # noqa
+    )  # noqa
     for ix, w in enumerate(words):
         val_ar[w]["arousal"]["mean"] = arousal_mean[ix]
         val_ar[w]["arousal"]["sd"] = arousal_sd[ix]

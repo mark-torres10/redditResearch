@@ -17,15 +17,10 @@ TOKENIZER_JOBLIB_FILE = os.path.join(ROOT_DIR, "model_files/26k_training_data.jo
 THRESHOLD = 0.70
 
 
-def threshold_acc(
-    y_true: tf.Tensor, y_pred: tf.Tensor
-) -> float:
+def threshold_acc(y_true: tf.Tensor, y_pred: tf.Tensor) -> float:
     if K.backend() == "tensorflow":
         return K.mean(
-            K.equal(
-                y_true,
-                K.cast(K.greater_equal(y_pred, THRESHOLD), y_true.dtype)
-            )
+            K.equal(y_true, K.cast(K.greater_equal(y_pred, THRESHOLD), y_true.dtype))
         )
     else:
         return K.mean(K.equal(y_true, K.greater_equal(y_pred, THRESHOLD)))

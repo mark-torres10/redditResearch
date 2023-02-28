@@ -7,13 +7,11 @@ from lib.reddit import RedditAPI, unpack_t3_res
 def get_hottest_threads_in_subreddit(
     reddit_client: RedditAPI, subreddit: str, num_threads: int = 5
 ) -> List[Dict]:
-    res_data = reddit_client.get_hottest_threads_in_subreddit(
-        subreddit=subreddit
-    )["data"]
-
-    threads_dicts_list = [
-        unpack_t3_res(child) for child in res_data["children"]
+    res_data = reddit_client.get_hottest_threads_in_subreddit(subreddit=subreddit)[
+        "data"
     ]
+
+    threads_dicts_list = [unpack_t3_res(child) for child in res_data["children"]]
 
     return threads_dicts_list[:num_threads]
 
@@ -21,28 +19,23 @@ def get_hottest_threads_in_subreddit(
 def get_latest_threads_in_subreddit(
     reddit_client: RedditAPI, subreddit: str, num_threads: int = 5
 ) -> List[Dict]:
-    res_data = reddit_client.get_newest_threads_in_subreddit(
-        subreddit=subreddit
-    )["data"]
-
-    threads_dicts_list = [
-        unpack_t3_res(child) for child in res_data["children"]
+    res_data = reddit_client.get_newest_threads_in_subreddit(subreddit=subreddit)[
+        "data"
     ]
+
+    threads_dicts_list = [unpack_t3_res(child) for child in res_data["children"]]
 
     return threads_dicts_list[:num_threads]
 
 
 def get_latest_posts_in_thread(
-    reddit_client: RedditAPI, subreddit: str, thread_id: str,
-    num_posts: int = 5
+    reddit_client: RedditAPI, subreddit: str, thread_id: str, num_posts: int = 5
 ) -> List[Dict]:
     res_data = reddit_client.get_latest_posts_in_thread(
         subreddit=subreddit, thread_id=thread_id
     )[1]["data"]
 
-    posts_dicts_list = [
-        unpack_t3_res(child) for child in res_data["children"]
-    ]
+    posts_dicts_list = [unpack_t3_res(child) for child in res_data["children"]]
 
     return posts_dicts_list[:num_posts]
 

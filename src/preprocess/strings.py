@@ -305,10 +305,9 @@ def get_arousal(val_ar: Dict, stemmed: List[str], n: int) -> float:
         arousal_score = np.sum(mean * sd_weight)
     return arousal_score
 
+
 # unsure what the model and vectorizer types are.
-def get_sentiment(
-    nb_model: Any, nb_vectorizer: Any, stemmed: List[str]
-) -> float:
+def get_sentiment(nb_model: Any, nb_vectorizer: Any, stemmed: List[str]) -> float:
     if not stemmed:
         return 0
     vectorized = nb_vectorizer.transform(stemmed)

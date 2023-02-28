@@ -105,18 +105,12 @@ class RedditAPI:
 
     def get(self, url: str, **kwargs: Dict) -> Dict:
         """Make GET request."""
-        func_kwargs = {
-            "url": url,
-            **kwargs # type: ignore
-        }
+        func_kwargs = {"url": url, **kwargs}  # type: ignore
         return self.make_request("GET", kwargs=func_kwargs)
 
     def post(self, url: str, **kwargs: Dict) -> Dict:
         """Make POST request."""
-        func_kwargs = {
-            "url": url,
-            **kwargs # type: ignore
-        }
+        func_kwargs = {"url": url, **kwargs}  # type: ignore
         return self.make_request("POST", kwargs=func_kwargs)
 
     @lazy_load_access_token
@@ -143,9 +137,7 @@ class RedditAPI:
         headers = self.generate_request_header()
         return self.get(url=url, headers=headers)
 
-    def get_latest_posts_in_thread(
-        self, subreddit: str, thread_id: str
-    ) -> Dict:
+    def get_latest_posts_in_thread(self, subreddit: str, thread_id: str) -> Dict:
         url = f"https://www.reddit.com/r/{subreddit}/comments/{thread_id}/.json"  # noqa
         headers = self.generate_request_header()
         return self.get(url=url, headers=headers)
