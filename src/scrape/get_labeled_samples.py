@@ -1,4 +1,4 @@
-from pprint import pprint
+from typing import Dict, List
 
 import pandas as pd
 
@@ -10,7 +10,7 @@ from scrape.get_reddit_data import (
 )
 
 
-def scrape_reddit_threads():
+def scrape_reddit_threads() -> None:
     pass
 
 
@@ -45,10 +45,10 @@ if __name__ == "__main__":
 
     embedding, tokenizer = load_default_embedding_and_tokenizer()
 
-    map_thread_to_posts = {}
+    map_threads_to_posts: Dict[str, Dict] = {}
 
     for thread in hottest_threads:
-        map_thread_to_posts[thread["id"]] = {}
+        map_threads_to_posts[thread["id"]] = {}  # noqa
         for post in get_latest_posts_in_thread(
             reddit_client=reddit_client,
             subreddit=subreddit,
@@ -59,7 +59,7 @@ if __name__ == "__main__":
             prob, label = classify_text(
                 text=post_text, embedding=embedding, tokenizer=tokenizer
             )
-            map_thread_to_posts[thread["id"]][post["id"]] = {
+            map_threads_to_posts[thread["id"]][post["id"]] = {
                 "threadBody": thread["selftext"],
                 "postBody": post_text,
                 "prob": prob,
@@ -68,13 +68,13 @@ if __name__ == "__main__":
 
     rows = []
 
-    for thread_id in map_thread_to_posts:
-        for post_id in map_thread_to_posts[thread_id]:
+    for thread_id in map_threads_to_posts:
+        for post_id in map_threads_to_posts[thread_id]:
             rows.append(
                 {
                     "threadId": thread_id,
                     "postId": post_id,
-                    **map_thread_to_posts[thread_id][post_id],
+                    **map_threads_to_posts[thread_id][post_id],
                 }
             )
 

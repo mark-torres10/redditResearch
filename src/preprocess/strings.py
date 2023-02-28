@@ -4,7 +4,7 @@ import csv
 import os
 import re
 import string
-from typing import Dict
+from typing import Any, Dict
 
 from nltk import pos_tag
 from nltk.corpus import stopwords, wordnet
@@ -273,7 +273,7 @@ def psy_string_process(text: str):
     n = len(text_tokenized)
     try:
         text_tokenized = [
-            unicode(y.encode("utf-8"), errors="ignore") for y in text_tokenized
+            str(y.encode("utf-8"), errors="ignore") for y in text_tokenized
         ]
         stemmed = [stemmer.stem(y) for y in text_tokenized]
     except:
@@ -327,7 +327,7 @@ def get_expanded_outrage(stemmed):
 
 
 def obtain_string_features_dict(string: str) -> Dict:
-    string_features_map = {}
+    string_features_map: Dict[str, Any] = {}
     string_features_map["text"] = str(string)
     string_features_map["hashtag"] = get_hashtags_from_string(string)
     string_features_map["wn_lemmatize"] = preprocess_text(string)

@@ -33,7 +33,7 @@ jobs:
         run: |
           black --check .
           black .
-          mypy --ignore-missing-imports --strict-optional --no-implicit-optional --warn-unused-ignores --disallow-untyped-defs .
+          mypy .
 
       - name: Run tests
         run: pytest

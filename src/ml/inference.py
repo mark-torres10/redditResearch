@@ -1,12 +1,13 @@
 from joblib import load
 import os
-from typing import Tuple
+from typing import Callable, Tuple
 
 from keras import backend as K
-from keras.models import load_model
+from keras.models import load_model, Model
+from keras.preprocessing.text import Tokenizer
 from keras.utils import pad_sequences
-
 import pandas as pd
+import tensorflow as tf
 
 from lib.helper import ROOT_DIR
 from preprocess.strings import obtain_string_features_dict
@@ -16,28 +17,37 @@ TOKENIZER_JOBLIB_FILE = os.path.join(ROOT_DIR, "model_files/26k_training_data.jo
 THRESHOLD = 0.70
 
 
-def threshold_acc(y_true, y_pred):
+def threshold_acc(
+    y_true: tf.Tensor, y_pred: tf.Tensor
+) -> float:
     if K.backend() == "tensorflow":
         return K.mean(
-            K.equal(y_true, K.cast(K.greater_equal(y_pred, THRESHOLD), y_true.dtype))
+            K.equal(
+                y_true,
+                K.cast(K.greater_equal(y_pred, THRESHOLD), y_true.dtype)
+            )
         )
     else:
         return K.mean(K.equal(y_true, K.greater_equal(y_pred, THRESHOLD)))
 
 
-def load_embedding_and_tokenizer(model_name, tokenizer_joblib_file, threshold_acc):
+def load_embedding_and_tokenizer(
+    model_name: str, tokenizer_joblib_file: str, threshold_acc: Callable
+) -> Tuple[Model, Tokenizer]:
     gru_model = load_model(model_name, custom_objects={"threshold_acc": threshold_acc})
     embedding_tokenizer = load(tokenizer_joblib_file)
     return gru_model, embedding_tokenizer
 
 
-def load_default_embedding_and_tokenizer():
+def load_default_embedding_and_tokenizer() -> Tuple[Model, Tuple]:
     return load_embedding_and_tokenizer(
         MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
     )
 
 
-def classify_text(text: str, embedding, tokenizer) -> Tuple[float, int]:
+def classify_text(
+    text: str, embedding: Model, tokenizer: Tokenizer
+) -> Tuple[float, int]:
     """Take single text, return inferred outrage classification."""
 
     text_features = obtain_string_features_dict(text)
