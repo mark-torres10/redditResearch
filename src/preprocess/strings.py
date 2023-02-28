@@ -4,7 +4,7 @@ import csv
 import os
 import re
 import string
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 from nltk import pos_tag
 from nltk.corpus import stopwords, wordnet
@@ -164,12 +164,12 @@ def remove_stopwords_and_short_words(string: str) -> str:
     )
 
 
-def token_postag(string):
+def token_postag(string: str) -> List[Tuple[str, str]]:
     tokens = word_tokenize(string)
     return pos_tag(tokens)
 
 
-def get_wordnet_pos(treebank_tag):
+def get_wordnet_pos(treebank_tag: str) -> Optional[str]:
     if treebank_tag.startswith("J"):
         return wordnet.ADJ
     elif treebank_tag.startswith("V"):
@@ -182,8 +182,8 @@ def get_wordnet_pos(treebank_tag):
         return None
 
 
-def modify_pos(dict):
-    result_dic = {}
+def modify_pos(dict: Dict) -> Dict:
+    result_dic: Dict = {}
     for key in dict.keys():
         if key.startswith("J"):
             if "adj" in result_dic:
@@ -223,7 +223,7 @@ def modify_pos(dict):
     return result_dic
 
 
-def tokenize_stem_lemmatize_string(string):
+def tokenize_stem_lemmatize_string(string: str) -> str:
     tokens_pos = token_postag(string)
     result_string = ""
     for word, tag in tokens_pos:
@@ -236,7 +236,7 @@ def tokenize_stem_lemmatize_string(string):
     return result_string
 
 
-def preprocess_text(string: str):
+def preprocess_text(string: str) -> str:
     """Preprocess the given text by removing links, URLs, 'RT' and 'cc', hashtags, mentions,
     punctuation, extra whitespace, stopwords and short words, and stemming and lemmatizing the
     remaining words.
@@ -259,7 +259,7 @@ def preprocess_text(string: str):
     return string
 
 
-def psy_string_process(text: str):
+def psy_string_process(text: str) -> Tuple[List[str], int]:
     keep = set(["!", "?"])
     stop = set(stopwords.words("english"))
     remove = set([x for x in list(string.punctuation) if x not in keep])
@@ -282,7 +282,7 @@ def psy_string_process(text: str):
     return stemmed, n
 
 
-def get_arousal(val_ar, stemmed, n):
+def get_arousal(val_ar: Dict, stemmed: List[str], n: int) -> float:
     text_arr = np.zeros(n)
     mean = np.zeros(n)
     sd = np.zeros(n)
@@ -305,8 +305,10 @@ def get_arousal(val_ar, stemmed, n):
         arousal_score = np.sum(mean * sd_weight)
     return arousal_score
 
-
-def get_sentiment(nb_model, nb_vectorizer, stemmed):
+# unsure what the model and vectorizer types are.
+def get_sentiment(
+    nb_model: Any, nb_vectorizer: Any, stemmed: List[str]
+) -> float:
     if not stemmed:
         return 0
     vectorized = nb_vectorizer.transform(stemmed)
@@ -314,7 +316,7 @@ def get_sentiment(nb_model, nb_vectorizer, stemmed):
     return sentiment_score
 
 
-def get_expanded_outrage(stemmed):
+def get_expanded_outrage(stemmed: List[str]) -> int:
     # with open(exp_outrage, 'r') as f:
     #    exp_outrage_list = list(csv.reader(f))[0]
 
