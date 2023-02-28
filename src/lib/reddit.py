@@ -135,6 +135,11 @@ class RedditAPI:
         url = f"https://www.reddit.com/r/{subreddit}/new/.json"
         headers = self.generate_request_header()
         return self.get(url=url, headers=headers)
+
+    def get_controversial_threads_in_subreddit(self, subreddit: str):
+        url = f"https://www.reddit.com/r/{subreddit}/controversial/.json"
+        headers = self.generate_request_header()
+        return self.get(url=url, headers=headers)
     
     def get_latest_posts_in_thread(self, subreddit: str, thread_id: str):
         url = f"https://www.reddit.com/r/{subreddit}/comments/{thread_id}/.json"  # noqa
