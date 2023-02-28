@@ -25,7 +25,7 @@ def lazy_load_access_token(func: Callable) -> Callable:
     (which is gated behind OAuth).
     """
 
-    def inner(api_instance) -> Callable: # type: ignore
+    def inner(api_instance) -> Callable:  # type: ignore
         if api_instance.access_token is None:
             api_instance.access_token = api_instance._generate_access_token()
         return func(api_instance)
