@@ -36,4 +36,4 @@ jobs:
           mypy .
 
       - name: Run tests
-        run: pytest
+        run: pytest --verbose
