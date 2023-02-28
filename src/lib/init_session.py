@@ -6,10 +6,12 @@ nodes to use.
 """
 import os
 
+
 class PipelineParameters:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
 
 def init_pipeline_run_parameters():
     """Generate the parameters for the pipeline run."""
@@ -22,7 +24,7 @@ def init_pipeline_run_parameters():
         "subreddits_list": subreddits_list,
         "number_of_threads_per_subreddit": number_of_threads_per_subreddit,
         "number_of_posts_per_thread": number_of_posts_per_thread,
-        "num_responses_per_post": num_responses_per_post
+        "num_responses_per_post": num_responses_per_post,
     }
 
     pipeline = PipelineParameters(**kwargs)
