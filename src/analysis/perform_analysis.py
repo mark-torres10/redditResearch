@@ -1,2 +1,2 @@
-def generate_analyses():
+def generate_analyses() -> None:
     pass
