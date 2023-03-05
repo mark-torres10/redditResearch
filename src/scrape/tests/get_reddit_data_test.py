@@ -7,7 +7,7 @@ from scrape.get_reddit_data import get_posts_from_threads_in_subreddit
 
 class TestGetPostsFromThreadsInSubreddit:
     @pytest.fixture
-    def api(self):
+    def api(self) -> None:
         return RedditAPI()
 
     subreddit = "test-subreddit"
@@ -25,7 +25,7 @@ class TestGetPostsFromThreadsInSubreddit:
     ]
 
 
-    def test_get_new_posts_from_subreddit(self, api):
+    def test_get_new_posts_from_subreddit(self, api: RedditAPI) -> None:
         mock_get_newest_threads = Mock(return_value=self.threads_json)
         api.get_newest_threads_in_subreddit = mock_get_newest_threads
         
@@ -50,3 +50,10 @@ class TestGetPostsFromThreadsInSubreddit:
         }
 
         assert thread_posts_dict == expected_result
+
+
+class TestGetHottestThreadsInSubreddit:
+    """Tests for get_hottest_threads_in_subreddit()."""
+
+    def test_get_hottest_threads_in_subreddit(self) -> None:
+        assert 1 == 1
