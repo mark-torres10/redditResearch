@@ -79,6 +79,7 @@ click==8.1.3
     #   flask-appbuilder
     #   nltk
     #   pip-tools
+    #   typer
 clickclick==20.10.2
     # via connexion
 colorama==0.4.6
@@ -454,6 +455,8 @@ tomli==2.0.1
     #   pytest
 tqdm==4.64.1
     # via nltk
+typer==0.7.0
+    # via -r requirements.in
 typing-extensions==4.4.0
     # via
     #   apache-airflow

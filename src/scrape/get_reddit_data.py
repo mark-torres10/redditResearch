@@ -1,7 +1,11 @@
 """Base file for getting Reddit data."""
-from typing import Dict, List, Literal
+from typing import Dict, List, Literal, Optional
+
+import typer
 
 from lib.reddit import RedditAPI, unpack_t3_res
+
+app = typer.Typer()
 
 
 def get_hottest_threads_in_subreddit(
@@ -81,29 +85,30 @@ def get_posts_from_threads_in_subreddit(
     thread_posts_dict = {}
     for thread in threads[:num_threads]:
         thread_id = thread['data']['id']
-        thread_posts = api.get_latest_posts_in_thread(subreddit, thread_id)[:num_posts_per_thread]
+        thread_posts = api.get_latest_posts_in_thread(
+            subreddit, thread_id
+        )[:num_posts_per_thread]
         post_dict = {post['id']: post for post in thread_posts}
         thread_posts_dict[thread_id] = post_dict
 
     return thread_posts_dict
 
 
+@app.command()
+def query_subreddit(
+    subreddit: str,
+    num_threads: Optional[int] = 5,
+    thread_sort_type: Literal["new", "hot", "controversial"] = "hot",
+    num_posts_per_thread: Optional[int] = 5,
+):
+    """
+    Query a subreddit and retrieve threads and posts.
+    """
+    typer.echo(f"Subreddit: {subreddit}")
+    typer.echo(f"Number of threads: {num_threads}")
+    typer.echo(f"Thread sort type: {thread_sort_type}")
+    typer.echo(f"Number of posts per thread: {num_posts_per_thread}")
+
+
 if __name__ == "__main__":
-    reddit_client = RedditAPI()
-    subreddit = "politics"
-    num_threads = 2
-    num_posts = 5
-
-    hottest_threads = get_hottest_threads_in_subreddit(
-        reddit_client=reddit_client, subreddit=subreddit, num_threads=num_threads
-    )
-
-    hottest_thread = hottest_threads[0]
-    hottest_thread_id = hottest_thread["id"]
-
-    latest_posts_in_thread = get_latest_posts_in_thread(
-        reddit_client=reddit_client,
-        subreddit=subreddit,
-        thread_id=hottest_thread_id,
-        num_posts=num_posts,
-    )
+    app()
