@@ -1,11 +1,18 @@
-"""Base file for getting Reddit data."""
+"""Base file for getting Reddit data.
+
+Can be used as a self-standing command line app (via `typer` library).
+
+Example usage:
+
+$ python get_reddit_data.py query_subreddit --subreddit=python \
+    --num_threads=10 --thread_sort_type=hot --num_posts_per_thread=3
+
+"""
 from typing import Dict, List, Literal, Optional
 
 import typer
 
 from lib.reddit import RedditAPI, unpack_t3_res
-
-app = typer.Typer()
 
 
 def get_hottest_threads_in_subreddit(
@@ -94,21 +101,45 @@ def get_posts_from_threads_in_subreddit(
     return thread_posts_dict
 
 
-@app.command()
+def validate_thread_sort_type(thread_sort_type: str) -> str:
+    allowed_options = ["new", "hot", "controversial"]
+    if thread_sort_type not in allowed_options:
+        raise typer.BadParameter(f"Invalid thread sort type: {thread_sort_type}. Must be one of: {', '.join(allowed_options)}")
+    return thread_sort_type
+
+
+"""
 def query_subreddit(
     subreddit: str,
-    num_threads: Optional[int] = 5,
-    thread_sort_type: Literal["new", "hot", "controversial"] = "hot",
-    num_posts_per_thread: Optional[int] = 5,
-):
+    thread_sort_type: typer.Option(
+        "hot",
+        callback=validate_thread_sort_type,
+        help="The sort type of the threads to get."
+    ),
+    num_threads: typer.Option(
+        5, help="The number of threads to query in the subreddit."
+    ),
+    num_posts_per_thread: typer.Option(
+        5, help="The number of posts per thread to get."
+    )
+) -> None:
+"""
+def query_subreddit(
+    subreddit: typer.Option(str),
+    thread_sort_type: Optional[str] = "hot",
+    num_threads: Optional[int] =  5,
+    num_posts_per_thread: Optional[int] = 5
+) -> None:
     """
     Query a subreddit and retrieve threads and posts.
     """
-    typer.echo(f"Subreddit: {subreddit}")
-    typer.echo(f"Number of threads: {num_threads}")
-    typer.echo(f"Thread sort type: {thread_sort_type}")
-    typer.echo(f"Number of posts per thread: {num_posts_per_thread}")
+    print("foo")
+    #typer.echo(f"Subreddit: {subreddit}")
+    #typer.echo(f"Number of threads: {num_threads}")
+    #typer.echo(f"Thread sort type: {thread_sort_type}")
+    #typer.echo(f"Number of posts per thread: {num_posts_per_thread}")
 
 
 if __name__ == "__main__":
-    app()
+    #app()
+    typer.run(query_subreddit)
