@@ -230,6 +230,8 @@ lockfile==0.12.2
     # via
     #   apache-airflow
     #   python-daemon
+logger==1.4
+    # via -r requirements.in
 mako==1.2.4
     # via alembic
 markdown==3.4.1
