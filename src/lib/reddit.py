@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 import requests
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 from uuid import uuid4
 
 
@@ -137,10 +137,113 @@ class RedditAPI:
         headers = self.generate_request_header()
         return self.get(url=url, headers=headers)
 
+    def get_controversial_threads_in_subreddit(self, subreddit: str) -> Dict:
+        url = f"https://www.reddit.com/r/{subreddit}/controversial/.json"
+        headers = self.generate_request_header()
+        return self.get(url=url, headers=headers)
+
     def get_latest_posts_in_thread(self, subreddit: str, thread_id: str) -> Dict:
         url = f"https://www.reddit.com/r/{subreddit}/comments/{thread_id}/.json"  # noqa
         headers = self.generate_request_header()
         return self.get(url=url, headers=headers)
+
+
+class Listing:
+    """Wrapper for the 'Listing' resposne object returned by the Reddit API.
+
+    Expected schema:
+    {
+    "kind": "Listing",
+    "data": {
+        "modhash": string,
+        "dist": integer,
+        "children": [
+        object,
+        object,
+        ...
+        ],
+        "after": string,
+        "before": string
+    }
+    }
+    """
+
+    pass
+
+
+class T1:
+    """Wrapper for the 'T1' response object returned by the Reddit API.
+
+    'T1' is the response object from the Reddit API that represents
+    a comment. These are the individual comments that people leave on a post.
+    """
+
+    def __init__(self, comment_data: Dict[str, Any]) -> None:
+        self.id: str = comment_data["id"]
+        self.author: str = comment_data["author"]
+        self.author_fullname: str = comment_data[
+            "author_fullname"
+        ]  # id of author, in form `t2_{author id}`
+        self.body: str = comment_data["body"]  # body of comment (needs parsing)
+        self.body_html: str = comment_data["body_html"]
+        self.created_utc: float = comment_data["created_utc"]
+        self.parent_id: str = comment_data[
+            "parent_id"
+        ]  # in the form `t3_{id of subreddit}`
+        self.permalink: str = comment_data["permalink"]
+        self.replies: Dict[str, Dict] = comment_data["replies"]
+        self.children: List[Dict] = comment_data["replies"]["data"]
+        self.score: int = comment_data["score"]
+        self.subreddit: str = comment_data["subreddit"]
+        self.subreddit_id: str = comment_data["subreddit_id"]
+        self.subreddit_name_prefixed: str = comment_data["subreddit_name_prefixed"]
+        self.upvote_count: int = comment_data["ups"]
+
+    def to_dict(self) -> Dict:
+        """Converts object and its attributes to a JSON dict."""
+        return {attr: getattr(self, attr) for attr in self.__dict__}
+
+
+class T3:
+    """Wrapper for the 'T3' response object returned by the Reddit API.
+
+    'T3' is the response object from the Reddit API that represents a post,
+    such as a link, image, or text post.
+
+    Here, we specify the fields that we want to return when given a T3 response
+    object.
+    """
+
+    def __init__(self, thread_data: Dict[str, Any]) -> None:
+        self.title: str = thread_data["title"]
+        self.id: str = thread_data["id"]
+        self.author: str = thread_data["author"]
+        # marked as "author_fullname" in the API but it's actually their id
+        self.author_fullname_id: str = thread_data["author_fullname"]
+        self.subreddit: str = thread_data["subreddit"]
+        self.subreddit_name_prefixed: str = thread_data["subreddit_name_prefixed"]
+        self.subreddit_id: str = thread_data["subreddit_id"]
+        self.subreddit_subscribers: int = thread_data["subreddit_subscribers"]
+        self.permalink: str = thread_data["permalink"]
+        self.upvote_count: int = thread_data["ups"]
+        self.upvote_ratio: float = thread_data["upvote_ratio"]
+        self.score: int = thread_data["score"]
+        self.total_awards_received: int = thread_data["total_awards_received"]
+        self.view_count: Optional[int] = thread_data["view_count"]
+        self.num_comments: int = thread_data["num_comments"]
+        # we need to filter out bot posts; is_robot_indexable=True if it is a bot.
+        self.is_robot_indexable: bool = thread_data["is_robot_indexable"]
+        self.url: str = thread_data["url"]
+        self.thread_url: str = f"{self.url}.json"
+        self.posts: List[Dict] = []
+
+    def to_dict(self) -> Dict:
+        """Converts object and its attributes to a JSON dict."""
+        return {attr: getattr(self, attr) for attr in self.__dict__}
+
+    def add_comments_to_thread(self, comments: List[T1]) -> None:
+        """Adds the comments to the thread."""
+        self.posts.extend([comment.to_dict() for comment in comments])
 
 
 def unpack_t3_res(t3_dict: Dict) -> Dict:
@@ -148,9 +251,4 @@ def unpack_t3_res(t3_dict: Dict) -> Dict:
     return t3_dict["data"]
 
 
-if __name__ == "__main__":
-    reddit = RedditAPI()
-    politics_subreddits = reddit.search_subreddits("politics")
-    # token = reddit._generate_access_token()
-    # profile = reddit.get_own_profile_info()
-    breakpoint()
+MAP_RESPONSE_KIND_TO_CLASS = {"t1": T1, "t3": T3, "listing": Listing}

@@ -4,14 +4,10 @@ import pandas as pd
 
 from lib.reddit import RedditAPI
 from ml.inference import classify_text, load_default_embedding_and_tokenizer
-from scrape.get_reddit_data import (
+from sync.get_reddit_data import (
     get_hottest_threads_in_subreddit,
     get_latest_posts_in_thread,
 )
-
-
-def scrape_reddit_threads() -> None:
-    pass
 
 
 if __name__ == "__main__":
