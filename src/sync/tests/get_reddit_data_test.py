@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from lib.reddit import RedditAPI
-from scrape.get_reddit_data import get_posts_from_threads_in_subreddit
+from sync.get_reddit_data import get_posts_from_threads_in_subreddit
 
 class TestGetPostsFromThreadsInSubreddit:
     @pytest.fixture
