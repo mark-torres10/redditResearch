@@ -2,17 +2,17 @@
 import csv
 import datetime
 import json
-import logger as log
 import os
 import requests
 from typing import Any, Dict, List, Literal, Optional
 
+from lib.logging import RedditLogger
 from lib.reddit import T1, T3
 
 CURRENT_TIME_STR = datetime.datetime.utcnow().strftime('%Y-%m-%d_%H%M')
 REDDIT_BASE_URL = "https://www.reddit.com"
 
-logger = log.getLogger(__name__)
+logger = RedditLogger(name=__name__)
 
 def create_or_use_default_directory(directory: Optional[str] = None) -> None:
     if not directory:
@@ -66,33 +66,59 @@ def get_reddit_data(
     
     Writes both the JSON of the API result as well as a .csv file containing
     metadata of the request.
+
+    Gets the list of threads in the subreddit, then for each thread, gets the
+    most recent comments in that thread.
     """
 
-    # create an API request that gets the 4 hottest threads in the r/politics
-    # subreddit, then gets the 3 latest posts in each thread. Returns a list
-    # of dictionaries.
+    logger.info(f"Starting syncing Reddit data for subreddit {subreddit}")
     endpoint = f"{REDDIT_BASE_URL}/r/{subreddit}/{thread_sort_type}.json"
     response = api.get(endpoint, params={"limit": num_threads})
 
-    result_data = []
-    for thread in response.json()['data']['children']:
-        t3_obj = T3(thread)
+    result_data: List[Dict] = []
+
+    thread_list = response.json()['data']['children']
+    num_threads = len(thread_list)
+
+    for (i, thread) in enumerate(thread_list):
+        logger.info(f"Processing thread {i + 1} out of {num_threads}")
+        t3_obj = T3(thread["data"])
         thread_response = api.get(t3_obj.thread_url, params={"limit": num_posts_per_thread})
-        for post in thread_response.json()[1]['data']['children']:
-            t1_obj = T1(post)
-            t3_obj.add_posts_to_thread(comments=[t1_obj])
+        try:
+            comment_posts = thread_response.json()[1]['data']['children']
+        except (requests.exceptions.JSONDecodeError, KeyError):
+            continue
+        num_comments = len(comment_posts)
+        for (j, comment_post) in enumerate(comment_posts):
+            logger.info(f"Processing comment {j} out ouf {num_comments} comments.")  # noqa
+            if comment_post["kind"] == "t1":
+                t1_obj = T1(comment_post["data"])
+                t3_obj.add_comments_to_thread(comments=[t1_obj])
+        result_data.append(t3_obj.to_dict())
+
+    num_posts_per_synced_thread = [
+        len(thread["posts"]) for thread in result_data
+    ]
+    avg_num_comments_synced_per_thread = round(
+        sum(num_posts_per_synced_thread) / len(num_posts_per_synced_thread), 1
+    )
 
     metadata_dict = {
         "subreddit": subreddit,
         "thread_sort_type": thread_sort_type,
-        "num_threads": num_threads,
-        "num_posts_per_thread": num_posts_per_thread,
+        "num_threads_to_sync": num_threads,
+        "num_threads_actually_synced": len(result_data),
+        "num_posts_per_thread_to_sync": num_posts_per_thread,
+        "avg_num_comments_actually_synced_per_thread": (
+            avg_num_comments_synced_per_thread
+        ),
         "output_filepath": output_filepath,
     }
 
     write_results_to_jsonl(result_data)
     write_metadata_file(metadata_dict=metadata_dict)
     logger.info("Finished syncing data from Reddit.")
+
 
 if __name__ == '__main__':
     with requests.Session() as api:
