@@ -9,6 +9,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()],
 )
 
+
 # mypy: ignore-errors
 class RedditLogger(logging.Logger):
     def __init__(self, name: str, level: int = logging.INFO) -> None:
