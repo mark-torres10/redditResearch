@@ -15,7 +15,7 @@ from analysis.perform_analysis import generate_analyses
 from lib.init_session import init_pipeline_run_parameters
 from message.handle_messages import receive_messages, send_messages
 from ml.inference import classify_reddit_text
-from sync.get_labeled_samples import sync_reddit_threads
+from sync.get_reddit_data import get_reddit_data
 
 
 default_args = {
@@ -44,7 +44,7 @@ init_run_parameters = PythonOperator(
 )
 
 sync_threads = PythonOperator(
-    task_id="sync_threads", python_callable=sync_reddit_threads, dag=dag
+    task_id="sync_threads", python_callable=get_reddit_data, dag=dag
 )
 
 classify_threads = PythonOperator(
@@ -65,7 +65,7 @@ generate_study_analyses = PythonOperator(
 
 (
     init_run_parameters
-    >> scrape_threads
+    >> sync_threads
     >> classify_threads
     >> send_reddit_messages
     >> receive_reddit_messages
