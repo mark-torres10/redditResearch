@@ -344,11 +344,13 @@ def obtain_string_features_dict(string: str) -> Dict:
         string_features_map["psy_stemmed"],
         string_features_map["len_tokenize"],
     ) = psy_string_process(string)
+    """
     string_features_map["get_arousal"] = get_arousal(
         VALENCE_ARRAY,
         string_features_map["psy_stemmed"],
         string_features_map["len_tokenize"],
     )
+    """
     string_features_map["get_sentiment"] = get_sentiment(
         NB_MODEL, NB_VECTORIZER, string_features_map["psy_stemmed"]
     )
