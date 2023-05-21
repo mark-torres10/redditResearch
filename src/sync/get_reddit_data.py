@@ -33,7 +33,7 @@ def write_results_to_jsonl(data: List[Dict]) -> None:
     with open(file_name, "w") as f:
         for item in data:
             f.write(json.dumps(item))
-            f.write(",\n")
+            f.write("\n")
 
 
 def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
