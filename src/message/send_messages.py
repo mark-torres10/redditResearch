@@ -3,7 +3,7 @@ import sys
 
 import pandas as pd
 
-from lib.helper import ROOT_DIR
+from lib.helper import CODE_DIR
 from lib.logging import RedditLogger
 from message.constants import MESSAGES_ROOT_PATH, OUTPUT_FILENAME
 from message.handle_messages import send_message

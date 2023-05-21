@@ -1,8 +1,8 @@
 import os
 
-from lib.helper import ROOT_DIR
+from lib.helper import CODE_DIR
 
-SYNC_ROOT_PATH = os.path.join(ROOT_DIR, "sync")
+SYNC_ROOT_PATH = os.path.join(CODE_DIR, "sync")
 
 SYNC_METADATA_FILENAME = "metadata.csv"
 SYNC_RESULTS_FILENAME = "results.jsonl"

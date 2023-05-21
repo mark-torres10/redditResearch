@@ -29,13 +29,14 @@ STOPWORDS = stopwords.words("english")
 MIN_WORD_LENGTH = 3
 POS = ["adj", "verb", "noun", "adv", "pronoun", "wh", "other"]
 
+"""
 exp_outrage = os.path.join(
     ROOT_DIR, "model_files/expanded_outrage_dictionary_stemmed.csv"
 )
+"""
 #nb_model_fp = os.path.join(ROOT_DIR, "model_files/NB_sentiment_model.pkl")
 #nb_vectorizer_fp = os.path.join(ROOT_DIR, "model_files/NB_vectorizer.pkl")
 #NB_MODEL, NB_VECTORIZER = get_nb_vectorizer(nb_model_fp, nb_vectorizer_fp)
-
 
 def char_is_emoji(char: str) -> bool:
     return char in emoji_name_to_unicode_map.values()
