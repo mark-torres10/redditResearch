@@ -1,3 +1,10 @@
+import random
+from typing import List, Optional
+
+import pandas as pd
+
+from ml.constants import LABEL_COL
+
 AUTHOR_DM_SCRIPT = """
     Hi {name},
 
@@ -50,3 +57,45 @@ OBSERVER_DM_SCRIPT = """
     5
     1
 """
+
+TO_MESSAGE_COL = "to_message_flag"
+
+HAS_BEEN_MESSAGED_COL = "has_been_messaged"
+
+def balance_posts(labels: List[int], min_count: int) -> List[int]:
+    # determine whether the 0s or the 1s is smaller. Assign all those as
+    # to message
+    min_label: 1 if sum(labels) == min_count else 0
+    
+    to_message_lst = [0] * len(labels)
+
+    max_label_idx_lst = []
+
+    # all the rows with the min_label should be messaged.
+    for idx, label in enumerate(labels):
+        if label == min_label:
+            to_message_lst[idx] = 1
+        else:
+            max_label_idx_lst.append(idx)
+    
+    # shuffle the max_label_idx_lst, take the first [:min_count] labels
+    random.shuffle(max_label_idx_lst)
+    max_labels_idxs_to_message = max_label_idx_lst[min_count:]
+    for idx in max_labels_idxs_to_message:
+        to_message_lst[idx] = 1
+    
+    return to_message_lst
+
+
+def determine_which_posts_to_message(
+    sync_data_df: pd.DataFrame,
+    balance_strategy: Optional[str] = "equal"
+) -> pd.DataFrame:
+    """Given a df with labeled data."""
+    label_col = sync_data_df[LABEL_COL].tolist()
+    if balance_strategy == "equal":
+        min_count = label_col.value_counts().min()
+    to_message_list = balance_posts(label_col, min_count)
+    sync_data_df[TO_MESSAGE_COL] = to_message_list
+
+    return sync_data_df

@@ -63,10 +63,11 @@ def classify_text(
     return gru_prob, gru_binary
 
 
-def classify_reddit_text(text: str) -> None:
-    embedding, tokenizer = load_embedding_and_tokenizer(
-        MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
-    )
+def classify_reddit_text(text: str, embedding=None, tokenizer=None) -> None:
+    if not embedding or not tokenizer:
+        embedding, tokenizer = load_embedding_and_tokenizer(
+            MODEL_NAME, TOKENIZER_JOBLIB_FILE, threshold_acc
+        )
     prob, label = classify_text(text, embedding, tokenizer)
     print(f"Outrage probability: {prob}\tLabel: {label}")
 

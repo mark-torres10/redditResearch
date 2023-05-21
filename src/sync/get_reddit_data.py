@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from lib.logging import RedditLogger
 from lib.reddit import T1, T3
+from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
 
 CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
 REDDIT_BASE_URL = "https://www.reddit.com"
@@ -27,7 +28,7 @@ def write_results_to_jsonl(data: List[Dict]) -> None:
     """Writes the results of the request to a JSONL file."""
     dir = create_or_use_default_directory()
 
-    file_name = os.path.join(dir, "results.jsonl")
+    file_name = os.path.join(dir, SYNC_RESULTS_FILENAME)
 
     with open(file_name, "w") as f:
         for item in data:
@@ -44,7 +45,7 @@ def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
     """
     dir = create_or_use_default_directory()
 
-    file_name = os.path.join(dir, "metadata.csv")
+    file_name = os.path.join(dir, SYNC_METADATA_FILENAME)
 
     data = [metadata_dict]
     header_names = list(metadata_dict.keys())
