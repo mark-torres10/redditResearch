@@ -1,11 +1,8 @@
 import collections
-import os
 from typing import Dict
 
 from keras.models import Model
 import pandas as pd
-
-from lib.helper import ROOT_DIR
 
 
 def get_valance_array(model: Model) -> Dict:
@@ -24,6 +21,6 @@ def get_valance_array(model: Model) -> Dict:
     return val_ar
 
 
-valence_arousal = os.path.join(ROOT_DIR, "model_files/valence_arousal.csv")
+#valence_arousal = os.path.join(ROOT_DIR, "model_files/valence_arousal.csv")
 
-valence_array = get_valance_array(valence_arousal)
+#valence_array = get_valance_array(valence_arousal)

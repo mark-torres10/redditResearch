@@ -20,7 +20,6 @@ from preprocess.emoji_helper import (
     TOP_EMOJIS,
 )
 from preprocess.model_loader import get_nb_vectorizer
-from preprocess.valence_helper import valence_array as VALENCE_ARRAY
 
 PUNCTUATION_REGEX = r"[%s]" % re.escape("""!"$%&()*+,-./:;<=>?@[\]^_`{|}~""")
 SHORT_LINK_REGEX = "//t.co\S+"
@@ -33,9 +32,9 @@ POS = ["adj", "verb", "noun", "adv", "pronoun", "wh", "other"]
 exp_outrage = os.path.join(
     ROOT_DIR, "model_files/expanded_outrage_dictionary_stemmed.csv"
 )
-nb_model_fp = os.path.join(ROOT_DIR, "model_files/NB_sentiment_model.pkl")
-nb_vectorizer_fp = os.path.join(ROOT_DIR, "model_files/NB_vectorizer.pkl")
-NB_MODEL, NB_VECTORIZER = get_nb_vectorizer(nb_model_fp, nb_vectorizer_fp)
+#nb_model_fp = os.path.join(ROOT_DIR, "model_files/NB_sentiment_model.pkl")
+#nb_vectorizer_fp = os.path.join(ROOT_DIR, "model_files/NB_vectorizer.pkl")
+#NB_MODEL, NB_VECTORIZER = get_nb_vectorizer(nb_model_fp, nb_vectorizer_fp)
 
 
 def char_is_emoji(char: str) -> bool:
@@ -307,12 +306,14 @@ def get_arousal(val_ar: Dict, stemmed: List[str], n: int) -> float:
 
 
 # unsure what the model and vectorizer types are.
+"""
 def get_sentiment(nb_model: Any, nb_vectorizer: Any, stemmed: List[str]) -> float:
     if not stemmed:
         return 0
     vectorized = nb_vectorizer.transform(stemmed)
     sentiment_score = np.average(1 - nb_model.predict_proba(vectorized)[:, 1])
     return sentiment_score
+"""
 
 
 def get_expanded_outrage(stemmed: List[str]) -> int:
@@ -351,9 +352,11 @@ def obtain_string_features_dict(string: str) -> Dict:
         string_features_map["len_tokenize"],
     )
     """
+    """
     string_features_map["get_sentiment"] = get_sentiment(
         NB_MODEL, NB_VECTORIZER, string_features_map["psy_stemmed"]
     )
+    """
     string_features_map["get_expanded_outrage"] = get_expanded_outrage(
         string_features_map["psy_stemmed"]
     )
