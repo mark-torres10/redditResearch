@@ -88,14 +88,14 @@ def balance_posts(labels: List[int], min_count: int) -> List[int]:
 
 
 def determine_which_posts_to_message(
-    sync_data_df: pd.DataFrame,
+    labeled_data: pd.DataFrame,
     balance_strategy: Optional[str] = "equal"
 ) -> pd.DataFrame:
     """Given a df with labeled data."""
-    label_col = sync_data_df[LABEL_COL].tolist()
+    label_col = labeled_data[LABEL_COL].tolist()
     if balance_strategy == "equal":
         min_count = label_col.value_counts().min()
     to_message_list = balance_posts(label_col, min_count)
-    sync_data_df[TO_MESSAGE_COL] = to_message_list
+    labeled_data[TO_MESSAGE_COL] = to_message_list
 
-    return sync_data_df
+    return labeled_data

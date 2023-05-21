@@ -9,45 +9,39 @@ from message.handle_messages import send_message
 from message.helper import (
     HAS_BEEN_MESSAGED_COL, TO_MESSAGE_COL, determine_which_posts_to_message
 )
-from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
+from ml.constants import LABELED_DATA_FILENAME
 
 logger = RedditLogger(name=__name__)
 
-SYNC_ROOT_PATH = os.path.join(ROOT_DIR, "sync")
+ML_ROOT_PATH = os.path.join(ROOT_DIR, "ml")
 
 MESSAGES_ROOT_PATH = os.path.join(ROOT_DIR, "messages")
 
 OUTPUT_FILENAME = "posts_to_message_status.csv"
 
 if __name__ == "__main__":
-    # load classified files
+    # load labeled data
     load_timestamp = sys.argv[1]
 
-    timestamp_dir = os.path.join(SYNC_ROOT_PATH, load_timestamp)
+    timestamp_dir = os.path.join(ML_ROOT_PATH, load_timestamp)
 
     if not os.path.exists(timestamp_dir):
         logger.error(f"Timestamp directory {load_timestamp} does not exist")
         sys.exit(1)
-    
-    metadata_filepath = os.path.join(timestamp_dir, SYNC_METADATA_FILENAME)
-    sync_data_filepath = os.path.join(timestamp_dir, SYNC_RESULTS_FILENAME)
 
-    metadata: pd.DataFrame
-    sync_data: pd.DataFrame
-
-    metadata = pd.read_csv(metadata_filepath)
-    sync_data = pd.read_json(sync_data_filepath, lines=True)
+    labeled_data_filepath = os.path.join(timestamp_dir, LABELED_DATA_FILENAME)
+    labeled_data = pd.read_json(labeled_data_filepath, lines=True)
 
     api = "" # TODO: instantiate access to Reddit API.
 
     # balance messages (ratio of 1:1 for outrage/not outrage)
-    sync_data = determine_which_posts_to_message(
-        sync_data_df=sync_data, balance_strategy="equal"
+    labeled_data = determine_which_posts_to_message(
+        labeled_data=labeled_data, balance_strategy="equal"
     )
 
     has_been_messaged_col = []
 
-    for idx, row in enumerate(sync_data.iterrows()):
+    for idx, row in enumerate(labeled_data.iterrows()):
         id_col = [""] # TODO: add correct ID column
         if row[TO_MESSAGE_COL] == 1:
             try:
@@ -62,14 +56,14 @@ if __name__ == "__main__":
                 has_been_messaged_col.append(0)
                 continue
     
-    sync_data[HAS_BEEN_MESSAGED_COL] = has_been_messaged_col
+    labeled_data[HAS_BEEN_MESSAGED_COL] = has_been_messaged_col
 
     # dump results of messaging
     output_filepath = os.path.join(
         MESSAGES_ROOT_PATH, load_timestamp, OUTPUT_FILENAME
     )
 
-    sync_data.to_csv(output_filepath)
+    labeled_data.to_csv(output_filepath)
 
     logger.info(
         f"Done sending messages for data synced on timestamp {load_timestamp}"
