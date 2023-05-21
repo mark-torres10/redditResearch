@@ -39,6 +39,7 @@ if __name__ == "__main__":
 
     probs = []
     labels = []
+    num_text_unable_to_classify = 0
 
     embedding, tokenizer = load_default_embedding_and_tokenizer()
 
@@ -59,7 +60,16 @@ if __name__ == "__main__":
             )
             probs.append(f"Unable to classify. Error {e}")
             labels.append(0) # NOTE: should this be defaulted to None?
+            num_text_unable_to_classify += 1
             continue
+    
+    logger.info(
+        "Tried to classify {count} posts. Succeeded in {num_success}, failed in {num_fail}".format( # noqa
+            count=len(text_col),
+            num_success=len(text_col)-num_text_unable_to_classify,
+            num_fail=num_text_unable_to_classify
+        )
+    )
 
     sync_data[PROB_COL] = probs
     sync_data[LABEL_COL] = labels
