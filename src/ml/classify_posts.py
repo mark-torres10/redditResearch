@@ -1,11 +1,12 @@
 import sys
 import time
+from typing import Dict, List
 import os
 
 import pandas as pd
 
 from lib.helper import read_jsonl_as_list_dicts
-from lib.logging import RedditLogger
+from lib.redditLogging import RedditLogger
 from ml.constants import (
     LABEL_COL, LABELED_DATA_FILENAME, ML_ROOT_PATH, PROB_COL
 )
@@ -38,17 +39,23 @@ if __name__ == "__main__":
 
     # each row corresponds to a thread. The `posts` field corresponds to the
     # posts in the thread. Let's get these posts
+    posts_dict_list: List[List[Dict]]
     posts_dict_list = sync_data[POSTS_COLNAME]
 
     # for each post, we only want the columns needed to identify them
-    post_dict_subset = []
-    texts_list = []
-    for post in posts_dict_list:
-        post_dict_subset.append(post[[COLS_TO_IDENTIFY_POST]])
-        texts_list.append(post[POST_TEXT_COLNAME])
+    post_dict_subset: List[Dict] = []
+    texts_list: List[str] = []
 
-    probs = []
-    labels = []
+    for post_list in posts_dict_list:
+        for post in post_list:
+            output_dict = {}
+            for col in COLS_TO_IDENTIFY_POST:
+                output_dict[col] = post[col]
+            post_dict_subset.append(output_dict)
+            texts_list.append(post[POST_TEXT_COLNAME])
+
+    probs: List[List[int]] = [] # nested list, e.g., [[0.2], [0.5]]
+    labels: List[int] = [] # e.g., [0, 1]
     num_text_unable_to_classify = 0
 
     embedding, tokenizer = load_default_embedding_and_tokenizer()
@@ -103,13 +110,15 @@ if __name__ == "__main__":
 
     for idx, post_dict in enumerate(post_dict_subset):
         post_dict[LABEL_COL] = labels[idx]
-        post_dict[PROB_COL] = probs[idx]
+        post_dict[PROB_COL] = probs[idx][0]
 
     labeled_df = pd.DataFrame(post_dict_subset)
 
-    output_filepath = os.path.join(
-        ML_ROOT_PATH, load_timestamp, LABELED_DATA_FILENAME
-    )
+    output_directory = os.path.join(ML_ROOT_PATH, load_timestamp, '')
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
+    output_filepath = os.path.join(output_directory, LABELED_DATA_FILENAME)
     labeled_df.to_csv(output_filepath)
 
     logger.info(f"Done classifying data synced on timestamp {load_timestamp}")
