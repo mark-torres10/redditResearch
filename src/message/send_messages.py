@@ -5,19 +5,15 @@ import pandas as pd
 
 from lib.helper import ROOT_DIR
 from lib.logging import RedditLogger
+from message.constants import MESSAGES_ROOT_PATH, OUTPUT_FILENAME
 from message.handle_messages import send_message
 from message.helper import (
     HAS_BEEN_MESSAGED_COL, TO_MESSAGE_COL, determine_which_posts_to_message
 )
-from ml.constants import LABELED_DATA_FILENAME
+from ml.constants import LABELED_DATA_FILENAME, ML_ROOT_PATH
 
 logger = RedditLogger(name=__name__)
 
-ML_ROOT_PATH = os.path.join(ROOT_DIR, "ml")
-
-MESSAGES_ROOT_PATH = os.path.join(ROOT_DIR, "messages")
-
-OUTPUT_FILENAME = "posts_to_message_status.csv"
 
 if __name__ == "__main__":
     # load labeled data
@@ -26,7 +22,7 @@ if __name__ == "__main__":
     timestamp_dir = os.path.join(ML_ROOT_PATH, load_timestamp)
 
     if not os.path.exists(timestamp_dir):
-        logger.error(f"Timestamp directory {load_timestamp} does not exist")
+        logger.error(f"Labeled data timestamp directory {load_timestamp} does not exist")
         sys.exit(1)
 
     labeled_data_filepath = os.path.join(timestamp_dir, LABELED_DATA_FILENAME)
@@ -66,5 +62,5 @@ if __name__ == "__main__":
     labeled_data.to_csv(output_filepath)
 
     logger.info(
-        f"Done sending messages for data synced on timestamp {load_timestamp}"
+        f"Done sending messages for data labeled on timestamp {load_timestamp}"
     )
