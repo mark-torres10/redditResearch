@@ -6,7 +6,7 @@ import os
 import requests
 from typing import Any, Dict, List, Literal, Optional
 
-from lib.logging import RedditLogger
+from lib.redditLogging import RedditLogger
 from lib.reddit import T1, T3
 from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
 
