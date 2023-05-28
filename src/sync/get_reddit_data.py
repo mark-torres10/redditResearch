@@ -1,9 +1,14 @@
-"""Base file for getting Reddit data."""
+"""Base file for getting Reddit data.
+
+Example run:
+    python get_reddit_data.py politics 5 10
+"""
 import csv
 import datetime
 import json
 import os
 import requests
+import sys
 from typing import Any, Dict, List, Literal, Optional
 
 from lib.redditLogging import RedditLogger
@@ -73,7 +78,7 @@ def get_reddit_data(
     most recent comments in that thread.
     """
 
-    logger.info(f"Starting syncing Reddit data for subreddit {subreddit}")
+    print(f"Starting syncing Reddit data for subreddit {subreddit}")
     endpoint = f"{REDDIT_BASE_URL}/r/{subreddit}/{thread_sort_type}.json"
     response = api.get(endpoint, params={"limit": num_threads})
 
@@ -83,7 +88,7 @@ def get_reddit_data(
     num_threads = len(thread_list)
 
     for i, thread in enumerate(thread_list):
-        logger.info(f"Processing thread {i + 1} out of {num_threads}")
+        print(f"Processing thread {i + 1} out of {num_threads}")
         t3_obj = T3(thread["data"])
         thread_response = api.get(
             t3_obj.thread_url, params={"limit": num_posts_per_thread}
@@ -94,7 +99,7 @@ def get_reddit_data(
             continue
         num_comments = len(comment_posts)
         for j, comment_post in enumerate(comment_posts):
-            logger.info(
+            print(
                 f"Processing comment {j} out ouf {num_comments} comments."
             )  # noqa
             if comment_post["kind"] == "t1":
@@ -121,16 +126,20 @@ def get_reddit_data(
 
     write_results_to_jsonl(result_data)
     write_metadata_file(metadata_dict=metadata_dict)
-    logger.info("Finished syncing data from Reddit.")
+    print("Finished syncing data from Reddit.")
 
 
 if __name__ == "__main__":
+    subreddit = sys.argv[1]
+    num_threads = int(sys.argv[2])
+    num_posts_per_thread = int(sys.argv[3])
+
     with requests.Session() as api:
         api.headers = {"User-Agent": "Mozilla/5.0"}
         get_reddit_data(
             api=api,
-            subreddit="politics",
+            subreddit=subreddit,
             thread_sort_type="hot",
-            num_threads=4,
-            num_posts_per_thread=3,
+            num_threads=num_threads,
+            num_posts_per_thread=num_posts_per_thread,
         )

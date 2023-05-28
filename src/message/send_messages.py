@@ -85,6 +85,10 @@ if __name__ == "__main__":
                 )
                 has_been_messaged_col.append(0)
                 continue
+        else:
+            has_been_messaged_col.append(0)
+
+    has_been_messaged_col = labeled_data[constants.TO_MESSAGE_COL].tolist()
 
     print(
         "Messaged {sum_messaged} out of {sum_possible} total possible".format(
