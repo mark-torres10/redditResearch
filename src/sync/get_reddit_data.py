@@ -12,7 +12,7 @@ import sys
 from typing import Any, Dict, List, Literal, Optional
 
 from lib.redditLogging import RedditLogger
-from lib.reddit import T1, T3
+from lib.reddit import init_api_access
 from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
 
 CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
@@ -61,85 +61,34 @@ def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
         writer.writerows(data)
 
 
-def get_reddit_data(
-    api: requests.Session,
-    subreddit: str,
-    thread_sort_type: Literal["new", "hot", "controversial"],
-    num_threads: int = 5,
-    num_posts_per_thread: int = 3,
-    output_filepath: Optional[str] = None,
-) -> None:
-    """Queries Reddit API and returns a dictionary of dictionaries.
-
-    Writes both the JSON of the API result as well as a .csv file containing
-    metadata of the request.
-
-    Gets the list of threads in the subreddit, then for each thread, gets the
-    most recent comments in that thread.
-    """
-
-    print(f"Starting syncing Reddit data for subreddit {subreddit}")
-    endpoint = f"{REDDIT_BASE_URL}/r/{subreddit}/{thread_sort_type}.json"
-    response = api.get(endpoint, params={"limit": num_threads})
-
-    result_data: List[Dict] = []
-
-    thread_list = response.json()["data"]["children"]
-    num_threads = len(thread_list)
-
-    for i, thread in enumerate(thread_list):
-        print(f"Processing thread {i + 1} out of {num_threads}")
-        t3_obj = T3(thread["data"])
-        thread_response = api.get(
-            t3_obj.thread_url, params={"limit": num_posts_per_thread}
-        )
-        try:
-            comment_posts = thread_response.json()[1]["data"]["children"]
-        except (requests.exceptions.JSONDecodeError, KeyError):
-            continue
-        num_comments = len(comment_posts)
-        for j, comment_post in enumerate(comment_posts):
-            print(
-                f"Processing comment {j} out ouf {num_comments} comments."
-            )  # noqa
-            if comment_post["kind"] == "t1":
-                t1_obj = T1(comment_post["data"])
-                t3_obj.add_comments_to_thread(comments=[t1_obj])
-        result_data.append(t3_obj.to_dict())
-
-    num_posts_per_synced_thread = [len(thread["posts"]) for thread in result_data]
-    avg_num_comments_synced_per_thread = round(
-        sum(num_posts_per_synced_thread) / len(num_posts_per_synced_thread), 1
-    )
-
-    metadata_dict = {
-        "subreddit": subreddit,
-        "thread_sort_type": thread_sort_type,
-        "num_threads_to_sync": num_threads,
-        "num_threads_actually_synced": len(result_data),
-        "num_posts_per_thread_to_sync": num_posts_per_thread,
-        "avg_num_comments_actually_synced_per_thread": (
-            avg_num_comments_synced_per_thread
-        ),
-        "output_filepath": output_filepath,
-    }
-
-    write_results_to_jsonl(result_data)
-    write_metadata_file(metadata_dict=metadata_dict)
-    print("Finished syncing data from Reddit.")
-
-
 if __name__ == "__main__":
     subreddit = sys.argv[1]
     num_threads = int(sys.argv[2])
     num_posts_per_thread = int(sys.argv[3])
 
-    with requests.Session() as api:
-        api.headers = {"User-Agent": "Mozilla/5.0"}
-        get_reddit_data(
-            api=api,
-            subreddit=subreddit,
-            thread_sort_type="hot",
-            num_threads=num_threads,
-            num_posts_per_thread=num_posts_per_thread,
-        )
+    api = init_api_access()
+
+    subreddit = api.subreddit(subreddit)
+    # TODO: support other types, such as controversial/new, not just "hot"
+    hot_threads = subreddit.hot(limit=num_threads)
+
+    posts_dict_list = []
+
+    for thread in hot_threads:
+        # Retrieve the top posts in each thread
+        for submission in thread.comments[:num_posts_per_thread]:
+            print(f"Post: {submission.body}")
+            print("-----")
+            posts_dict_list.append(submission.__dict__)
+    
+    metadata_dict = {
+        "subreddit": subreddit,
+        "thread_sort_type": "hot",
+        "num_threads": num_threads,
+        "num_posts_per_thread": num_posts_per_thread,
+        "num_total_posts_synced": len(posts_dict_list)
+    }
+
+    write_results_to_jsonl(posts_dict_list)
+    write_metadata_file(metadata_dict=metadata_dict)
+    print("Finished syncing data from Reddit.")
