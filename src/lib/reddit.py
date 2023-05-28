@@ -2,9 +2,9 @@
 from dotenv import load_dotenv
 import os
 from pathlib import Path
-import requests
 from typing import Any, Callable, Dict, List, Optional
-from uuid import uuid4
+
+import praw
 
 
 load_dotenv(Path("../../.env"))
@@ -12,6 +12,7 @@ load_dotenv(Path("../../.env"))
 CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
 CLIENT_SECRET = os.getenv("REDDIT_SECRET")
 REDIRECT_URI = os.getenv("REDDIT_REDIRECT_URI")
+REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
 # TODO: get lab username + PW at some point
 USERNAME = os.getenv("REDDIT_USERNAME")
 PASSWORD = os.getenv("REDDIT_PASSWORD")
@@ -31,6 +32,41 @@ def lazy_load_access_token(func: Callable) -> Callable:
         return func(api_instance)
 
     return inner
+
+def init_api_access() -> praw.Reddit:
+    return praw.Reddit(
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        refresh_token=REFRESH_TOKEN,
+        user_agent=DEFAULT_USER_AGENT,
+    )
+
+def authorize_api_access(api: praw.Reddit) -> None:
+    """Provides auth for API access.
+    
+    Documentation: https://praw.readthedocs.io/en/stable/getting_started/authentication.html
+    """
+    # TODO: update auth url args for future use cases
+    scopes = ["identity", "privatemessages"]
+    state = "..."
+    implicit=False
+    duration="permanent"
+    try:
+        auth_url = api.auth.url(
+            scopes=scopes, state=state, implicit=implicit, duration=duration
+        )
+        print(
+            f"Please visit the following URL to authorize the application: {auth_url}"
+        )
+        unique_key = input("Please paste in the unique key:")
+        breakpoint()
+        refresh_token = api.auth.authorize(unique_key)
+        print(f"Refresh token: {refresh_token}")
+        print("Authorized successfully!")
+    except Exception as e:
+        print(f"Unable to authorize application: {e}")
+        raise
+
 
 class Listing:
     """Wrapper for the 'Listing' resposne object returned by the Reddit API.
