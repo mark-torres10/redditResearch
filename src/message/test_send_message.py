@@ -11,10 +11,9 @@ TEST_NAME = TEST_USER
 TEST_DATE = "2020-01-01"
 TEST_BODY = "This is a great day!"
 
-def test_message(api: praw.Reddit) -> None:
+def test_message(api: praw.Reddit, user: str, subject: str, body: str) -> None:
     """Send a test message to self."""
     message_body = create_message_body(TEST_NAME, TEST_DATE, TEST_BODY)
-
     send_message(
         api=api,
         user=TEST_USER,
@@ -25,4 +24,8 @@ def test_message(api: praw.Reddit) -> None:
 
 if __name__ == "__main__":
     api = init_api_access()
-    test_message(api)
+    message_body = create_message_body(TEST_NAME, TEST_DATE, TEST_BODY)
+    user = TEST_USER
+    subject = TEST_SUBJECT
+    test_message(api, user=user, subject=subject, body=message_body)
+    print(f"Message successfully sent to {user}!")
