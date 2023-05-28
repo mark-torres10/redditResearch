@@ -45,6 +45,8 @@ def authorize_api_access(api: praw.Reddit) -> None:
     """Provides auth for API access.
     
     Documentation: https://praw.readthedocs.io/en/stable/getting_started/authentication.html
+
+    Only needed if there is no refresh token.
     """
     # TODO: update auth url args for future use cases
     scopes = ["identity", "privatemessages"]

@@ -1,9 +1,17 @@
+"""
+Determines which users to message.
+
+Example usage:
+    python determine_who_to_message.py 2023-03-20_1438
+"""
 import os
 import sys
 
 import pandas as pd
+import praw
 
 from lib.helper import CODE_DIR
+from lib.reddit import init_api_access
 from lib.redditLogging import RedditLogger
 from message.constants import MESSAGES_ROOT_PATH, OUTPUT_FILENAME
 from message.handle_messages import send_message
@@ -13,7 +21,6 @@ from message.helper import (
 from ml.constants import LABELED_DATA_FILENAME, ML_ROOT_PATH
 
 logger = RedditLogger(name=__name__)
-
 
 if __name__ == "__main__":
     # load labeled data
@@ -26,9 +33,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     labeled_data_filepath = os.path.join(timestamp_dir, LABELED_DATA_FILENAME)
-    labeled_data = pd.read_json(labeled_data_filepath, lines=True)
+    labeled_data = pd.read_csv(labeled_data_filepath)
 
-    api = "" # TODO: instantiate access to Reddit API.
+    api = init_api_access()
+
+    breakpoint()
 
     # balance messages (ratio of 1:1 for outrage/not outrage)
     labeled_data = determine_which_posts_to_message(
