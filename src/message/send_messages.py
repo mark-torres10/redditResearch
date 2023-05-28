@@ -20,6 +20,17 @@ def send_message(api: praw.Reddit, user: str, subject: str, body: str) -> None:
     """Send a message to a user."""
     api.redditor(user).message(subject, body)
 
+
+def test_message(api: praw.Reddit) -> None:
+    """Send a test message to self."""
+    send_message(
+        api=api,
+        user="YaleSocResearch",
+        subject="Test message",
+        body="This is a test message",
+    )
+
+
 if __name__ == "__main__":
     # load data with who to message.
     load_timestamp = sys.argv[1]
@@ -36,6 +47,10 @@ if __name__ == "__main__":
     labeled_data = pd.read_csv(labeled_data_filepath)
 
     api = init_api_access()
+
+    test_message()
+
+    breakpoint()
 
     has_been_messaged_col = []
 

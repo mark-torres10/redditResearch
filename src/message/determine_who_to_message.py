@@ -36,12 +36,16 @@ if __name__ == "__main__":
     )
 
     # dump results of messaging
-    output_filepath = os.path.join(
-        MESSAGES_ROOT_PATH, load_timestamp, WHO_TO_MESSAGE_FILENAME
-    )
+    output_directory = os.path.join(MESSAGES_ROOT_PATH, load_timestamp, '')
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
+    output_filepath = os.path.join(output_directory, WHO_TO_MESSAGE_FILENAME)
+
+    breakpoint()
 
     labeled_data.to_csv(output_filepath)
 
-    logger.info(
+    print(
         f"Done determining who to message, for data labeled on timestamp {load_timestamp}" # noqa
     )

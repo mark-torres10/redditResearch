@@ -65,7 +65,7 @@ HAS_BEEN_MESSAGED_COL = "has_been_messaged"
 def balance_posts(labels: List[int], min_count: int) -> List[int]:
     # determine whether the 0s or the 1s is smaller. Assign all those as
     # to message
-    min_label: 1 if sum(labels) == min_count else 0
+    min_label = 1 if sum(labels) == min_count else 0
     
     to_message_lst = [0] * len(labels)
 
@@ -92,7 +92,7 @@ def determine_which_posts_to_message(
     balance_strategy: Optional[str] = "equal"
 ) -> pd.DataFrame:
     """Given a df with labeled data."""
-    label_col = labeled_data[LABEL_COL].tolist()
+    label_col = labeled_data[LABEL_COL]
     if balance_strategy == "equal":
         min_count = label_col.value_counts().min()
     to_message_list = balance_posts(label_col, min_count)
