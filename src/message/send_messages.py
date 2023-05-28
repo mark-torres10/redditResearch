@@ -20,12 +20,19 @@ from message import helper
 
 logger = RedditLogger(name=__name__)
 
-def create_message_body(name: str, date: str, post: str) -> str:
+def create_message_body(
+    name: str, date: str, post: str, subreddit: str, permalink: str
+) -> str:
     """Creates message body."""
-    return helper.AUTHOR_DM_SCRIPT.format(name=name, date=date, post=post)
+    return helper.AUTHOR_DM_SCRIPT.format(
+        name=name, date=date, post=post, subreddit=subreddit,
+        permalink=permalink
+    )
 
 
-def send_message(api: praw.Reddit, user: str, subject: str, body: str) -> None:
+def send_message(
+    api: praw.Reddit, user: str, subject: str, body: str
+) -> None:
     """Send a message to a user."""
     api.redditor(user).message(subject, body)
 

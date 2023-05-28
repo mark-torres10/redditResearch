@@ -14,9 +14,11 @@ AUTHOR_DM_SCRIPT = """
     media. Would you like to answer a few questions to help us with our
     research? Your response will remain anonymous. 
 
-    You posted the following message on {date}:
+    You posted the following message on {date} in the {subreddit} subreddit:
 
     {post}
+
+    (link {permalink})
 
     Take a moment to think about what was happening at the time you posted.
     Think about who you were interacting with online, and what you were reading
