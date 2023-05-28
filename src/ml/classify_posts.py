@@ -70,8 +70,6 @@ if __name__ == "__main__":
                 output_dict[enrichment_col] = transform_func(post[col_input])
             post_dict_subset.append(output_dict)
             texts_list.append(post[POST_TEXT_COLNAME])
-    
-    breakpoint()
 
     probs: List[List[int]] = [] # nested list, e.g., [[0.2], [0.5]]
     labels: List[int] = [] # e.g., [0, 1]
@@ -87,7 +85,7 @@ if __name__ == "__main__":
             probs.append(prob)
             labels.append(label)
         except Exception as e:
-            logger.info("""
+            print("""
                 Unable to classify text at position {idx}. Text details:
 
                 Text preview: {text_preview}
@@ -110,7 +108,7 @@ if __name__ == "__main__":
         execution_time_seconds - (60 * execution_time_minutes)
     )
 
-    logger.info(
+    print(
         "Tried to classify {count} posts. Succeeded in {num_success}, failed in {num_fail}".format( # noqa
             count=len(texts_list),
             num_success=len(texts_list)-num_text_unable_to_classify,
@@ -118,7 +116,7 @@ if __name__ == "__main__":
         )
     )
 
-    logger.info(f"""
+    print(f"""
         Label metrics:
             - Number of posts labeled: {len(texts_list)}
             - Number of positive labels: {sum(labels)}
@@ -137,8 +135,7 @@ if __name__ == "__main__":
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    breakpoint()
     output_filepath = os.path.join(output_directory, LABELED_DATA_FILENAME)
     labeled_df.to_csv(output_filepath)
 
-    logger.info(f"Done classifying data synced on timestamp {load_timestamp}")
+    print(f"Done classifying data synced on timestamp {load_timestamp}")
