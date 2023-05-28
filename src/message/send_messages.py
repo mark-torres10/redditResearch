@@ -1,4 +1,8 @@
-"""Given a list of users to message, send them a message."""
+"""Given a list of users to message, send them a message.
+
+Example usage:
+    python send_messages.py 2023-03-20_1438
+"""
 import os
 import sys
 
@@ -12,23 +16,18 @@ from message.constants import (
 import pandas as pd
 import praw
 
-from message.helper import HAS_BEEN_MESSAGED_COL, TO_MESSAGE_COL
+from message import helper
 
 logger = RedditLogger(name=__name__)
+
+def create_message_body(name: str, date: str, post: str) -> str:
+    """Creates message body."""
+    return helper.AUTHOR_DM_SCRIPT.format(name=name, date=date, post=post)
+
 
 def send_message(api: praw.Reddit, user: str, subject: str, body: str) -> None:
     """Send a message to a user."""
     api.redditor(user).message(subject, body)
-
-
-def test_message(api: praw.Reddit) -> None:
-    """Send a test message to self."""
-    send_message(
-        api=api,
-        user="YaleSocResearch",
-        subject="Test message",
-        body="This is a test message",
-    )
 
 
 if __name__ == "__main__":
@@ -48,15 +47,13 @@ if __name__ == "__main__":
 
     api = init_api_access()
 
-    test_message()
-
     breakpoint()
 
     has_been_messaged_col = []
 
     for idx, row in enumerate(labeled_data.iterrows()):
         id_col = [""] # TODO: add correct ID column
-        if row[TO_MESSAGE_COL] == 1:
+        if row[helper.TO_MESSAGE_COL] == 1:
             try:
                 # send_message(api, )
                 has_been_messaged_col.append(1)
@@ -69,7 +66,7 @@ if __name__ == "__main__":
                 has_been_messaged_col.append(0)
                 continue
     
-    labeled_data[HAS_BEEN_MESSAGED_COL] = has_been_messaged_col
+    labeled_data[helper.HAS_BEEN_MESSAGED_COL] = has_been_messaged_col
 
     output_filepath = os.path.join(
         MESSAGES_ROOT_PATH, load_timestamp, SENT_MESSAGES_FILENAME

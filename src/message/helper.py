@@ -5,6 +5,8 @@ import pandas as pd
 
 from ml.constants import LABEL_COL
 
+AUTHOR_DM_SUBJECT_LINE = "Test Author DM Subject Line"
+
 AUTHOR_DM_SCRIPT = """
     Hi {name},
 
@@ -32,6 +34,8 @@ AUTHOR_DM_SCRIPT = """
     3
     4
 """ # noqa
+
+OBSERVER_DM_SUBJECT_LINE = "Test Observer DM Subject Line"
 
 OBSERVER_DM_SCRIPT = """
     Hi {name},
