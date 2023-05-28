@@ -1,3 +1,10 @@
+"""
+Classifies a previously synced set of posts. Dumps the labels in a new
+directory.
+
+Example usage:
+    python classify_posts.py 2023-03-20_1438
+"""
 import sys
 import time
 from typing import Dict, List

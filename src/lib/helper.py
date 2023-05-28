@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-ROOT_DIR = "/Users/marktorres/Documents/work/redditResearch/"
+ROOT_DIR = "/Users/mark/Documents/work/redditResearch/"
 CODE_DIR = os.path.join(ROOT_DIR, "src")
 
 def write_dict_list_to_csv(dict_list: List[Dict], write_path: str) -> None:
