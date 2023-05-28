@@ -102,6 +102,13 @@ def determine_which_posts_to_message(
     to_message_list = balance_posts(label_col, min_count)
     labeled_data[TO_MESSAGE_COL] = to_message_list
 
+    print(
+        f"""
+            Number of posts: {len(to_message_list)}\n
+            Number to DM: {sum(to_message_list)}
+        """
+    )
+
     return labeled_data
 
 def transform_permalink_to_link(permalink: str) -> str:

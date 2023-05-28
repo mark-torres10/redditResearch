@@ -38,11 +38,9 @@ def send_message(
 if __name__ == "__main__":
     # load data with who to message.
     load_timestamp = sys.argv[1]
-
     timestamp_dir = os.path.join(
         constants.MESSAGES_ROOT_PATH, load_timestamp
     )
-
     if not os.path.exists(timestamp_dir):
         logger.error(f"Labeled data timestamp directory {load_timestamp} does not exist")
         sys.exit(1)
@@ -51,9 +49,7 @@ if __name__ == "__main__":
         timestamp_dir, constants.WHO_TO_MESSAGE_FILENAME
     )
     labeled_data = pd.read_csv(labeled_data_filepath)
-
     api = init_api_access()
-
     has_been_messaged_col = []
 
     for row_tuple in labeled_data.iterrows():
@@ -64,8 +60,10 @@ if __name__ == "__main__":
         body = row["body"]
         permalink = row["permalink"]
         full_link = helper.transform_permalink_to_link(permalink)
-    
-        if row[constants.TO_MESSAGE_COL] == 1:
+
+        should_message_flag = row[constants.TO_MESSAGE_COL]
+
+        if should_message_flag == 1:
             try:
                 message_body = create_message_body(
                     name=author_screen_name,
@@ -80,13 +78,20 @@ if __name__ == "__main__":
                 )
                 has_been_messaged_col.append(1)
             except Exception as e:
-                logger.info(
+                print(
                     "Unable to message row {row} with id {id} for reason {e}".format( # noqa
                         row=idx, id=id, e=e
                     )
                 )
                 has_been_messaged_col.append(0)
                 continue
+
+    print(
+        "Messaged {sum_messaged} out of {sum_possible} total possible".format(
+            sum_messaged=sum(has_been_messaged_col),
+            sum_possible=labeled_data.shape[0]
+        )
+    )
     
     labeled_data[constants.HAS_BEEN_MESSAGED_COL] = has_been_messaged_col
 
