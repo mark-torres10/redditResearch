@@ -20,9 +20,10 @@ from ml.constants import (
 from ml.inference import (
     classify_text, load_default_embedding_and_tokenizer
 )
+from ml.transformations import MAP_COL_TO_TRANSFORMATION
 from sync.constants import (
-    COLS_TO_IDENTIFY_POST, POST_TEXT_COLNAME, POSTS_COLNAME,
-    SYNC_RESULTS_FILENAME, SYNC_ROOT_PATH
+    API_FIELDS_TO_REMAPPED_FIELDS, COLS_TO_IDENTIFY_POST, POST_TEXT_COLNAME,
+    POSTS_COLNAME, SYNC_RESULTS_FILENAME, SYNC_ROOT_PATH
 )
 
 logger = RedditLogger(name=__name__)
@@ -56,10 +57,21 @@ if __name__ == "__main__":
     for post_list in posts_dict_list:
         for post in post_list:
             output_dict = {}
+            # get necessary fields from raw input
             for col in COLS_TO_IDENTIFY_POST:
-                output_dict[col] = post[col]
+                col_name_remapped = API_FIELDS_TO_REMAPPED_FIELDS.get(col, col)
+                output_dict[col_name_remapped] = post[col]
+            # add any enrichment + supplementary fields, as necessary
+            for (enrichment_col, transformation_dict) in (
+                MAP_COL_TO_TRANSFORMATION.items()
+            ):
+                col_input = transformation_dict["original_col"]
+                transform_func = transformation_dict["transform_func"]
+                output_dict[enrichment_col] = transform_func(post[col_input])
             post_dict_subset.append(output_dict)
             texts_list.append(post[POST_TEXT_COLNAME])
+    
+    breakpoint()
 
     probs: List[List[int]] = [] # nested list, e.g., [[0.2], [0.5]]
     labels: List[int] = [] # e.g., [0, 1]
@@ -125,6 +137,7 @@ if __name__ == "__main__":
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
+    breakpoint()
     output_filepath = os.path.join(output_directory, LABELED_DATA_FILENAME)
     labeled_df.to_csv(output_filepath)
 

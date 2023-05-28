@@ -14,12 +14,12 @@ POST_TEXT_COLNAME = "body"
 
 # columns required to identify the post (e.g., id, author, thread, link)
 COLS_TO_IDENTIFY_POST = [
-    "id", "author", "author_fullname", "body", "permalink"
+    "id", "author", "author_fullname", "body", "permalink", "created_utc"
 ]
 
 # some field names from the Reddit API are ambiguous. Remapping these for
 # our purposes. Keys=Reddit API field names, Values=remapped values.
 API_FIELDS_TO_REMAPPED_FIELDS = {
-    "author": "author_name",
-    "author_fullname": "author_id",
+    "author": "author_screen_name",
+    "author_fullname": "author_id"
 }
