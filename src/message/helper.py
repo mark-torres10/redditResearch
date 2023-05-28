@@ -66,25 +66,26 @@ OBSERVER_DM_SCRIPT = """
     1
 """
 
-def balance_posts(labels: List[int], min_count: int) -> List[int]:
+def balance_posts(labels: pd.Series, min_count: int) -> List[int]:
     # determine whether the 0s or the 1s is smaller. Assign all those as
     # to message
-    min_label = 1 if sum(labels) == min_count else 0
+    labels_list = labels.tolist()
+    min_label = 1 if sum(labels_list) == min_count else 0
     
-    to_message_lst = [0] * len(labels)
+    to_message_lst = [0] * len(labels_list)
 
     max_label_idx_lst = []
 
     # all the rows with the min_label should be messaged.
-    for idx, label in enumerate(labels):
+    for idx, label in enumerate(labels_list):
         if label == min_label:
             to_message_lst[idx] = 1
         else:
             max_label_idx_lst.append(idx)
-    
+
     # shuffle the max_label_idx_lst, take the first [:min_count] labels
     random.shuffle(max_label_idx_lst)
-    max_labels_idxs_to_message = max_label_idx_lst[min_count:]
+    max_labels_idxs_to_message = max_label_idx_lst[:min_count]
     for idx in max_labels_idxs_to_message:
         to_message_lst[idx] = 1
     
