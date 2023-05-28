@@ -7,9 +7,8 @@ import csv
 import datetime
 import json
 import os
-import requests
 import sys
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
 from lib.redditLogging import RedditLogger
 from lib.reddit import init_api_access
@@ -20,6 +19,12 @@ REDDIT_BASE_URL = "https://www.reddit.com"
 
 logger = RedditLogger(name=__name__)
 
+def is_json_serializable(value):
+    try:
+        json.dumps(value, cls=json.JSONEncoder)
+        return True
+    except (TypeError, OverflowError):
+        return False
 
 def create_or_use_default_directory(directory: Optional[str] = None) -> str:
     if not directory:
@@ -79,7 +84,11 @@ if __name__ == "__main__":
         for submission in thread.comments[:num_posts_per_thread]:
             print(f"Post: {submission.body}")
             print("-----")
-            posts_dict_list.append(submission.__dict__)
+            output_dict = {}
+            for field, value in submission.__dict__.items():
+                if is_json_serializable(value):
+                    output_dict[field] = value
+            posts_dict_list.append(output_dict)
     
     metadata_dict = {
         "subreddit": subreddit,
@@ -91,4 +100,6 @@ if __name__ == "__main__":
 
     write_results_to_jsonl(posts_dict_list)
     write_metadata_file(metadata_dict=metadata_dict)
-    print("Finished syncing data from Reddit.")
+    print(
+        f"Finished syncing data from Reddit for timestamp {CURRENT_TIME_STR}"
+    )

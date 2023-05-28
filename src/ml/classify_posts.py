@@ -45,31 +45,32 @@ if __name__ == "__main__":
     sync_data_jsons = read_jsonl_as_list_dicts(sync_data_filepath)
     sync_data = pd.DataFrame(sync_data_jsons)
 
-    # each row corresponds to a thread. The `posts` field corresponds to the
-    # posts in the thread. Let's get these posts
-    posts_dict_list: List[List[Dict]]
-    posts_dict_list = sync_data[POSTS_COLNAME]
-
     # for each post, we only want the columns needed to identify them
     post_dict_subset: List[Dict] = []
     texts_list: List[str] = []
 
-    for post_list in posts_dict_list:
-        for post in post_list:
-            output_dict = {}
-            # get necessary fields from raw input
-            for col in COLS_TO_IDENTIFY_POST:
-                col_name_remapped = API_FIELDS_TO_REMAPPED_FIELDS.get(col, col)
-                output_dict[col_name_remapped] = post[col]
-            # add any enrichment + supplementary fields, as necessary
-            for (enrichment_col, transformation_dict) in (
-                MAP_COL_TO_TRANSFORMATION.items()
-            ):
-                col_input = transformation_dict["original_col"]
-                transform_func = transformation_dict["transform_func"]
-                output_dict[enrichment_col] = transform_func(post[col_input])
-            post_dict_subset.append(output_dict)
-            texts_list.append(post[POST_TEXT_COLNAME])
+    for row_tuple in sync_data.iterrows():
+        idx, row = row_tuple
+        if idx % 10 == 0:
+            print(
+                "Processing row {idx} out of {total}".format(
+                    idx=idx, total=len(sync_data)
+                )
+            )
+        output_dict = {}
+        # get necessary fields from raw input
+        for col in COLS_TO_IDENTIFY_POST:
+            col_name_remapped = API_FIELDS_TO_REMAPPED_FIELDS.get(col, col)
+            output_dict[col_name_remapped] = row[col]
+        # add any enrichment + supplementary fields, as necessary
+        for (enrichment_col, transformation_dict) in (
+            MAP_COL_TO_TRANSFORMATION.items()
+        ):
+            col_input = transformation_dict["original_col"]
+            transform_func = transformation_dict["transform_func"]
+            output_dict[enrichment_col] = transform_func(row[col_input])
+        post_dict_subset.append(output_dict)
+        texts_list.append(row[POST_TEXT_COLNAME])
 
     probs: List[List[int]] = [] # nested list, e.g., [[0.2], [0.5]]
     labels: List[int] = [] # e.g., [0, 1]
