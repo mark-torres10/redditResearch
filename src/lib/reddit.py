@@ -33,12 +33,18 @@ def lazy_load_access_token(func: Callable) -> Callable:
 
     return inner
 
-def init_api_access() -> praw.Reddit:
+def init_api_access(rate_limit_seconds: int=60) -> praw.Reddit:
+    """Inits Reddit API access with `praw`.
+    
+    Sets default rate limit as 1 minute, since this is the rate limit for
+    the `privatemessages` DM endpoint, it seems.
+    """
     return praw.Reddit(
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
         refresh_token=REFRESH_TOKEN,
         user_agent=DEFAULT_USER_AGENT,
+        ratelimit_seconds=rate_limit_seconds
     )
 
 def authorize_api_access(api: praw.Reddit) -> None:
