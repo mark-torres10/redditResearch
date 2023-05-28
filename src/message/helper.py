@@ -7,7 +7,7 @@ from lib.helper import BASE_REDDIT_URL
 from message.constants import TO_MESSAGE_COL
 from ml.constants import LABEL_COL
 
-AUTHOR_DM_SUBJECT_LINE = "Test Author DM Subject Line"
+AUTHOR_DM_SUBJECT_LINE = "Yale Researchers Looking to Learn More About Your Beliefs"
 
 AUTHOR_DM_SCRIPT = """
     Hi {name},
