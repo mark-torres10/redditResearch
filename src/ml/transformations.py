@@ -16,3 +16,5 @@ MAP_COL_TO_TRANSFORMATION = {
         "transform_func": convert_utc_timestamp_to_datetime_string
     }
 }
+
+TRANSFORMATION_FIELDS_LIST = ["created_utc_string"]

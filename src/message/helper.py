@@ -3,6 +3,8 @@ from typing import List, Optional
 
 import pandas as pd
 
+from lib.helper import BASE_REDDIT_URL
+from message.constants import TO_MESSAGE_COL
 from ml.constants import LABEL_COL
 
 AUTHOR_DM_SUBJECT_LINE = "Test Author DM Subject Line"
@@ -64,10 +66,6 @@ OBSERVER_DM_SCRIPT = """
     1
 """
 
-TO_MESSAGE_COL = "to_message_flag"
-
-HAS_BEEN_MESSAGED_COL = "has_been_messaged"
-
 def balance_posts(labels: List[int], min_count: int) -> List[int]:
     # determine whether the 0s or the 1s is smaller. Assign all those as
     # to message
@@ -105,3 +103,6 @@ def determine_which_posts_to_message(
     labeled_data[TO_MESSAGE_COL] = to_message_list
 
     return labeled_data
+
+def transform_permalink_to_link(permalink: str) -> str:
+    return BASE_REDDIT_URL + permalink

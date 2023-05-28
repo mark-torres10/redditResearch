@@ -41,9 +41,6 @@ if __name__ == "__main__":
         os.makedirs(output_directory)
 
     output_filepath = os.path.join(output_directory, WHO_TO_MESSAGE_FILENAME)
-
-    breakpoint()
-
     labeled_data.to_csv(output_filepath)
 
     print(
