@@ -88,12 +88,17 @@ if __name__ == "__main__":
             for field, value in submission.__dict__.items():
                 if is_json_serializable(value):
                     output_dict[field] = value
-            posts_dict_list.append(output_dict)
 
             # add modified fields
-            user_screen_name = api.redditor(submission.author).name.name
-            output_dict["author"] = user_screen_name
+            if submission.author:
+                user_screen_name = api.redditor(submission.author).name.name
+                output_dict["author"] = user_screen_name
+            else:
+                print(f"No author for post with id={submission.id}, likely deleted submission...") # noqa
+                continue
     
+            posts_dict_list.append(output_dict)
+
     metadata_dict = {
         "subreddit": subreddit,
         "thread_sort_type": "hot",
