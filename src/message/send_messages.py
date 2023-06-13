@@ -4,7 +4,9 @@ Example usage:
     python send_messages.py 2023-03-20_1438
 """
 import os
+import re
 import sys
+import time
 
 
 from lib.reddit import init_api_access
@@ -34,6 +36,34 @@ def send_message(
     """Send a message to a user."""
     api.redditor(user).message(subject, body)
 
+
+def catch_rate_limit_and_sleep(e: praw.exceptions.RedditAPIException) -> None:
+    """Catch rate limit exception.
+    
+    Parses time to wait form the exception string and sleeps for that long.
+    Example rate limit exception string:
+    "Looks like you've been doing that a lot. Take a break for 2 minutes before
+    trying again."
+    """
+    if e.error_type == "RATELIMIT":
+        rate_limit_message = e.message
+        number = re.search(r'\b(\d+)\b', rate_limit_message)
+        try:
+            wait_time_minutes = int(number.group(0))
+            print(
+                f"Hit rate limit, sleeping for {wait_time_minutes} minutes"
+            )
+            time.sleep(wait_time_minutes * 60)
+            time.sleep(1 * 60)
+        except Exception:
+            print(
+                "Unable to parse rate limit message {rate_limit_message}".format(
+                    rate_limit_message=rate_limit_message
+                )
+            )
+            return
+    else:
+        return
 
 if __name__ == "__main__":
     # load data with who to message.
@@ -78,12 +108,16 @@ if __name__ == "__main__":
                 )
                 has_been_messaged_col.append(1)
             except Exception as e:
+                # catch rate limit, skip this row, and hopefully succeed on
+                # messaging the next row
+                # TODO: build retry so it tries messaging this row again.
                 print(
                     "Unable to message row {row} with id {id} for reason {e}".format( # noqa
                         row=idx, id=id, e=e
                     )
                 )
                 has_been_messaged_col.append(0)
+                catch_rate_limit_and_sleep(e)
                 continue
         else:
             has_been_messaged_col.append(0)
