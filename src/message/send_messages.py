@@ -53,8 +53,9 @@ def catch_rate_limit_and_sleep(e: praw.exceptions.RedditAPIException) -> None:
             print(
                 f"Hit rate limit, sleeping for {wait_time_minutes} minutes"
             )
+            # sleep for wait time, then wait 30 seconds to send message
             time.sleep(wait_time_minutes * 60)
-            time.sleep(1 * 60)
+            time.sleep(1 * 30)
         except Exception:
             print(
                 "Unable to parse rate limit message {rate_limit_message}".format(
