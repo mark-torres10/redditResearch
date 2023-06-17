@@ -76,6 +76,9 @@ if __name__ == "__main__":
     previously_messaged_users_df = pd.read_csv(
         PREVIOUSLY_MESSAGED_USERS_FILENAME
     )
+    previously_messaged_author_screen_names_list = (
+        previously_messaged_users_df["author_screen_name"].tolist()
+    )
     # load data with who to message.
     load_timestamp = sys.argv[1]
     timestamp_dir = os.path.join(
@@ -102,6 +105,10 @@ if __name__ == "__main__":
         full_link = helper.transform_permalink_to_link(permalink)
 
         should_message_flag = row[constants.TO_MESSAGE_COL]
+
+        if author_screen_name in previously_messaged_author_screen_names_list:
+            print(f"Author {author_screen_name} has been messaged before. Skipping...") # noqa
+            has_been_messaged_col.append(1)
 
         if should_message_flag == 1:
             try:
