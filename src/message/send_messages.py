@@ -109,6 +109,7 @@ if __name__ == "__main__":
         if author_screen_name in previously_messaged_author_screen_names_list:
             print(f"Author {author_screen_name} has been messaged before. Skipping...") # noqa
             has_been_messaged_col.append(1)
+            continue
 
         if should_message_flag == 1:
             try:
