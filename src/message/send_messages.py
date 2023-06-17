@@ -11,7 +11,7 @@ import time
 
 from lib.reddit import init_api_access
 from lib.redditLogging import RedditLogger
-from message import constants
+from message import constants, manage_previously_messaged_users
 
 import pandas as pd
 import praw
@@ -19,6 +19,10 @@ import praw
 from message import helper
 
 logger = RedditLogger(name=__name__)
+
+PREVIOUSLY_MESSAGED_USERS_FILENAME = os.path.join(
+    constants.MESSAGES_ROOT_PATH, constants.ALL_MESSAGED_USERS_FILENAME
+)
 
 def create_message_body(
     name: str, date: str, post: str, subreddit: str, permalink: str
@@ -67,6 +71,11 @@ def catch_rate_limit_and_sleep(e: praw.exceptions.RedditAPIException) -> None:
         return
 
 if __name__ == "__main__":
+    # update list of users who have already been messaged.
+    manage_previously_messaged_users.dump_all_previously_messaged_users_as_csv() # noqa
+    previously_messaged_users_df = pd.read_csv(
+        PREVIOUSLY_MESSAGED_USERS_FILENAME
+    )
     # load data with who to message.
     load_timestamp = sys.argv[1]
     timestamp_dir = os.path.join(
