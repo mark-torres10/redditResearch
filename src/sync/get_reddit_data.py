@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from lib.redditLogging import RedditLogger
 from lib.reddit import init_api_access
+from ml.transformations import convert_utc_timestamp_to_datetime_string
 from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
 
 CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
@@ -75,7 +76,7 @@ if __name__ == "__main__":
 
     subreddit = api.subreddit(subreddit)
     # TODO: support other types, such as controversial/new, not just "hot"
-    hot_threads = subreddit.new(limit=num_threads)
+    hot_threads = subreddit.hot(limit=num_threads)
 
     posts_dict_list = []
 
@@ -83,6 +84,10 @@ if __name__ == "__main__":
         # Retrieve the top posts in each thread
         for submission in thread.comments[:num_posts_per_thread]:
             print(f"Post: {submission.body}")
+            created_utc_string = convert_utc_timestamp_to_datetime_string(
+                submission.created_utc
+            )
+            print(f"Created at: {created_utc_string}")
             print("-----")
             output_dict = {}
             for field, value in submission.__dict__.items():
@@ -101,7 +106,7 @@ if __name__ == "__main__":
 
     metadata_dict = {
         "subreddit": subreddit,
-        "thread_sort_type": "new",
+        "thread_sort_type": "hot",
         "num_threads": num_threads,
         "num_posts_per_thread": num_posts_per_thread,
         "num_total_posts_synced": len(posts_dict_list)
