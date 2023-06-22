@@ -3,8 +3,9 @@ import sys
 from typing import List
 
 def determine_which_posts_to_use(sync_timestamp: str):
-    pass
+    # load messages from sync timestamp
 
+    # write 
 
 def determine_users_to_message() -> List[str]:
     pass
