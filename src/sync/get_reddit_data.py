@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     subreddit = api.subreddit(subreddit)
     # TODO: support other types, such as controversial/new, not just "hot"
-    hot_threads = subreddit.hot(limit=num_threads)
+    hot_threads = subreddit.new(limit=num_threads)
 
     posts_dict_list = []
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     metadata_dict = {
         "subreddit": subreddit,
-        "thread_sort_type": "hot",
+        "thread_sort_type": "new",
         "num_threads": num_threads,
         "num_posts_per_thread": num_posts_per_thread,
         "num_total_posts_synced": len(posts_dict_list)
