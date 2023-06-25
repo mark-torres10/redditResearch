@@ -105,23 +105,37 @@ def manually_validate_responses(
         check = ''
         valid_checks = ['y', 'n', 'q']
         while check not in valid_checks:
+            base_response_obj = {
+                "message_id": response.id,
+                "author_name": response.author_name,
+                "author_t2_id": response.author_t2_id,
+                "subject": response.subject,
+                "response_body": response.response_body,
+                "created_utc_string": response.created_utc_string
+            }
             check = input("Is this a valid response? (y=yes, n=no, q=quit)")
             if check == 'y':
                 validated_score = input(
                     "What are their scores? Give as 4 digit string"
                 )
-                output_obj = {
-                    "message_id": response.id,
-                    "author_name": response.author_name,
-                    "author_t2_id": response.author_t2_id,
-                    "subject": response.subject,
-                    "response_body": response.response_body,
-                    "created_utc_string": response.created_utc_string,
-                    "validated_score": validated_score
+                updated_response_obj = {
+                    **{base_response_obj},
+                    **{
+                        "is_valid_response": True,
+                        "validated_score": validated_score
+                    }
                 }
-                validated_responses.append(output_obj)
+                validated_responses.append(updated_response_obj)
                 check = ''
             if check == 'n':
+                updated_response_obj = {
+                    **{base_response_obj},
+                    **{
+                        "is_valid_response": False,
+                        "validated_score": None
+                    }
+                }
+                validated_responses.append(updated_response_obj)
                 print(f"{response.response_body} not valid response, skipping...") # noqa
                 check = ''
             if check == 'q':
