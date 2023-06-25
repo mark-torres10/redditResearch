@@ -6,24 +6,45 @@ posts have self-reported scores from their respective authors.
 We want to record the message, message ID, the author, our original message,
 the date that our DM was sent, and the date that we received the response.
 """
+import datetime
 import os
 import re
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
 import praw
 
-from get_responses.constants import (
-    NUMBER_REGEX_PATTERN, RESPONSES_ROOT_PATH, VALIDATED_RESPONSES_FILENAMES
-)
+from get_responses import constants
 from lib.reddit import init_api_access
 from ml.transformations import convert_utc_timestamp_to_datetime_string
 
-DEFAULT_MESSAGED_USERS_FILEPATH = os.path.join(
-    RESPONSES_ROOT_PATH, VALIDATED_RESPONSES_FILENAMES
+ALL_VALIDATED_RESPONSES_FILEPATH = os.path.join(
+    constants.VALIDATED_RESPONSES_ROOT_PATH,
+    constants.ALL_VALIDATED_RESPONSES_FILENAME
+)
+CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
+SESSION_VALIDATED_RESPONSES_FILEPATH = os.path.join(
+    constants.VALIDATED_RESPONSES_ROOT_PATH,
+    constants.SESSION_VALIDATED_RESPONSES_FILENAME.format(
+        timestamp=CURRENT_TIME_STR
+    )
 )
 
 api = init_api_access()
+
+
+def get_previous_labeling_session_data() -> List[Dict]:
+    """Load in previous labeling session data. For each session, load
+    as a pandas df and then convert to a list of dicts."""
+    list_previously_labeled_data = []
+    for filename in os.listdir(constants.VALIDATED_RESPONSES_ROOT_PATH):
+        if "VALIDATED_RESPONSES_ROOT_FILENAME" in filename:
+            df = pd.DataFrame(
+                os.path.join(constants.VALIDATED_RESPONSES_ROOT_PATH, filename)
+            )
+            list_dict = df.to_dict()
+            list_previously_labeled_data.extend(list_dict)
+    return list_previously_labeled_data
 
 
 def get_message_obj_from_id(
@@ -62,7 +83,7 @@ class RedditMessage:
         """Uses regex to see if the respnse could likely be valid. If the
         response has a number somewhere in it, it's possible that the response
         could be valid."""
-        return bool(re.search(NUMBER_REGEX_PATTERN, response))
+        return bool(re.search(constants.NUMBER_REGEX_PATTERN, response))
 
     @classmethod
     def convert_to_df(self, messages: List) -> pd.DataFrame:
@@ -96,12 +117,19 @@ def manually_validate_responses(
 ) -> List[RedditMessage]:
     """Given the list of possibly valid responses, validate those responses
     manually, add to a pandas df, and write to a .csv file."""
+    # get previously labeled data:
+    previously_labeled_data = get_previous_labeling_session_data()
+    previously_labeled_ids = [data["message_id"] for data in previously_labeled_data] # noqa
+    # validate responses
     validated_responses = []
     total_responses = len(possibly_valid_responses)
     for idx, response in enumerate(possibly_valid_responses):
         print('-' * 5)
         print(f"Validating response {idx} out of {total_responses} responses.")
         print(f"Response body: {response.response_body}")
+        if response.id in previously_labeled_ids:
+            print(f"Skipping {response.id} since it has already been labeled previously.")  # noqa
+            continue
         check = ''
         valid_checks = ['y', 'n', 'q']
         while check not in valid_checks:
@@ -144,11 +172,19 @@ def manually_validate_responses(
             else:
                 print(f"Please provide a valid input. {check} not in [{valid_checks}]") # noqa
     print(f"Validated {total_responses} possibly valid responses.")
+
+    # create and dump file of today's validation session.
     print(
-        f"Writing to df and dumping to .csv file at {DEFAULT_MESSAGED_USERS_FILEPATH}" # noqa
+        f"Writing to df and dumping to .csv file at {SESSION_VALIDATED_RESPONSES_FILEPATH}" # noqa
     )
     validated_responses_df = pd.DataFrame(validated_responses)
-    validated_responses_df.to_csv(DEFAULT_MESSAGED_USERS_FILEPATH)
+    validated_responses_df.to_csv(SESSION_VALIDATED_RESPONSES_FILEPATH)
+
+    # create and dump file of all validation sessions.
+    print(f"Consolidating data from all labeling sessions into one .csv file at {ALL_VALIDATED_RESPONSES_FILEPATH}")
+    all_responses = previously_labeled_data + validated_responses
+    all_responses_df = pd.DataFrame(all_responses)
+    all_responses_df.to_csv(ALL_VALIDATED_RESPONSES_FILEPATH)
 
 
 if __name__ == "__main__":
