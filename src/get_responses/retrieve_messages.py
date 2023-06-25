@@ -69,7 +69,7 @@ class RedditMessage:
         )
         self.replies: List[praw.models.Message] = message.replies
         self.possibly_has_valid_response = (
-            self.check_if_possible_valid_response(self.body)
+            self.check_if_possible_valid_response(self.response_body)
         )
 
 
@@ -79,7 +79,7 @@ class RedditMessage:
         pass
 
     @classmethod
-    def check_if_possible_valid_response(response: str) -> bool:
+    def check_if_possible_valid_response(self, response: str) -> bool:
         """Uses regex to see if the respnse could likely be valid. If the
         response has a number somewhere in it, it's possible that the response
         could be valid."""
@@ -112,34 +112,61 @@ def get_messages_with_possibly_valid_responses(
     return [msg for msg in sent_messages if msg.possibly_has_valid_response]
 
 
+def get_possibly_valid_responses(
+    messages_with_possible_responses: List[RedditMessage]
+) -> List[Dict]:
+    """Returns a dictionary where the keys indicate the original DM that
+    we sent as well as the user's response.
+    
+    Key is the message ID and value is a dictionary of the original DM, original
+    DM object, and the response message."""
+    responses = {}
+    for msg in messages_with_possible_responses:
+        replies = msg.replies
+        replies_body_list = []
+        for reply in replies:
+            replies_body_list.append(reply.body)
+        replies_body = '\n'.join(replies_body_list)
+        responses[msg.message_id] = {
+            "original_message_object": msg,
+            "original_dm": msg.response_body,
+            "response_dm": replies_body
+        }
+    return responses
+
+
 def manually_validate_responses(
-    possibly_valid_responses: List[RedditMessage]
-) -> List[RedditMessage]:
+    previously_labeled_ids: List[str],
+    possibly_valid_responses: List[Dict]
+) -> None:
     """Given the list of possibly valid responses, validate those responses
     manually, add to a pandas df, and write to a .csv file."""
-    # get previously labeled data:
-    previously_labeled_data = get_previous_labeling_session_data()
-    previously_labeled_ids = [data["message_id"] for data in previously_labeled_data] # noqa
-    # validate responses
     validated_responses = []
     total_responses = len(possibly_valid_responses)
-    for idx, response in enumerate(possibly_valid_responses):
+    for idx, (message_id, message_obj) in enumerate(
+        possibly_valid_responses.items()
+    ):
         print('-' * 5)
         print(f"Validating response {idx} out of {total_responses} responses.")
-        print(f"Response body: {response.response_body}")
-        if response.id in previously_labeled_ids:
-            print(f"Skipping {response.id} since it has already been labeled previously.")  # noqa
+
+        message = message_obj["original_message_object"]
+        response_dm = message_obj["response_dm"]
+
+        print(f"Response body: {response_dm}")
+
+        if message_id in previously_labeled_ids:
+            print(f"Skipping {message_id} since it has already been labeled previously.")  # noqa
             continue
         check = ''
         valid_checks = ['y', 'n', 'q']
         while check not in valid_checks:
             base_response_obj = {
-                "message_id": response.id,
-                "author_name": response.author_name,
-                "author_t2_id": response.author_t2_id,
-                "subject": response.subject,
-                "response_body": response.response_body,
-                "created_utc_string": response.created_utc_string
+                "message_id": message_id,
+                "author_name": message.author_name,
+                "author_t2_id": message.author_t2_id,
+                "subject": message.subject,
+                "response_body": message.response_body,
+                "created_utc_string": message.created_utc_string
             }
             check = input("Is this a valid response? (y=yes, n=no, q=quit)")
             if check == 'y':
@@ -147,7 +174,7 @@ def manually_validate_responses(
                     "What are their scores? Give as 4 digit string"
                 )
                 updated_response_obj = {
-                    **{base_response_obj},
+                    **base_response_obj,
                     **{
                         "is_valid_response": True,
                         "validated_score": validated_score
@@ -155,17 +182,19 @@ def manually_validate_responses(
                 }
                 validated_responses.append(updated_response_obj)
                 check = ''
+                continue
             if check == 'n':
                 updated_response_obj = {
-                    **{base_response_obj},
+                    **base_response_obj,
                     **{
                         "is_valid_response": False,
                         "validated_score": None
                     }
                 }
                 validated_responses.append(updated_response_obj)
-                print(f"{response.response_body} not valid response, skipping...") # noqa
+                print(f"{response_dm} not valid response, skipping...")
                 check = ''
+                continue
             if check == 'q':
                 print(f"Quitting labeling session. QAed {idx} out of {total_responses}") # noqa
                 break
@@ -188,5 +217,20 @@ def manually_validate_responses(
 
 
 if __name__ == "__main__":
-    possibly_valid_responses = get_messages_with_possibly_valid_responses(api)
-    manually_validate_responses(possibly_valid_responses)
+    # go through DMs in inbox
+    possibly_valid_messages = get_messages_with_possibly_valid_responses(api)
+    possibly_valid_responses = get_possibly_valid_responses(
+        messages_with_possible_responses=possibly_valid_messages
+    )
+
+    # get previously labeled data:
+    previously_labeled_data = get_previous_labeling_session_data()
+    previously_labeled_ids = [
+        data["message_id"] for data in previously_labeled_data
+    ]
+
+    # do manual QA
+    manually_validate_responses(
+        previously_labeled_ids=previously_labeled_ids,
+        possibly_valid_responses=possibly_valid_responses
+    )
