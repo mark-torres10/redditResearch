@@ -46,10 +46,11 @@ map_users_to_post_id_and_date = {
 }
 
 
-def load_valid_previous_messages() -> List[str]:
+def load_valid_previous_messages() -> pd.DataFrame:
     """Load the IDs of messages that we previously labeled and confirmed were
     valid."""
-    previously_labeled_data = []
+    previously_labeled_ids = []
+    scores = []
     load_dir = constants.VALIDATED_RESPONSES_ROOT_PATH
     for filepath in os.listdir(load_dir):
         df = pd.read_csv(os.path.join(load_dir, filepath))
@@ -58,9 +59,16 @@ def load_valid_previous_messages() -> List[str]:
         valid_ids = [
             id_ for id_, flag in zip(ids, valid_responses_flags) if  flag == 1
         ]
-        previously_labeled_data.extend(valid_ids)
+        valid_scores = [
+            score for score, flag in zip(ids, valid_responses_flags)
+            if  flag == 1
+        ]
+        previously_labeled_ids.extend(valid_ids)
+        scores.extend(valid_scores)
 
-    return previously_labeled_data
+    return pd.DataFrame(
+        zip(previously_labeled_ids, scores), columns=["message_id", "scores"]
+    )
 
 
 def get_author_id_for_message(api: praw.Reddit, message_id: str):
@@ -76,31 +84,38 @@ def get_author_id_for_message(api: praw.Reddit, message_id: str):
 
 
 
-def hydate_message_with_post_and_subreddit_information(author_id: str) -> Dict:
+def hydate_message_with_post_and_subreddit_information(
+    message_info: Dict
+) -> Dict:
     """Given the user and message ID, we can hydrate with post and
     subreddit information.
     """
+    author_id = message_info["author_id"]
     post_info = map_users_to_post_id_and_date.get(author_id, {})
     if not post_info:
         print(f"Author ID {author_id} not found in dataset. Skipping...")
         return
-    return post_info
+    return {**message_info, **post_info}
 
 
-def hydrate_message(api: praw.Reddit, message_id: str):
+def hydrate_message(api: praw.Reddit, message_id: str, score: str):
     author_id = get_author_id_for_message(api, message_id)
+    message_info = {
+        "author_id": author_id,
+        "score": score
+    }
     message_with_hydrated_info = (
-        hydate_message_with_post_and_subreddit_information(
-            author_id
-        )
+        hydate_message_with_post_and_subreddit_information(message_info)
     )
     return message_with_hydrated_info
 
 
-def hydrate_messages(api: praw.Reddit, message_id_list: str):
+def hydrate_messages(
+    api: praw.Reddit, message_id_list: str, score_list: str
+) -> Dict:
     return [
-        hydrate_message(api, message_id)
-        for message_id in message_id_list
+        hydrate_message(api, message_id, score)
+        for (message_id, score) in zip(message_id_list, score_list)
     ]
 
 
@@ -115,8 +130,12 @@ def dump_hydrated_messages_to_csv(hydrated_messages: Dict) -> None:
 
 
 def main():
-    previously_labeled_ids = load_valid_previous_messages()
-    hydrated_messages = hydrate_messages(api, previously_labeled_ids)
+    previous_labeled_data_df = load_valid_previous_messages()
+    previously_labeled_ids = previous_labeled_data_df["message_id"].tolist()
+    previous_scores = previous_labeled_data_df["scores"].tolist()
+    hydrated_messages = hydrate_messages(
+        api, previously_labeled_ids, previous_scores
+    )
     dump_hydrated_messages_to_csv(hydrated_messages)
 
 
