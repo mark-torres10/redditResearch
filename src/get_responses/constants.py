@@ -20,3 +20,4 @@ SESSION_VALIDATED_RESPONSES_FILENAME = (
     f"{VALIDATED_RESPONSES_ROOT_FILENAME}" + "_{timestamp}.csv"
 )
 ALL_VALIDATED_RESPONSES_FILENAME = "validated_responses_all.csv"
+HYDRATED_VALIDATED_RESPONSES_FILENAME = "hydrated_validated_responses.csv"
