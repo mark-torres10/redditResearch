@@ -22,6 +22,7 @@ previous_messages_df = pd.read_csv(PREVIOUS_CONSOLIDATED_MESSAGES_FILENAME)
 
 map_users_to_post_id_and_date = {
     author_id: {
+        "author_id": author_id,
         "post_id": post_id,
         "post_body": post_body,
         "post_permalink": post_permalink,
@@ -62,12 +63,12 @@ def load_valid_previous_messages() -> List[str]:
     return previously_labeled_data
 
 
-def hydrate_message_with_author_id(api: praw.Reddit, message_id: str):
+def get_author_id_for_message(api: praw.Reddit, message_id: str):
     """In our initial code to get the messages that we receive, we didn't
     record the IDs of the users who sent us each message.
     
     In this step, we want to recreate the message object and get the
-    associated user.
+    associated user who sent us the message.
     """
     obj = get_message_obj_from_id(api, message_id)
     author_id = obj.author_fullname
@@ -75,28 +76,22 @@ def hydrate_message_with_author_id(api: praw.Reddit, message_id: str):
 
 
 
-def hydate_message_with_post_and_subreddit_information(
-    message_dict: Dict[str, str]
-) -> Dict:
+def hydate_message_with_post_and_subreddit_information(author_id: str) -> Dict:
     """Given the user and message ID, we can hydrate with post and
     subreddit information.
     """
-    author_id = message_dict["author_id"]
     post_info = map_users_to_post_id_and_date.get(author_id, {})
     if not post_info:
         print(f"Author ID {author_id} not found in dataset. Skipping...")
         return
-    return {
-        **message_dict,
-        **post_info
-    }
+    return post_info
 
 
 def hydrate_message(api: praw.Reddit, message_id: str):
-    message_with_author_id = hydrate_message_with_author_id(api, message_id)
+    author_id = get_author_id_for_message(api, message_id)
     message_with_hydrated_info = (
         hydate_message_with_post_and_subreddit_information(
-            message_with_author_id
+            author_id
         )
     )
     return message_with_hydrated_info
