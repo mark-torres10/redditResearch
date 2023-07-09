@@ -71,6 +71,46 @@ def get_users_in_subreddit(
     return users_lst
 
 
+def get_users_to_post_map(
+    users_in_subreddit: List[str],
+    posts_to_score: List[str]
+) -> List[Dict[str, str]]:
+    """Maps the users to message with the post that we want them to score.
+    
+    Returns as list of dictionaries, which we can transform into a pandas df.
+    """
+    if len(posts_to_score) < constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE:
+        num_posts_desired = constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE
+        raise ValueError(
+            "Not enough posts to score in this subreddit. Please select a "
+            f"subreddit with more posts. Only {len(posts_to_score)} to score, "
+            f"out of {num_posts_desired} posts needed for scoring"
+        )
+    output_lst = []
+    idx = 0
+    for user in users_in_subreddit:
+        row_to_use = df.loc[idx, :]
+        output_lst.append(
+            {
+                "author_id": user["author_id"],
+                "author_name": user["author_name"],
+                "post_id": row_to_use["post_id"],
+                "post_body": row_to_use["post_body"],
+                "post_permalink": row_to_use["post_permalink"],
+                "created_utc_string": row_to_use["created_utc_string"],
+                "label": row_to_use["label"],
+                "score": row_to_use["score"],
+                "subreddit_name_prefixed": row_to_use["subreddit_name_prefixed"] # noqa
+            }
+        )
+        # update iterator
+        idx += 1
+        if idx >= constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE:
+            idx = 0
+    
+    return output_lst
+
+
 if __name__ == "__main__":
     # organize the "hydrated_validated_responses.csv" file by subreddit.
     df = pd.read_csv(
@@ -90,12 +130,14 @@ if __name__ == "__main__":
     df_subreddits["to_message"] = 0
 
     for subreddit in df_subreddits["subreddit_name_prefixed"].unique():
-        subreddit_indices = df[df['subreddit_name_prefixed'] == subreddit].index # noqa
-        df.loc[
+        subreddit_indices = df_subreddits[
+            df_subreddits['subreddit_name_prefixed'] == subreddit
+        ].index
+        df_subreddits.loc[
             subreddit_indices[:constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE],
             'to_message'
         ] = 1
-        df.loc[
+        df_subreddits.loc[
             subreddit_indices[constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE:],
             'to_message'
         ] = 0
@@ -118,33 +160,32 @@ if __name__ == "__main__":
         in df_subreddits["subreddit_name_prefixed"].unique()
     }
 
-    subreddits_prefixed_list = (
-        df_subreddits["subreddit_name_prefixed"].tolist()
-    )
-    users_to_message_list = [
-        subreddit_prefixed_to_user_id_list[subreddit_prefixed]
-        for subreddit_prefixed in subreddits_prefixed_list
-    ]
-    df_subreddits["users_to_message_list"] = users_to_message_list
-
-    # create a new df for each subreddit.
-    subreddit_to_df_map = {
-        subreddit_prefixed: df_subreddits[
-            df_subreddits["subreddit_name_prefixed"] == subreddit_prefixed
-        ]
-        for subreddit_prefixed in subreddits_prefixed_list
+    map_subreddit_to_users_to_message_post_to_message: Dict[str, List[Dict]] = { # noqa
+        subreddit_prefixed: get_users_to_post_map(
+            users_in_subreddit=subreddit_prefixed_to_user_id_list[subreddit_prefixed], # noqa
+            posts_to_score=(
+                df_subreddits[
+                    (df_subreddits["subreddit_name_prefixed"] == subreddit_prefixed) # noqa
+                    & (df_subreddits["to_message"] == 1)
+                ]
+            )
+        )
+        for subreddit_prefixed
+        in df_subreddits["subreddit_name_prefixed"].unique()
     }
 
-    if not os.path.exists(constants.SUBREDDITS_ROOT_PATH):
-        os.mkdir(constants.SUBREDDITS_ROOT_PATH)
-
+    # create a new df for each subreddit.
     # dump each new df into a .csv file, whose name contains the subreddit
     # name as well as a timestamp.
 
     # in a new file, for each of these .csv files we would create the
     # message to send and then message the users.
+    if not os.path.exists(constants.SUBREDDITS_ROOT_PATH):
+        os.mkdir(constants.SUBREDDITS_ROOT_PATH)
 
-    for subreddit_prefixed, subreddit_df in subreddit_to_df_map.items():
+    for (subreddit_prefixed, users_to_message_dict_list) in (
+        map_subreddit_to_users_to_message_post_to_message.items()
+    ):
         subreddit_name = strip_prefix_from_subreddit(subreddit_prefixed)
         subreddit_dir = os.path.join(
             constants.SUBREDDITS_ROOT_PATH, subreddit_name
@@ -154,6 +195,7 @@ if __name__ == "__main__":
         full_filepath = os.path.join(
             subreddit_dir, f"users_to_message_{CURRENT_TIME_STR}.csv"
         )
-        subreddit_df.to_csv(full_filepath)
+        export_df = pd.DataFrame(users_to_message_dict_list)
+        export_df.to_csv(full_filepath)
 
     print("Completed determining which users to message, per subreddit.")

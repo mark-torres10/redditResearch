@@ -1,5 +1,6 @@
 """Given the list of users to message for the observer phase, send the
 messages."""
+import ast
 import os
 import sys
 
@@ -27,8 +28,16 @@ def message_observers_for_subreddit(
         os.path.join(subreddit_users_to_message_dir, filename)
     )
 
+    breakpoint()
+
     has_been_messaged_col = []
 
+    # should be able to just take the first value in this column, as they
+    # all have the same value (it was done like this for convenience sake,
+    # to save 1 additional join or filtering step - developer's choice)
+    users_to_message = ast.literal_eval(df["users_to_message_list"][0])
+
+    # TODO: why is to_message all 0s? This is wrong.
     for row_tuple in df.iterrows():
         idx, row = row_tuple
         # TODO: add logic for sending DMs
@@ -67,10 +76,14 @@ if __name__ == "__main__":
     has_been_messaged_col = []
 
     for subreddit_prefixed in constants.SUBREDDITS_TO_OBSERVE:
-        message_observers_for_subreddit(
-            api=api, subreddit_prefixed=subreddit_prefixed,
-            timestamp=timestamp
-        )
+        try:
+            message_observers_for_subreddit(
+                api=api, subreddit_prefixed=subreddit_prefixed,
+                timestamp=timestamp
+            )
+        except Exception as e:
+            print(e)
+            breakpoint()
 
     print(
         f"Completed sending DMs for observer phase for timestamp {timestamp}"
