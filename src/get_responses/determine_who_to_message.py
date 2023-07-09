@@ -5,7 +5,7 @@ We can randomly message an active subset of the subreddit.
 """
 import datetime
 import os
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
 import praw
@@ -35,7 +35,7 @@ def strip_prefix_from_subreddit(subreddit_prefixed: str) -> str:
 
 def get_users_in_subreddit(
     api: praw.Reddit, subreddit: str, num_users: int
-) -> List[str]:
+) -> List[Dict[str, str]]:
     """Get list of users in the subreddit.
     
     Skip over people who we messaged in the previous phase of the study.
@@ -50,14 +50,24 @@ def get_users_in_subreddit(
     users_lst = []
     num_users_added = 0
     for comment in subreddit.comments(limit=None):
-        if not hasattr(comment, "author_fullname"):
-            continue
-        user_id = comment.author_fullname
+        breakpoint()
         if (
-            user_id not in previously_messaged_user_ids
+            not hasattr(comment, "author_fullname")
+            or not hasattr(comment, "author")
+        ):
+            continue
+        author_id = comment.author_fullname
+        author_name = comment.author.name
+        if (
+            author_id not in previously_messaged_user_ids
             and num_users_added < num_users
         ):
-            users_lst.append(user_id)
+            users_lst.append(
+                {
+                    "author_id": author_id,
+                    "author_name": author_name
+                }
+            )
             num_users_added += 1
     return users_lst
 
