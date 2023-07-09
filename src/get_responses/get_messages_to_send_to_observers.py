@@ -3,6 +3,7 @@ to observers."""
 import os
 from typing import Dict
 
+import numpy as np
 import pandas as pd
 import praw
 
@@ -50,7 +51,7 @@ def load_valid_previous_messages() -> pd.DataFrame:
     """Load the IDs of messages that we previously labeled and confirmed were
     valid."""
     previously_labeled_ids = []
-    scores = []
+    previously_labeled_scores = []
     load_dir = constants.VALIDATED_RESPONSES_ROOT_PATH
     for filepath in os.listdir(load_dir):
         df = pd.read_csv(os.path.join(load_dir, filepath))
@@ -58,17 +59,18 @@ def load_valid_previous_messages() -> pd.DataFrame:
         scores = df["scores"].tolist()
         valid_responses_flags = df["is_valid_response"].tolist()
         valid_ids = [
-            id_ for id_, flag in zip(ids, valid_responses_flags) if  flag == 1
+            id_ for id_, flag in zip(ids, valid_responses_flags) if flag == 1
         ]
         valid_scores = [
             score for score, flag in zip(scores, valid_responses_flags)
-            if  flag == 1
+            if flag == 1
         ]
         previously_labeled_ids.extend(valid_ids)
-        scores.extend(valid_scores)
+        previously_labeled_scores.extend(valid_scores)
 
     return pd.DataFrame(
-        zip(previously_labeled_ids, scores), columns=["message_id", "scores"]
+        zip(previously_labeled_ids, previously_labeled_scores),
+        columns=["message_id", "scores"]
     )
 
 
