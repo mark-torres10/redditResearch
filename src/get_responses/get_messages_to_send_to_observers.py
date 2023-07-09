@@ -1,7 +1,7 @@
 """After we have the messages from poster, get the messages to send
 to observers."""
 import os
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import pandas as pd
 import praw
