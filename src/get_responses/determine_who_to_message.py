@@ -50,7 +50,6 @@ def get_users_in_subreddit(
     users_lst = []
     num_users_added = 0
     for comment in subreddit.comments(limit=None):
-        breakpoint()
         if (
             not hasattr(comment, "author_fullname")
             or not hasattr(comment, "author")
