@@ -40,7 +40,6 @@ def message_observers_for_subreddit(
 
     has_been_messaged_col = []
 
-    # TODO: why is to_message all 0s? This is wrong.
     for row_tuple in df.iterrows():
         idx, row = row_tuple
         # TODO: add logic for sending DMs
@@ -53,8 +52,8 @@ def message_observers_for_subreddit(
                 name=row["author_name"],
                 subreddit_name=row["subreddit_name_prefixed"],
                 date=row["created_utc_string"],
-                post=row["body"],
-                permalink=transform_permalink_to_link(row["permalink"])
+                post=row["post_body"],
+                permalink=transform_permalink_to_link(row["post_permalink"])
             )
             send_message(
                 api=api,
@@ -68,8 +67,8 @@ def message_observers_for_subreddit(
             # messaging the next row
             # TODO: build retry so it tries messaging this row again.
             print(
-                "Unable to message row {row} with id {id} for reason {e}".format( # noqa
-                    row=idx, id=id, e=e
+                "Unable to message row {row} with user id {id} for reason {e}".format( # noqa
+                    row=idx, id=row["author_id"], e=e
                 )
             )
             has_been_messaged_col.append(0)
@@ -85,9 +84,13 @@ def message_observers_for_subreddit(
     )
 
     # dump results to new path
+    if not os.path.exists(constants.MESSAGED_OBSERVERS_PATH):
+        os.mkdir(constants.MESSAGED_OBSERVERS_PATH)
+
     subreddit_export_dir = os.path.join(
         constants.MESSAGED_OBSERVERS_PATH, subreddit_stripped
     )
+
     if not os.path.exists(subreddit_export_dir):
         os.mkdir(subreddit_export_dir)
 
@@ -111,26 +114,29 @@ if __name__ == "__main__":
     # TODO: update list of users who have already been messaged.
     # TODO: get users who have already been messaged.
 
-    if subreddit in constants.SUBREDDITS_TO_OBSERVE:
-        try:
-            message_observers_for_subreddit(
-                api=api, subreddit_prefixed=subreddit,
-                timestamp=timestamp
-            )
-        except Exception as e:
-            print(e)
-    elif subreddit == "all":
-        for subreddit_prefixed in constants.SUBREDDITS_TO_OBSERVE:
+    try:
+        if subreddit in constants.SUBREDDITS_TO_OBSERVE:
             try:
                 message_observers_for_subreddit(
-                    api=api, subreddit_prefixed=subreddit_prefixed,
+                    api=api, subreddit_prefixed=subreddit,
                     timestamp=timestamp
                 )
             except Exception as e:
                 print(e)
-    else:
-        raise ValueError(f"Invalid argument passed in for `subreddit`: {subreddit}")
+        elif subreddit == "all":
+            for subreddit_prefixed in constants.SUBREDDITS_TO_OBSERVE:
+                try:
+                    message_observers_for_subreddit(
+                        api=api, subreddit_prefixed=subreddit_prefixed,
+                        timestamp=timestamp
+                    )
+                except Exception as e:
+                    print(e)
+        else:
+            raise ValueError(f"Invalid argument passed in for `subreddit`: {subreddit}")
 
-    print(
-        f"Completed sending DMs for observer phase for timestamp {timestamp}"
-    )
+        print(
+            f"Completed sending DMs for observer phase for timestamp {timestamp}"
+        )
+    except Exception as e:
+        print(f"Unable to complete sending DMs for observer phase: {e}")
