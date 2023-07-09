@@ -55,12 +55,13 @@ def load_valid_previous_messages() -> pd.DataFrame:
     for filepath in os.listdir(load_dir):
         df = pd.read_csv(os.path.join(load_dir, filepath))
         ids = df["message_id"].tolist()
+        scores = df["scores"].tolist()
         valid_responses_flags = df["is_valid_response"].tolist()
         valid_ids = [
             id_ for id_, flag in zip(ids, valid_responses_flags) if  flag == 1
         ]
         valid_scores = [
-            score for score, flag in zip(ids, valid_responses_flags)
+            score for score, flag in zip(scores, valid_responses_flags)
             if  flag == 1
         ]
         previously_labeled_ids.extend(valid_ids)
