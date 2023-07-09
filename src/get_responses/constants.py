@@ -9,6 +9,9 @@ SUBREDDITS_ROOT_PATH = os.path.join(RESPONSES_ROOT_PATH, "subreddits")
 VALIDATED_RESPONSES_ROOT_PATH = os.path.join(
     RESPONSES_ROOT_PATH, "validated_responses_dir"
 )
+MESSAGED_OBSERVERS_PATH = os.path.join(
+    RESPONSES_ROOT_PATH, "messaged_observers"
+)
 RESEARCH_PHASE_TO_SUBJECT_LINE_MAP = {
     "messaging": AUTHOR_DM_SUBJECT_LINE,
     "observer": OBSERVER_DM_SUBJECT_LINE
