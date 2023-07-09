@@ -39,33 +39,6 @@ AUTHOR_DM_SCRIPT = """
     4
 """ # noqa
 
-OBSERVER_DM_SUBJECT_LINE = "Test Observer DM Subject Line"
-
-OBSERVER_DM_SCRIPT = """
-    Hi {name},
-
-    I'm a researcher at Yale University, and my research group is interested in
-    how people express themselves on social media. Would you like to answer a
-    few questions to help us with our research? Your response will remain
-    anonymous. 
-
-    The following message was posted in the {subreddit_name} subreddit on {date}:
-    
-    {post}
-
-    Please answer the following:
-
-    1. How outraged did you think the message author was on a 1-7 scale?
-    (1 = not at all, 4 = somewhat, 7 = very)
-
-    2. How happy did you think the message author was on a 1-7?
-    (1 = not at all, 4 = somewhat, 7 = very)
-
-    You can simply respond with one answer per line such as:
-    5
-    1
-"""
-
 def balance_posts(labels: pd.Series, min_count: int) -> List[int]:
     # determine whether the 0s or the 1s is smaller. Assign all those as
     # to message

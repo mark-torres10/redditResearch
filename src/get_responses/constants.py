@@ -30,3 +30,32 @@ SUBREDDITS_TO_OBSERVE = ["r/politics", "r/Conservative", "r/Liberal"]
 NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE = 4
 
 NUM_SUBREDDIT_USERS_TO_FETCH = 50
+
+OBSERVER_DM_SUBJECT_LINE = "Yale Researchers Looking to Learn More About Your Beliefs" # noqa
+
+OBSERVER_DM_SCRIPT = """
+    Hi {name},
+
+    I'm a researcher at Yale University, and my research group is interested in
+    how people express themselves on social media. Would you like to answer a
+    few questions to help us with our research? Your response will remain
+    anonymous.
+
+    The following message was posted in the {subreddit_name} subreddit on {date}:
+    
+    {post}
+
+    (link {permalink})
+
+    Please answer the following:
+
+    1. How outraged did you think the message author was on a 1-7 scale?
+    (1 = not at all, 4 = somewhat, 7 = very)
+
+    2. How happy did you think the message author was on a 1-7?
+    (1 = not at all, 4 = somewhat, 7 = very)
+
+    You can simply respond with one answer per line such as:
+    5
+    1
+""" # noqa
