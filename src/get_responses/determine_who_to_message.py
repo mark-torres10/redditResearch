@@ -39,12 +39,20 @@ def get_users_in_subreddit(
     """Get list of users in the subreddit.
     
     Skip over people who we messaged in the previous phase of the study.
+
+    We can't directly get people who follow the subreddit, since this isn't
+    an endpoint in the API. The best that we can do is iterate through the
+    comments and use that as a proxy approximation that the people who leave
+    comments are active participants in the subreddit and would therefore be
+    able to provide good scores for our datasets.
     """
     subreddit = api.subreddit(subreddit)
     users_lst = []
     num_users_added = 0
-    for user in subreddit.new(limit=None):
-        user_id = user.author.id
+    for comment in subreddit.comments(limit=None):
+        if not hasattr(comment, "author_fullname"):
+            continue
+        user_id = comment.author_fullname
         if (
             user_id not in previously_messaged_user_ids
             and num_users_added < num_users
