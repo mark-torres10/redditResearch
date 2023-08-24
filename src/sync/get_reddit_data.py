@@ -4,47 +4,17 @@ Example run:
     python get_reddit_data.py politics 5 10
 """
 import csv
-import datetime
-import json
 import os
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
+from lib import helper
 from lib.redditLogging import RedditLogger
 from lib.reddit import init_api_access
-from ml.transformations import convert_utc_timestamp_to_datetime_string
+from lib.helper import convert_utc_timestamp_to_datetime_string
 from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
 
-CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
-REDDIT_BASE_URL = "https://www.reddit.com"
-
 logger = RedditLogger(name=__name__)
-
-def is_json_serializable(value):
-    try:
-        json.dumps(value, cls=json.JSONEncoder)
-        return True
-    except (TypeError, OverflowError):
-        return False
-
-def create_or_use_default_directory(directory: Optional[str] = None) -> str:
-    if not directory:
-        directory = CURRENT_TIME_STR
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    return directory
-
-
-def write_results_to_jsonl(data: List[Dict]) -> None:
-    """Writes the results of the request to a JSONL file."""
-    dir = create_or_use_default_directory()
-
-    file_name = os.path.join(dir, SYNC_RESULTS_FILENAME)
-
-    with open(file_name, "w") as f:
-        for item in data:
-            f.write(json.dumps(item))
-            f.write("\n")
 
 
 def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
@@ -54,7 +24,7 @@ def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
 
     Creates a one-row metadata .csv file.
     """
-    dir = create_or_use_default_directory()
+    dir = helper.create_or_use_default_directory()
 
     file_name = os.path.join(dir, SYNC_METADATA_FILENAME)
 
@@ -91,7 +61,7 @@ if __name__ == "__main__":
             print("-----")
             output_dict = {}
             for field, value in submission.__dict__.items():
-                if is_json_serializable(value):
+                if helper.is_json_serializable(value):
                     output_dict[field] = value
 
             # add modified fields
@@ -99,7 +69,10 @@ if __name__ == "__main__":
                 user_screen_name = api.redditor(submission.author).name.name
                 output_dict["author"] = user_screen_name
             else:
-                print(f"No author for post with id={submission.id}, likely deleted submission...") # noqa
+                print(
+                    f"No author for post with id={submission.id}"
+                    "likely deleted submission..."
+                )
                 continue
     
             posts_dict_list.append(output_dict)
@@ -112,8 +85,8 @@ if __name__ == "__main__":
         "num_total_posts_synced": len(posts_dict_list)
     }
 
-    write_results_to_jsonl(posts_dict_list)
+    helper.write_list_dict_to_jsonl(posts_dict_list, SYNC_RESULTS_FILENAME)
     write_metadata_file(metadata_dict=metadata_dict)
     print(
-        f"Finished syncing data from Reddit for timestamp {CURRENT_TIME_STR}"
+        f"Finished syncing data from Reddit for timestamp {helper.CURRENT_TIME_STR}"
     )
