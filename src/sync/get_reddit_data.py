@@ -25,9 +25,7 @@ def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
     Creates a one-row metadata .csv file.
     """
     dir = helper.create_or_use_default_directory()
-
     file_name = os.path.join(dir, SYNC_METADATA_FILENAME)
-
     data = [metadata_dict]
     header_names = list(metadata_dict.keys())
 
@@ -39,38 +37,40 @@ def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     subreddit = sys.argv[1]
-    num_threads = int(sys.argv[2])
-    num_posts_per_thread = int(sys.argv[3])
+    num_submissions = int(sys.argv[2])
+    num_comments_per_thread = int(sys.argv[3])
 
     api = init_api_access()
 
     subreddit = api.subreddit(subreddit)
     # TODO: support other types, such as controversial/new, not just "hot"
-    hot_threads = subreddit.hot(limit=num_threads)
+    hot_threads = subreddit.hot(limit=num_submissions)
 
     posts_dict_list = []
 
+    breakpoint()
+
     for thread in hot_threads:
         # Retrieve the top posts in each thread
-        for submission in thread.comments[:num_posts_per_thread]:
-            print(f"Post: {submission.body}")
+        for comment in thread.comments[:num_comments_per_thread]:
+            print(f"Post: {comment.body}")
             created_utc_string = convert_utc_timestamp_to_datetime_string(
-                submission.created_utc
+                comment.created_utc
             )
             print(f"Created at: {created_utc_string}")
             print("-----")
             output_dict = {}
-            for field, value in submission.__dict__.items():
+            for field, value in comment.__dict__.items():
                 if helper.is_json_serializable(value):
                     output_dict[field] = value
 
             # add modified fields
-            if submission.author:
-                user_screen_name = api.redditor(submission.author).name.name
+            if comment.author:
+                user_screen_name = api.redditor(comment.author).name.name
                 output_dict["author"] = user_screen_name
             else:
                 print(
-                    f"No author for post with id={submission.id}"
+                    f"No author for post with id={comment.id}"
                     "likely deleted submission..."
                 )
                 continue
@@ -80,8 +80,8 @@ if __name__ == "__main__":
     metadata_dict = {
         "subreddit": subreddit,
         "thread_sort_type": "hot",
-        "num_threads": num_threads,
-        "num_posts_per_thread": num_posts_per_thread,
+        "num_threads": num_submissions,
+        "num_posts_per_thread": num_comments_per_thread,
         "num_total_posts_synced": len(posts_dict_list)
     }
 
