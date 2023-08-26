@@ -2,17 +2,22 @@
 Classifies a previously synced set of posts. Dumps the labels in a new
 directory.
 
+Loads previous files, transforms the .jsonl to a df, classifies the comment
+bodies for each body, adds the classification probs and labels to the df, and
+exports this to a .csv file.
+
 Example usage:
     python classify_posts.py 2023-03-20_1438
 """
 import sys
 import time
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import os
 
+from keras.models import Model
 import pandas as pd
 
-from lib.helper import read_jsonl_as_list_dicts
+from lib.helper import read_jsonl_as_list_dicts, track_function_runtime
 from lib.redditLogging import RedditLogger
 from ml.constants import (
     LABEL_COL, LABELED_DATA_FILENAME, ML_ROOT_PATH, PROB_COL
@@ -20,20 +25,32 @@ from ml.constants import (
 from ml.inference import (
     classify_text, load_default_embedding_and_tokenizer
 )
-from sync.transformations import MAP_COL_TO_TRANSFORMATION
 from sync.constants import (
-    API_FIELDS_TO_REMAPPED_FIELDS, COLS_TO_IDENTIFY_POST, POST_TEXT_COLNAME,
-    SYNC_RESULTS_FILENAME, SYNC_ROOT_PATH
+    COLS_TO_IDENTIFY_POST, POST_TEXT_COLNAME, SYNC_RESULTS_FILENAME,
+    SYNC_ROOT_PATH
 )
 
 logger = RedditLogger(name=__name__)
 
+
+@track_function_runtime
+def perform_classifications(
+    texts_list: List[str],
+    embedding: Model,
+    tokenizer: Tuple
+) -> Tuple[List[List[int]], List[int]]:
+    probs: List[List[int]] = [] # nested list, e.g., [[0.2], [0.5]]
+    labels: List[int] = [] # e.g., [0, 1]
+
+    for text in texts_list:
+        prob, label = classify_text(text, embedding, tokenizer)
+        probs.append(prob)
+        labels.append(label)
+
+    return probs, labels
+
+
 if __name__ == "__main__":
-    # load previous files
-    # transform .jsonl to df
-    # given df, get the text field.
-    # classify the text field, add as column to df
-    # save relevant IDs, text, classification (label, probability) to new file
     load_timestamp = sys.argv[1]
 
     timestamp_dir = os.path.join(SYNC_ROOT_PATH, load_timestamp, '')
@@ -64,49 +81,10 @@ if __name__ == "__main__":
         post_dict_subset.append(output_dict)
         texts_list.append(row[POST_TEXT_COLNAME])
 
-    probs: List[List[int]] = [] # nested list, e.g., [[0.2], [0.5]]
-    labels: List[int] = [] # e.g., [0, 1]
-    num_text_unable_to_classify = 0
-
+    # perform classification
     embedding, tokenizer = load_default_embedding_and_tokenizer()
-
-    label_start_time = time.time()
-
-    for idx, text in enumerate(texts_list):
-        try:
-            prob, label = classify_text(text, embedding, tokenizer)
-            probs.append(prob)
-            labels.append(label)
-        except Exception as e:
-            print("""
-                Unable to classify text at position {idx}. Text details:
-
-                Text preview: {text_preview}
-                Text length: {text_length}
-                """.format(
-                    idx=idx, text_preview=text[:50], text_length=len(text)
-                )
-            )
-            probs.append(f"Unable to classify. Error {e}")
-            labels.append(0) # NOTE: should this be defaulted to None?
-            num_text_unable_to_classify += 1
-            continue
-
-    label_end_time = time.time()
-
-    execution_time_seconds = round(label_end_time - label_start_time)
-
-    execution_time_minutes = execution_time_seconds // 60
-    execution_time_leftover_seconds = (
-        execution_time_seconds - (60 * execution_time_minutes)
-    )
-
-    print(
-        "Tried to classify {count} posts. Succeeded in {num_success}, failed in {num_fail}".format( # noqa
-            count=len(texts_list),
-            num_success=len(texts_list)-num_text_unable_to_classify,
-            num_fail=num_text_unable_to_classify
-        )
+    probs, labels = perform_classifications(
+        texts_list=texts_list, embedding=embedding, tokenizer=tokenizer
     )
 
     print(f"""
@@ -114,10 +92,10 @@ if __name__ == "__main__":
             - Number of posts labeled: {len(texts_list)}
             - Number of positive labels: {sum(labels)}
             - Number of negative labels: {len(labels) - sum(labels)}
-            - Execution time: {execution_time_minutes} minutes, {execution_time_leftover_seconds} seconds
         """ # noqa
     )
 
+    # export classifications
     for idx, post_dict in enumerate(post_dict_subset):
         post_dict[LABEL_COL] = labels[idx]
         post_dict[PROB_COL] = probs[idx][0]

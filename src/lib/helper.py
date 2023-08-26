@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import time
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -28,6 +29,23 @@ def read_jsonl_as_list_dicts(filepath: str) -> List[Dict]:
             json_object = json.loads(line)
             json_list.append(json_object)
     return json_list
+
+
+def track_function_runtime(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+
+        execution_time_seconds = round(end_time - start_time)
+        execution_time_minutes = execution_time_seconds // 60
+        execution_time_leftover_seconds = execution_time_seconds - (60 * execution_time_minutes)
+
+        print(f"Execution time: {execution_time_minutes} minutes, {execution_time_leftover_seconds} seconds")
+
+        return result
+
+    return wrapper
 
 
 def is_json_serializable(value):
