@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import time
+from typing import List
 
 
 from lib.helper import transform_permalink_to_link
@@ -20,6 +21,7 @@ import praw
 from message import helper
 
 logger = RedditLogger(name=__name__)
+api = init_api_access()
 
 PREVIOUSLY_MESSAGED_USERS_FILENAME = os.path.join(
     constants.MESSAGES_ROOT_PATH, constants.ALL_MESSAGED_USERS_FILENAME
@@ -77,7 +79,7 @@ if __name__ == "__main__":
     previously_messaged_users_df = pd.read_csv(
         PREVIOUSLY_MESSAGED_USERS_FILENAME
     )
-    previously_messaged_author_screen_names_list = (
+    previously_messaged_author_screen_names_list: List = (
         previously_messaged_users_df["author_screen_name"].tolist()
     )
     # load data with who to message.
@@ -92,8 +94,7 @@ if __name__ == "__main__":
     labeled_data_filepath = os.path.join(
         timestamp_dir, constants.WHO_TO_MESSAGE_FILENAME
     )
-    labeled_data = pd.read_csv(labeled_data_filepath)
-    api = init_api_access()
+    labeled_data: pd.DataFrame = pd.read_csv(labeled_data_filepath)
     has_been_messaged_col = []
 
     for row_tuple in labeled_data.iterrows():

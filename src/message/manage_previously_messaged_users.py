@@ -15,12 +15,12 @@ DEFAULT_MESSAGED_USERS_FILEPATH = os.path.join(
 def get_all_users_who_have_been_messaged() -> pd.DataFrame:
     """Loops through all the directories in the root path, loads in the
     'user_to_has_received_messages.csv' file, and adds the information of
-    those users to a pandas dataframe if they've been messaged.
+    those users to a pandas dataframe if they've been messaged (as indicated
+    by the `has_been_messaged` flag).
     """
     users_who_have_been_messaged: list[dict] = []
 
     for _, dirnames, _ in os.walk(MESSAGES_ROOT_PATH):
-        # Check if 'test.csv' exists in the current directory
         for timestamp_dir in dirnames:
             full_directory = os.path.join(MESSAGES_ROOT_PATH, timestamp_dir)
             if SENT_MESSAGES_FILENAME in os.listdir(full_directory):
@@ -30,13 +30,13 @@ def get_all_users_who_have_been_messaged() -> pd.DataFrame:
                     _, row = row_tuple
                     has_been_messaged_flag = row["has_been_messaged"]
                     if has_been_messaged_flag == 1:
-                        # NOTE: author_screen_name is what is actually used
-                        # by the API to determine who to message, I believe?
                         output_dict = {
                             "author_id": row["author_id"],
                             "author_screen_name": row["author_screen_name"],
                             "post_id": row["id"],
-                            "post_created_utc_string": row["created_utc_string"] # noqa
+                            "post_created_utc_string": (
+                                row["created_utc_string"]
+                            )
                         }
                         users_who_have_been_messaged.append(output_dict)
     
