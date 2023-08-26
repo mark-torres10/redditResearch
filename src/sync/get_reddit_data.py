@@ -9,12 +9,9 @@ import sys
 from typing import Any, Dict
 
 from lib import helper
-from lib.redditLogging import RedditLogger
 from lib.reddit import init_api_access
 from lib.helper import convert_utc_timestamp_to_datetime_string
 from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
-
-logger = RedditLogger(name=__name__)
 
 
 def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
@@ -43,38 +40,35 @@ if __name__ == "__main__":
     api = init_api_access()
 
     subreddit = api.subreddit(subreddit)
-    # TODO: support other types, such as controversial/new, not just "hot"
     hot_threads = subreddit.hot(limit=num_submissions)
 
     posts_dict_list = []
 
-    breakpoint()
-
     for thread in hot_threads:
-        # Retrieve the top posts in each thread
         for comment in thread.comments[:num_comments_per_thread]:
-            print(f"Post: {comment.body}")
             created_utc_string = convert_utc_timestamp_to_datetime_string(
                 comment.created_utc
             )
-            print(f"Created at: {created_utc_string}")
+            print(f"Comment: {comment.body}\nCreated at: {created_utc_string}")
             print("-----")
             output_dict = {}
             for field, value in comment.__dict__.items():
+                # we want to dump to a .jsonl file eventually, so we want to
+                # verify that the value is JSON-serializable.
                 if helper.is_json_serializable(value):
                     output_dict[field] = value
-
-            # add modified fields
+            # the author is given by their ID only, we want to hydrate this
+            # with the complete author name since we'll need this information
+            # when we send DMs.
             if comment.author:
                 user_screen_name = api.redditor(comment.author).name.name
                 output_dict["author"] = user_screen_name
             else:
                 print(
-                    f"No author for post with id={comment.id}"
+                    f"No author for comment with id={comment.id}"
                     "likely deleted submission..."
                 )
                 continue
-    
             posts_dict_list.append(output_dict)
 
     metadata_dict = {
