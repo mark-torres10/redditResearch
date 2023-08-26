@@ -5,10 +5,14 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
+from lib.reddit import init_api_access
+
 CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
 ROOT_DIR = "/Users/mark/Documents/work/redditResearch/"
 CODE_DIR = os.path.join(ROOT_DIR, "src")
 BASE_REDDIT_URL = "https://www.reddit.com"
+
+api = init_api_access()
 
 
 def write_dict_list_to_csv(dict_list: List[Dict], write_path: str) -> None:
@@ -67,3 +71,15 @@ def convert_utc_timestamp_to_datetime_string(utc_time: float) -> str:
     """
     utc_datetime = datetime.datetime.fromtimestamp(utc_time)
     return utc_datetime.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
+
+
+def get_author_name_from_author_id(author_id: str) -> str:
+    try:
+        author_name = api.redditor(author_id).name.name 
+    except:
+        print(
+            f"No author for comment for author ID = {author_id}"
+            "likely deleted submission..."
+        )
+        author_name = ''
+    return author_name

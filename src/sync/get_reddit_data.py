@@ -3,15 +3,22 @@
 Example run:
     python get_reddit_data.py politics 5 10
 """
+import copy
 import csv
 import os
 import sys
 from typing import Any, Dict
 
+from praw.models.reddit.comment import Comment
+
 from lib import helper
 from lib.reddit import init_api_access
 from lib.helper import convert_utc_timestamp_to_datetime_string
-from sync.constants import SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
+from sync.constants import (
+    API_FIELDS_TO_REMAPPED_FIELDS, COLS_TO_IDENTIFY_POST,
+    SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
+)
+from sync.transformations import MAP_COL_TO_TRANSFORMATION
 
 
 def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
@@ -30,6 +37,29 @@ def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
         writer = csv.DictWriter(csvfile, fieldnames=header_names)
         writer.writeheader()
         writer.writerows(data)
+
+
+def transform_fields(comment: Comment, output_dict: Dict) -> Dict:
+    """Given the `comment` object and the `output_dict` available,
+    transform certain fields and add them the output dictionary to include."""
+    transformed_dict = copy.deepcopy(output_dict)
+
+    # columns to rename in the `output` dictionary.
+    for api_field, remapped_name in API_FIELDS_TO_REMAPPED_FIELDS.items():
+        transformed_dict[remapped_name] = comment[api_field]
+    
+    # transform certain values
+    for (enrichment_col, transformation_dict) in (
+        MAP_COL_TO_TRANSFORMATION.items()
+    ):
+        col_input = transformation_dict["original_col"]
+        transform_func = transformation_dict["transform_func"]
+        transformed_dict[enrichment_col] = transform_func(comment[col_input])
+
+    return {
+        **output_dict,
+        **transformed_dict
+    }
 
 
 if __name__ == "__main__":
@@ -57,18 +87,9 @@ if __name__ == "__main__":
                 # verify that the value is JSON-serializable.
                 if helper.is_json_serializable(value):
                     output_dict[field] = value
-            # the author is given by their ID only, we want to hydrate this
-            # with the complete author name since we'll need this information
-            # when we send DMs.
-            if comment.author:
-                user_screen_name = api.redditor(comment.author).name.name
-                output_dict["author"] = user_screen_name
-            else:
-                print(
-                    f"No author for comment with id={comment.id}"
-                    "likely deleted submission..."
-                )
-                continue
+            output_dict = transform_fields(
+                comment=comment, output_dict=output_dict
+            )
             posts_dict_list.append(output_dict)
 
     metadata_dict = {

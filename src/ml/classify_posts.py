@@ -20,10 +20,10 @@ from ml.constants import (
 from ml.inference import (
     classify_text, load_default_embedding_and_tokenizer
 )
-from ml.transformations import MAP_COL_TO_TRANSFORMATION
+from sync.transformations import MAP_COL_TO_TRANSFORMATION
 from sync.constants import (
     API_FIELDS_TO_REMAPPED_FIELDS, COLS_TO_IDENTIFY_POST, POST_TEXT_COLNAME,
-    POSTS_COLNAME, SYNC_RESULTS_FILENAME, SYNC_ROOT_PATH
+    SYNC_RESULTS_FILENAME, SYNC_ROOT_PATH
 )
 
 logger = RedditLogger(name=__name__)
@@ -35,19 +35,20 @@ if __name__ == "__main__":
     # classify the text field, add as column to df
     # save relevant IDs, text, classification (label, probability) to new file
     load_timestamp = sys.argv[1]
-    timestamp_dir = os.path.join(SYNC_ROOT_PATH, load_timestamp, '')
 
+    timestamp_dir = os.path.join(SYNC_ROOT_PATH, load_timestamp, '')
     if not os.path.exists(timestamp_dir):
-        logger.error(f"Sync data timestamp directory {timestamp_dir} does not exist")
+        logger.error(
+            f"Sync data timestamp directory {timestamp_dir} does not exist"
+        )
         sys.exit(1)
 
     sync_data_filepath = os.path.join(timestamp_dir, SYNC_RESULTS_FILENAME)
     sync_data_jsons = read_jsonl_as_list_dicts(sync_data_filepath)
     sync_data = pd.DataFrame(sync_data_jsons)
 
-    # for each post, we only want the columns needed to identify them
-    post_dict_subset: List[Dict] = []
-    texts_list: List[str] = []
+    post_dict_subset: List[Dict] = []  # get only cols needed to identify post
+    texts_list: List[str] = []  # list of texts to classify
 
     for row_tuple in sync_data.iterrows():
         idx, row = row_tuple
@@ -58,17 +59,8 @@ if __name__ == "__main__":
                 )
             )
         output_dict = {}
-        # get necessary fields from raw input
-        for col in COLS_TO_IDENTIFY_POST:
-            col_name_remapped = API_FIELDS_TO_REMAPPED_FIELDS.get(col, col)
-            output_dict[col_name_remapped] = row[col]
-        # add any enrichment + supplementary fields, as necessary
-        for (enrichment_col, transformation_dict) in (
-            MAP_COL_TO_TRANSFORMATION.items()
-        ):
-            col_input = transformation_dict["original_col"]
-            transform_func = transformation_dict["transform_func"]
-            output_dict[enrichment_col] = transform_func(row[col_input])
+        for field in COLS_TO_IDENTIFY_POST:
+            output_dict[field] = row[field]
         post_dict_subset.append(output_dict)
         texts_list.append(row[POST_TEXT_COLNAME])
 
