@@ -64,6 +64,10 @@ def create_or_use_default_directory(directory: Optional[str] = None) -> str:
     return directory
 
 
+def transform_permalink_to_link(permalink: str) -> str:
+    return BASE_REDDIT_URL + permalink
+
+
 def write_list_dict_to_jsonl(
     data: List[Dict],
     dir: Optional[str] = None,

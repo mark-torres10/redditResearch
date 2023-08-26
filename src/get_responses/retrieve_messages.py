@@ -17,7 +17,7 @@ from praw.models.reddit.message import Message
 
 from get_responses import constants
 from lib.reddit import init_api_access
-from ml.transformations import convert_utc_timestamp_to_datetime_string
+from lib.helper import convert_utc_timestamp_to_datetime_string
 
 ALL_VALIDATED_RESPONSES_FILEPATH = os.path.join(
     constants.VALIDATED_RESPONSES_ROOT_PATH,
@@ -85,12 +85,6 @@ class RedditMessage:
     def convert_to_df(self, messages: List) -> pd.DataFrame:
         message_lst = [message.__dict__() for message in messages]
         return pd.DataFrame(message_lst)
-    
-
-class ResponseObject:
-    """Wrapper class to contain all the information about a response that
-    we want to track"""
-    pass
 
 
 def get_messages_received(api: praw.Reddit) -> List[Message]:

@@ -3,7 +3,6 @@ from typing import List, Optional
 
 import pandas as pd
 
-from lib.helper import BASE_REDDIT_URL
 from message.constants import TO_MESSAGE_COL
 from ml.constants import LABEL_COL
 
@@ -84,6 +83,3 @@ def determine_which_posts_to_message(
     )
 
     return labeled_data
-
-def transform_permalink_to_link(permalink: str) -> str:
-    return BASE_REDDIT_URL + permalink

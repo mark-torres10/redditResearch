@@ -9,6 +9,7 @@ import sys
 import time
 
 
+from lib.helper import transform_permalink_to_link
 from lib.reddit import init_api_access
 from lib.redditLogging import RedditLogger
 from message import constants, manage_previously_messaged_users
@@ -102,7 +103,7 @@ if __name__ == "__main__":
         author_screen_name = row["author_screen_name"]
         body = row["body"]
         permalink = row["permalink"]
-        full_link = helper.transform_permalink_to_link(permalink)
+        full_link = transform_permalink_to_link(permalink)
 
         should_message_flag = row[constants.TO_MESSAGE_COL]
 

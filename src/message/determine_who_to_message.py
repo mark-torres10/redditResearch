@@ -20,7 +20,6 @@ logger = RedditLogger(name=__name__)
 if __name__ == "__main__":
     # load labeled data
     load_timestamp = sys.argv[1]
-
     timestamp_dir = os.path.join(ML_ROOT_PATH, load_timestamp)
 
     if not os.path.exists(timestamp_dir):
