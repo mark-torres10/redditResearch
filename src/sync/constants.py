@@ -24,7 +24,7 @@ API_FIELDS_TO_REMAPPED_FIELDS = {
 # matches the names after the transformations and name remappings in
 # `API_FIELDS_TO_REMAPPED_FIELDS` are done.
 COLS_TO_IDENTIFY_POST = [
-    "id", "author_screen_name", "author_fullname", "body", "permalink",
+    "id", "author_screen_name", "author_id", "body", "permalink",
     "created_utc", "subreddit_name_prefixed"
 ]
 
