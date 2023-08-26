@@ -38,7 +38,21 @@ AUTHOR_DM_SCRIPT = """
     4
 """ # noqa
 
+
 def balance_posts(labels: pd.Series, min_count: int) -> List[int]:
+    """Balance which of the rows in the `labels` series to label.
+    
+    This will return a binary list of 0s and 1s where:
+        0 = do not message
+        1 = message
+    Such that if this list is zipped against the `labels` series, then the
+    number of rows in the "labels" series with a "labels" value of 0
+    that have a "to_label" value of 1 equal the number of rows in the "labels"
+    series with a "labels" value of 1 that have a "to_label" value of 1.
+
+    This means that we should message an equal number of the rows that have
+    labels = 0 as we do rows that have labels = 1.
+    """
     # determine whether the 0s or the 1s is smaller. Assign all those as
     # to message
     labels_list = labels.tolist()
@@ -68,7 +82,14 @@ def determine_which_posts_to_message(
     labeled_data: pd.DataFrame,
     balance_strategy: Optional[str] = "equal"
 ) -> pd.DataFrame:
-    """Given a df with labeled data."""
+    """Given a df with labeled data, determine which comments/posts should be
+    messaged.
+    
+    We do this by using a balance strategy (by default, "equal"). In the
+    "equal" strategy, we message an equal number of data labeled 0s and 1s.
+    This means that the number of 0s and 1s will be set as
+    min(num_zeros, num_ones), the minimum count of the two labels.
+    """
     label_col = labeled_data[LABEL_COL]
     if balance_strategy == "equal":
         min_count = label_col.value_counts().min()
