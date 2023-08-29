@@ -51,12 +51,28 @@ def load_previously_labeled_ids() -> List[str]:
 
 
 def load_messages(phase: str) -> List[Dict]:
-    """Loads previously dumped messages.
+    """Loads previously dumped messages for a given phase.
     
     Returns a list of dictionaries where each dictionary has as its keys
     the `id` and `body`, corresponding to the message ID and body respectively.
     """
-    pass
+    # get the max timestamp out of the directories available in the root phase
+    # directory. This will have the most up-to-date load
+    root_dir = os.path.join(constants.RESPONSES_ROOT_PATH, phase)
+    max_timestamp_dir = max(os.listdir(root_dir))
+
+    messages_df = pd.read_csv(
+        os.path.join(
+            root_dir,
+            max_timestamp_dir,
+            constants.ALL_RESPONSES_FILENAME.format(phase=phase)
+        )
+    )
+
+    # transform df to a list of dicts
+    messages = messages_df.to_dict("records")
+
+    return messages
 
 
 def write_labels_to_csv(messages_with_validation_status: List[Dict]) -> None:
