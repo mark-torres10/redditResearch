@@ -14,7 +14,7 @@ TEST_SUBJECT = helper.AUTHOR_DM_SUBJECT_LINE
 TEST_NAME = TEST_USER
 TEST_DATE = "2020-01-01"
 TEST_BODY = "This is a great day!"
-TEST_SUBREDDIT = "r/politics" # TODO: need to add subreddit in the data dumps
+TEST_SUBREDDIT = "r/politics"
 TEST_PERMALINK = "https://test-link"
 
 DUMMY_FILENAME = "test_posts_to_who_to_message.csv"
@@ -41,8 +41,7 @@ def load_dummy_data() -> pd.DataFrame:
 
 
 def test_message(
-    api: praw.Reddit, user: str, subject: str, body: str, subreddit: str,
-    permalink: str
+    api: praw.Reddit, user: str, subject: str, body: str
 ) -> None:
     """Send a test message to self."""
     send_message(
