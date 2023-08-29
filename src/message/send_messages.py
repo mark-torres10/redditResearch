@@ -211,7 +211,8 @@ if __name__ == "__main__":
         description="Script for sending DMs to users on Reddit."
     )
     parser.add_argument(
-        "--phase", type=str, required=True, help="Phase (author/observer)")
+        "--phase", type=str, required=True, help="Phase (author/observer)"
+    )
     parser.add_argument(
         "--timestamp", type=str, required=True, help="Timestamp of data."
     )

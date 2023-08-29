@@ -38,6 +38,10 @@ AUTHOR_DM_SCRIPT = """
     4
 """ # noqa
 
+AUTHOR_PHASE_MESSAGE_IDENTIFIER_STRING = (
+    "Take a moment to think about what was happening at the time you posted."
+)
+
 
 def balance_posts(labels: pd.Series, min_count: int) -> List[int]:
     """Balance which of the rows in the `labels` series to label.
