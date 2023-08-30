@@ -12,13 +12,12 @@ import pandas as pd
 from get_responses import constants
 
 
-
 def get_previous_labeling_session_data() -> List[Dict]:
     """Load in previous labeling session data. For each session, load
     as a pandas df and then convert to a list of dicts."""
     list_previously_labeled_data = []
     for filename in os.listdir(constants.VALIDATED_RESPONSES_ROOT_PATH):
-        if "VALIDATED_RESPONSES_ROOT_FILENAME" in filename:
+        if constants.VALIDATED_RESPONSES_ROOT_FILENAME in filename:
             df = pd.DataFrame(
                 os.path.join(constants.VALIDATED_RESPONSES_ROOT_PATH, filename)
             )

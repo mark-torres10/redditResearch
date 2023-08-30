@@ -208,20 +208,15 @@ if __name__ == "__main__":
             constants.SUBREDDITS_TO_OBSERVE
         )
     ]
-    
     df_subreddits = (
         select_author_messages_for_observers_to_respond(df_subreddits)
     )
-
     subreddits_without_prefixes = [
         strip_prefix_from_subreddit(subreddit)
         for subreddit in df_subreddits["subreddit_name_prefixed"].unique()
     ]
-
     map_subreddit_to_observers = get_observers_to_message_per_subreddit(
         df_subreddits
     )
-
     dump_observers_per_subreddit(map_subreddit_to_observers)
-
     print("Completed determining which users to message, per subreddit.")

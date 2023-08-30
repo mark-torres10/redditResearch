@@ -94,7 +94,6 @@ def get_author_id_for_message(api: praw.Reddit, message_id: str):
     return author_id
 
 
-
 def hydate_message_with_post_and_subreddit_information(
     message_info: Dict
 ) -> Dict:
