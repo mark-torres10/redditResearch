@@ -24,15 +24,28 @@ def split_author_phase_score_into_categories(
     author_regulation = []
 
     for score in author_phase_scores:
-        if len(score) != 4:
+        score_int = int(score)
+        if len(str(score_int)) != 4:
             print(
                 f"Invalid author phase score: {score}, needs to have length==4"
             )
             continue
-        author_outrage.extend(int(score[0]))
-        author_happy.extend(int(score[1]))
-        author_meta.extend(int(score[2]))
-        author_regulation.extend(int(score[3]))
+        
+        score_outrage = score_int // 1000
+        score_int %= 1000
+
+        score_happy = score_int // 100
+        score_int %= 100
+
+        score_meta = score_int // 10
+        score_int %= 10
+
+        score_regulation = score_int
+
+        author_outrage.append(score_outrage)
+        author_happy.append(score_happy)
+        author_meta.append(score_meta)
+        author_regulation.append(score_regulation)
 
     return {
         "author_outrage": author_outrage,
@@ -42,8 +55,6 @@ def split_author_phase_score_into_categories(
     }
 
 
-# TODO: need to modify once we have the "phase" column so that we only load the
-# validated author/observer phase responses, if specified.
 def get_author_self_reported_scores() -> pd.DataFrame:
     validated_responses_csv_files = [
         file for file in os.listdir(VALIDATED_RESPONSES_ROOT_PATH)
@@ -52,20 +63,22 @@ def get_author_self_reported_scores() -> pd.DataFrame:
     message_ids = []
     author_ids = []
     author_screen_names = []
-    author_original_posts = []
+    original_outreach_messages = []
     scores = []
 
     for csv_file in validated_responses_csv_files:
         fp = os.path.join(VALIDATED_RESPONSES_ROOT_PATH, csv_file)
-        df = pd.DataFrame(fp)
+        df = pd.read_csv(fp)
 
         # process only the rows that have a valid response
         df = df[df["is_valid_response"] == 1]
 
-        message_ids.extend(df["message_id"].tolist())
+        message_ids.extend(df["id"].tolist())
         author_ids.extend(df["author_id"].tolist())
         author_screen_names.extend(df["author_screen_name"].tolist())
-        author_original_posts.extend(df["body"].tolist())
+        original_outreach_messages.extend(
+            df["original_outreach_message_body"].tolist()
+        )
         scores.extend(df["scores"].tolist())
 
     author_scores_map = split_author_phase_score_into_categories(scores)
@@ -75,20 +88,18 @@ def get_author_self_reported_scores() -> pd.DataFrame:
     author_regulation = author_scores_map["author_regulation"]
 
     colnames = [
-        "message_id", "author_id", "author_screen_name",
-        "author_original_post", "author_outrage", "author_happy",
+        "id", "author_id", "author_screen_name",
+        "original_outreach_message_body", "author_outrage", "author_happy",
         "author_meta", "author_regulation"
     ]
-
     df = pd.DataFrame(
         zip(
             message_ids, author_ids, author_screen_names,
-            author_original_posts, author_outrage, author_happy, author_meta,
-            author_regulation
+            original_outreach_messages, author_outrage, author_happy,
+            author_meta, author_regulation
         ),
         columns=colnames
     )
-
     return df
 
 
@@ -97,7 +108,7 @@ if __name__ == "__main__":
         description="Process metrics for author phase of study."
     )
     parser.add_argument(
-        "--metric", type="str", required=True, help="Type of metric to obtain."
+        "--metric", type=str, required=True, help="Type of metric to obtain."
     )
     args = parser.parse_args()
 
@@ -105,3 +116,5 @@ if __name__ == "__main__":
         df = get_author_self_reported_scores()
         create_or_use_default_directory(constants.AUTHOR_PHASE_SCORES_DIR)
         df.to_csv(constants.AUTHOR_PHASE_SCORES_FILEPATH)
+
+    print("Completed gathering author phase metrics")
