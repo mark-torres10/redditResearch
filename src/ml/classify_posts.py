@@ -10,14 +10,16 @@ Example usage:
     python classify_posts.py 2023-03-20_1438
 """
 import sys
-import time
 from typing import Dict, List, Tuple
 import os
 
 from keras.models import Model
 import pandas as pd
 
-from lib.helper import read_jsonl_as_list_dicts, track_function_runtime
+from lib.helper import (
+    create_or_use_default_directory, read_jsonl_as_list_dicts,
+    track_function_runtime
+)
 from lib.redditLogging import RedditLogger
 from ml.constants import (
     LABEL_COL, LABELED_DATA_FILENAME, ML_ROOT_PATH, PROB_COL
@@ -103,8 +105,7 @@ if __name__ == "__main__":
     labeled_df = pd.DataFrame(post_dict_subset)
 
     output_directory = os.path.join(ML_ROOT_PATH, load_timestamp, '')
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+    create_or_use_default_directory(output_directory)
 
     output_filepath = os.path.join(output_directory, LABELED_DATA_FILENAME)
     labeled_df.to_csv(output_filepath)

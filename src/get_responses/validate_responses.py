@@ -69,6 +69,9 @@ def write_labels_to_csv(messages_with_validation_status: List[Dict]) -> None:
     df.to_csv(constants.SESSION_VALIDATED_RESPONSES_FILEPATH)
 
 
+# TODO: need to join the messages against the original author comment/post that
+# we asked the author to rate.
+# TODO: also, get the author and the author's full name
 def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
     """Validates the messages that we have received.
     
@@ -98,6 +101,7 @@ def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
                 scores = input("Please enter their scores (e.g., 1123):\t")
                 responses_list.append({
                     "id": msg.id,
+                    "body": msg.body,
                     "phase": phase,
                     "is_valid_response": 1,
                     "scores": scores
@@ -107,6 +111,7 @@ def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
                 print("Invalid response")
                 responses_list.append({
                     "id": msg.id,
+                    "body": msg.body,
                     "phase": phase,
                     "is_valid_response": 0,
                     "scores": ''

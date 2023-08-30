@@ -9,6 +9,7 @@ import sys
 
 import pandas as pd
 
+from lib.helper import create_or_use_default_directory
 from lib.redditLogging import RedditLogger
 from message.constants import MESSAGES_ROOT_PATH, WHO_TO_MESSAGE_FILENAME
 from message.helper import determine_which_posts_to_message
@@ -36,8 +37,7 @@ if __name__ == "__main__":
 
     # dump results of messaging
     output_directory = os.path.join(MESSAGES_ROOT_PATH, load_timestamp, '')
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+    create_or_use_default_directory(output_directory)
 
     output_filepath = os.path.join(output_directory, WHO_TO_MESSAGE_FILENAME)
     labeled_data.to_csv(output_filepath)
