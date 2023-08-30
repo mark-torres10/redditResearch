@@ -11,6 +11,7 @@ import pandas as pd
 import praw
 
 from get_responses import constants
+from lib.helper import get_message_obj_from_id
 from lib.reddit import init_api_access
 from observer_phase.constants import PREVIOUS_CONSOLIDATED_MESSAGES_FILENAME
 
@@ -73,13 +74,6 @@ def load_valid_previous_author_messages() -> pd.DataFrame:
         zip(previously_labeled_ids, previously_labeled_scores),
         columns=["id", "scores"]
     )
-
-
-def get_message_obj_from_id(
-    api: praw.Reddit, message_id: str
-) -> praw.models.reddit.message.Message:
-    """Get the message object from the message ID."""
-    return api.inbox.message(message_id)
 
 
 def get_author_id_for_message(api: praw.Reddit, message_id: str):

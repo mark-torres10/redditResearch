@@ -69,9 +69,8 @@ def write_labels_to_csv(messages_with_validation_status: List[Dict]) -> None:
     df.to_csv(constants.SESSION_VALIDATED_RESPONSES_FILEPATH)
 
 
-# TODO: need to join the messages against the original author comment/post that
-# we asked the author to rate.
-# TODO: also, get the author and the author's full name
+# TODO: add metadata (e.g., author id, author's full name) to output of
+# validated repsonses
 def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
     """Validates the messages that we have received.
     

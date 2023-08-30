@@ -5,6 +5,7 @@ import time
 from typing import Dict, List, Optional
 
 import pandas as pd
+import praw
 
 from lib.reddit import init_api_access
 
@@ -107,6 +108,21 @@ def get_author_name_from_author_id(author_id: str) -> str:
     return author_name
 
 
+def strip_message_obj_prefix_from_message_id(message_prefixed: str) -> str:
+    return message_prefixed.replace("t4_", '')
+
+
 def strip_prefix_from_subreddit(subreddit_prefixed: str) -> str:
     """Strip the "r/" prefix from the subreddit."""
     return subreddit_prefixed.replace("r/", "")
+
+
+def strip_redditor_obj_prefix_from_redditor_id(redditor_prefixed: str) -> str:
+    return redditor_prefixed.replace("t2_", '')
+
+
+def get_message_obj_from_id(
+    api: praw.Reddit, message_id: str
+) -> praw.models.reddit.message.Message:
+    """Get the message object from the message ID."""
+    return api.inbox.message(message_id)
