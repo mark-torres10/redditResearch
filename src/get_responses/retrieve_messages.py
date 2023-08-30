@@ -15,6 +15,7 @@ import praw
 from praw.models.reddit.message import Message
 
 from get_responses import constants
+from lib.helper import CURRENT_TIME_STR
 from lib.reddit import init_api_access
 from message.helper import AUTHOR_PHASE_MESSAGE_IDENTIFIER_STRING
 
@@ -22,7 +23,6 @@ ALL_VALIDATED_RESPONSES_FILEPATH = os.path.join(
     constants.VALIDATED_RESPONSES_ROOT_PATH,
     constants.ALL_VALIDATED_RESPONSES_FILENAME
 )
-CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
 SESSION_VALIDATED_RESPONSES_FILEPATH = os.path.join(
     constants.VALIDATED_RESPONSES_ROOT_PATH,
     constants.SESSION_VALIDATED_RESPONSES_FILENAME.format(

@@ -23,15 +23,15 @@ previous_messages_df = pd.read_csv(PREVIOUS_CONSOLIDATED_MESSAGES_FILENAME)
 map_users_to_post_id_and_date = {
     author_id: {
         "author_id": author_id,
-        "post_id": post_id,
-        "post_body": post_body,
-        "post_permalink": post_permalink,
+        "id": id,
+        "body": body,
+        "permalink": permalink,
         "created_utc_string": created_utc_string,
         "label": label,
         "subreddit_name_prefixed": subreddit_name_prefixed
     }
     for (
-        author_id, post_id, post_body, post_permalink, created_utc_string,
+        author_id, id, body, permalink, created_utc_string,
         label, subreddit_name_prefixed
     )
     in zip(

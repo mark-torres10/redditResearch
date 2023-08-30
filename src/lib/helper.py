@@ -105,3 +105,8 @@ def get_author_name_from_author_id(author_id: str) -> str:
         )
         author_name = ''
     return author_name
+
+
+def strip_prefix_from_subreddit(subreddit_prefixed: str) -> str:
+    """Strip the "r/" prefix from the subreddit."""
+    return subreddit_prefixed.replace("r/", "")

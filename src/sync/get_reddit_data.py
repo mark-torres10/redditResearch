@@ -15,8 +15,8 @@ from lib import helper
 from lib.reddit import init_api_access
 from lib.helper import convert_utc_timestamp_to_datetime_string
 from sync.constants import (
-    API_FIELDS_TO_REMAPPED_FIELDS, COLS_TO_IDENTIFY_POST,
-    SYNC_METADATA_FILENAME, SYNC_RESULTS_FILENAME
+    API_FIELDS_TO_REMAPPED_FIELDS, SYNC_METADATA_FILENAME,
+    SYNC_RESULTS_FILENAME
 )
 from sync.transformations import MAP_COL_TO_TRANSFORMATION
 

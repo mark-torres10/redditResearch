@@ -16,8 +16,7 @@ import pandas as pd
 import praw
 
 from get_responses import constants
-from get_responses.determine_who_to_message import strip_prefix_from_subreddit
-from lib.helper import transform_permalink_to_link
+from lib.helper import strip_prefix_from_subreddit, transform_permalink_to_link
 from lib.reddit import init_api_access
 from message.send_messages import catch_rate_limit_and_sleep, send_message
 

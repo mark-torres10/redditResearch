@@ -11,10 +11,9 @@ import pandas as pd
 import praw
 
 from get_responses import constants
+from lib.helper import CURRENT_TIME_STR, strip_prefix_from_subreddit
 from lib.reddit import init_api_access
 from message import constants as message_constants
-
-CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
 
 api = init_api_access()
 
@@ -27,10 +26,6 @@ previously_messaged_users_df = pd.read_csv(
 previously_messaged_user_ids = (
     previously_messaged_users_df["author_id"].tolist()
 )
-
-def strip_prefix_from_subreddit(subreddit_prefixed: str) -> str:
-    """Strip the "r/" prefix from the subreddit."""
-    return subreddit_prefixed.replace("r/", "")
 
 
 def get_users_in_subreddit(
@@ -68,6 +63,8 @@ def get_users_in_subreddit(
                 }
             )
             num_users_added += 1
+        if num_users_added > num_users:
+            break
     return users_lst
 
 
@@ -94,9 +91,9 @@ def get_users_to_post_map(
             {
                 "author_id": user["author_id"],
                 "author_name": user["author_name"],
-                "post_id": row_to_use["post_id"],
-                "post_body": row_to_use["post_body"],
-                "post_permalink": row_to_use["post_permalink"],
+                "id": row_to_use["id"],
+                "body": row_to_use["body"],
+                "permalink": row_to_use["permalink"],
                 "created_utc_string": row_to_use["created_utc_string"],
                 "label": row_to_use["label"],
                 "score": row_to_use["score"],
