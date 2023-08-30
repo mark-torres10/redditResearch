@@ -4,25 +4,13 @@ Performs validation for one of the phases (author/observer). Does validation
 only for the messages that weren't previously validated.
 """
 import argparse
-import datetime
 import os
 from typing import Dict, List
 
 import pandas as pd
 
 from get_responses import constants
-from lib.helper import CURRENT_TIME_STR
 
-ALL_VALIDATED_RESPONSES_FILEPATH = os.path.join(
-    constants.VALIDATED_RESPONSES_ROOT_PATH,
-    constants.ALL_VALIDATED_RESPONSES_FILENAME
-)
-SESSION_VALIDATED_RESPONSES_FILEPATH = os.path.join(
-    constants.VALIDATED_RESPONSES_ROOT_PATH,
-    constants.SESSION_VALIDATED_RESPONSES_FILENAME.format(
-        timestamp=CURRENT_TIME_STR
-    )
-)
 
 
 def get_previous_labeling_session_data() -> List[Dict]:
@@ -79,7 +67,7 @@ def write_labels_to_csv(messages_with_validation_status: List[Dict]) -> None:
     """Writes the validated messages as a .csv file."""
     colnames = ["id", "phase", "is_valid_response", "scores"]
     df = pd.DataFrame(messages_with_validation_status, columns=colnames)
-    df.to_csv(SESSION_VALIDATED_RESPONSES_FILEPATH)
+    df.to_csv(constants.SESSION_VALIDATED_RESPONSES_FILEPATH)
 
 
 def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:

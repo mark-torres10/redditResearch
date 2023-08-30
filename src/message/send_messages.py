@@ -11,8 +11,7 @@ import time
 from typing import List
 
 from get_responses import (
-    constants as observer_constants,
-    send_messages as observer_send_messages
+    constants as observer_constants
 )
 from lib.helper import transform_permalink_to_link
 from lib.reddit import init_api_access
@@ -25,6 +24,8 @@ from message import (
 
 import pandas as pd
 import praw
+
+from observer_phase import send_messages as observer_send_messages
 
 
 logger = RedditLogger(name=__name__)

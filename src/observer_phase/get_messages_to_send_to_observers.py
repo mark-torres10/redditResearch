@@ -1,22 +1,20 @@
-"""After we have the messages from poster, get the messages to send
-to observers."""
+"""Once we get the messages from the author phase and have validated them, we
+have the ids of these messages. In this script, we hydrate these messages with
+additional informations such as text. The end result of this script is a .csv
+file containing the message bodies and the original comments/posts of the
+author from the author phase.
+"""
 import os
 from typing import Dict
 
-import numpy as np
 import pandas as pd
 import praw
 
 from get_responses import constants
 from lib.reddit import init_api_access
-from message import constants as message_constants
+from observer_phase.constants import PREVIOUS_CONSOLIDATED_MESSAGES_FILENAME
 
 api = init_api_access()
-
-PREVIOUS_CONSOLIDATED_MESSAGES_FILENAME = os.path.join(
-    message_constants.MESSAGES_ROOT_PATH,
-    message_constants.CONSOLIDATED_MESSAGES_FILE_NAME
-)
 
 previous_messages_df = pd.read_csv(PREVIOUS_CONSOLIDATED_MESSAGES_FILENAME)
 
@@ -46,9 +44,10 @@ map_users_to_post_id_and_date = {
 }
 
 
-def load_valid_previous_messages() -> pd.DataFrame:
-    """Load the IDs of messages that we previously labeled and confirmed were
-    valid."""
+def load_valid_previous_author_messages() -> pd.DataFrame:
+    """Load the IDs of messages from the author phase that we previously
+    labeled and confirmed were valid.
+    """
     previously_labeled_ids = []
     previously_labeled_scores = []
     load_dir = constants.VALIDATED_RESPONSES_ROOT_PATH
@@ -57,19 +56,22 @@ def load_valid_previous_messages() -> pd.DataFrame:
         ids = df["message_id"].tolist()
         scores = df["scores"].tolist()
         valid_responses_flags = df["is_valid_response"].tolist()
+        phases = df["phase"].tolist()
         valid_ids = [
-            id_ for id_, flag in zip(ids, valid_responses_flags) if flag == 1
+            id_ for id_, flag, phase in zip(ids, valid_responses_flags, phases)
+            if flag == 1 and phase == "author"
         ]
         valid_scores = [
-            score for score, flag in zip(scores, valid_responses_flags)
-            if flag == 1
+            score for score, flag, phase
+            in zip(scores, valid_responses_flags, phases)
+            if flag == 1 and phase == "author"
         ]
         previously_labeled_ids.extend(valid_ids)
         previously_labeled_scores.extend(valid_scores)
 
     return pd.DataFrame(
         zip(previously_labeled_ids, previously_labeled_scores),
-        columns=["message_id", "scores"]
+        columns=["id", "scores"]
     )
 
 
@@ -139,8 +141,8 @@ def dump_hydrated_messages_to_csv(hydrated_messages: Dict) -> None:
 
 
 def main():
-    previous_labeled_data_df = load_valid_previous_messages()
-    previously_labeled_ids = previous_labeled_data_df["message_id"].tolist()
+    previous_labeled_data_df = load_valid_previous_author_messages()
+    previously_labeled_ids = previous_labeled_data_df["id"].tolist()
     previous_scores = previous_labeled_data_df["scores"].tolist()
     hydrated_messages = hydrate_messages(
         api, previously_labeled_ids, previous_scores

@@ -3,7 +3,6 @@ from the author phase, determine who to message for the observer phase.
 
 We can randomly message an active subset of the subreddit.
 """
-import datetime
 import os
 from typing import Dict, List
 
@@ -26,6 +25,35 @@ previously_messaged_users_df = pd.read_csv(
 previously_messaged_user_ids = (
     previously_messaged_users_df["author_id"].tolist()
 )
+
+hydrated_author_messages_df = pd.read_csv(
+    os.path.join(
+        constants.RESPONSES_ROOT_PATH,
+        constants.HYDRATED_VALIDATED_RESPONSES_FILENAME
+    )
+)
+
+def select_author_messages_for_observers_to_respond(
+    df_subreddits: pd.DataFrame
+) -> pd.DataFrame:
+    # for each subreddit, pick 4 validated responses that we want observers
+    # to respond to. Set the "to_message" column to 1 for these posts.
+    df_subreddits["to_message"] = 0
+
+    for subreddit in df_subreddits["subreddit_name_prefixed"].unique():
+        subreddit_indices = df_subreddits[
+            df_subreddits['subreddit_name_prefixed'] == subreddit
+        ].index
+        df_subreddits.loc[
+            subreddit_indices[:constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE],
+            'to_message'
+        ] = 1
+        df_subreddits.loc[
+            subreddit_indices[constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE:],
+            'to_message'
+        ] = 0
+    
+    return df_subreddits
 
 
 def get_users_in_subreddit(
@@ -58,8 +86,8 @@ def get_users_in_subreddit(
         ):
             users_lst.append(
                 {
-                    "author_id": author_id,
-                    "author_name": author_name
+                    "subreddit_user_id": author_id,
+                    "subreddit_user_name": author_name
                 }
             )
             num_users_added += 1
@@ -68,29 +96,34 @@ def get_users_in_subreddit(
     return users_lst
 
 
-def get_users_to_post_map(
-    users_in_subreddit: List[str],
-    posts_to_score: List[str]
+def assign_subreddit_users_to_author_message_map(
+    users_in_subreddit: List[Dict[str ,str]]
 ) -> List[Dict[str, str]]:
-    """Maps the users to message with the post that we want them to score.
+    """Maps the users to message with the author message/comment/post that we
+    want them to score.
     
     Returns as list of dictionaries, which we can transform into a pandas df.
+
+    The `users_in_subreddit` is a list of dictionaries where each dictionary
+    is of the format:
+        {
+            "subreddit_user_id": id of the person in the subreddit
+            "subreddit_user_name": screen name of the user
+        }
+    
+    We loop through the list of the users in the subreddit and assign them to
+    one of the author messages/comments/posts that we have. The output of this
+    is a list of dictionaries, where each dictionary is a combination of
+    one user and one author message for that user to observe/respond to.
     """
-    if len(posts_to_score) < constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE:
-        num_posts_desired = constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE
-        raise ValueError(
-            "Not enough posts to score in this subreddit. Please select a "
-            f"subreddit with more posts. Only {len(posts_to_score)} to score, "
-            f"out of {num_posts_desired} posts needed for scoring"
-        )
     output_lst = []
     idx = 0
     for user in users_in_subreddit:
-        row_to_use = df.loc[idx, :]
+        row_to_use = hydrated_author_messages_df.loc[idx, :]
         output_lst.append(
             {
-                "author_id": user["author_id"],
-                "author_name": user["author_name"],
+                "subreddit_user_id": user["subreddit_user_id"],
+                "subreddit_user_name": user["subreddit_user_name"],
                 "id": row_to_use["id"],
                 "body": row_to_use["body"],
                 "permalink": row_to_use["permalink"],
@@ -108,46 +141,18 @@ def get_users_to_post_map(
     return output_lst
 
 
-if __name__ == "__main__":
-    # organize the "hydrated_validated_responses.csv" file by subreddit.
-    df = pd.read_csv(
-        os.path.join(
-            constants.RESPONSES_ROOT_PATH,
-            constants.HYDRATED_VALIDATED_RESPONSES_FILENAME
-        )
-    )
-
-    # get only the subreddits for us to consider on the first pass.
-    df_subreddits = df[
-        df["subreddit_name_prefixed"].isin(constants.SUBREDDITS_TO_OBSERVE)
-    ]
-    
-    # for each subreddit, pick 4 validated responses that we want observers
-    # to respond to. Set the "to_message" column to 1 for these posts.
-    df_subreddits["to_message"] = 0
-
-    for subreddit in df_subreddits["subreddit_name_prefixed"].unique():
-        subreddit_indices = df_subreddits[
-            df_subreddits['subreddit_name_prefixed'] == subreddit
-        ].index
-        df_subreddits.loc[
-            subreddit_indices[:constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE],
-            'to_message'
-        ] = 1
-        df_subreddits.loc[
-            subreddit_indices[constants.NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE:],
-            'to_message'
-        ] = 0
-
-    subreddits_without_prefixes = [
-        strip_prefix_from_subreddit(subreddit)
-        for subreddit in df_subreddits["subreddit_name_prefixed"].unique()
-    ]
+def get_observers_to_message_per_subreddit(
+    df_subreddits: pd.DataFrame
+) -> Dict[str, List[Dict]]:
+    """For each subreddit, have a list of the observers/users in the subreddit
+    that we can message in order for them to respond to an author's
+    comment/post.
+    """
 
     # for each subreddit, get a random list of 50 users in the subreddit
     # who have been active in the past 48 hours. Filter out anyone who
     # we have messaged previously. Add this list as a column in the dataset.
-    subreddit_prefixed_to_user_id_list = {
+    subreddit_prefixed_to_user_id_list: Dict[str, List[Dict[str, str]]] = {
         subreddit_prefixed: get_users_in_subreddit(
             api=api,
             subreddit=strip_prefix_from_subreddit(subreddit_prefixed),
@@ -157,31 +162,32 @@ if __name__ == "__main__":
         in df_subreddits["subreddit_name_prefixed"].unique()
     }
 
-    map_subreddit_to_users_to_message_post_to_message: Dict[str, List[Dict]] = { # noqa
-        subreddit_prefixed: get_users_to_post_map(
-            users_in_subreddit=subreddit_prefixed_to_user_id_list[subreddit_prefixed], # noqa
-            posts_to_score=(
-                df_subreddits[
-                    (df_subreddits["subreddit_name_prefixed"] == subreddit_prefixed) # noqa
-                    & (df_subreddits["to_message"] == 1)
-                ]
+    map_subreddit_to_observers: Dict[str, List[Dict]] = {
+        subreddit_prefixed: assign_subreddit_users_to_author_message_map(
+            users_in_subreddit=(
+                subreddit_prefixed_to_user_id_list[subreddit_prefixed]
             )
         )
         for subreddit_prefixed
         in df_subreddits["subreddit_name_prefixed"].unique()
     }
 
-    # create a new df for each subreddit.
-    # dump each new df into a .csv file, whose name contains the subreddit
-    # name as well as a timestamp.
+    return map_subreddit_to_observers
 
-    # in a new file, for each of these .csv files we would create the
-    # message to send and then message the users.
+
+def dump_observers_per_subreddit(
+    map_subreddit_to_observers: List[str, Dict[str, str]]
+) -> None:
+    """For each subreddit, create a new df that has all the observers to
+    message as well as to which author message/post they should respond to.
+
+    Then, dump these dataframes as .csv files.
+    """
     if not os.path.exists(constants.SUBREDDITS_ROOT_PATH):
         os.mkdir(constants.SUBREDDITS_ROOT_PATH)
 
     for (subreddit_prefixed, users_to_message_dict_list) in (
-        map_subreddit_to_users_to_message_post_to_message.items()
+        map_subreddit_to_observers.items()
     ):
         subreddit_name = strip_prefix_from_subreddit(subreddit_prefixed)
         subreddit_dir = os.path.join(
@@ -194,5 +200,28 @@ if __name__ == "__main__":
         )
         export_df = pd.DataFrame(users_to_message_dict_list)
         export_df.to_csv(full_filepath)
+
+
+if __name__ == "__main__":
+    df_subreddits = hydrated_author_messages_df[
+        hydrated_author_messages_df["subreddit_name_prefixed"].isin(
+            constants.SUBREDDITS_TO_OBSERVE
+        )
+    ]
+    
+    df_subreddits = (
+        select_author_messages_for_observers_to_respond(df_subreddits)
+    )
+
+    subreddits_without_prefixes = [
+        strip_prefix_from_subreddit(subreddit)
+        for subreddit in df_subreddits["subreddit_name_prefixed"].unique()
+    ]
+
+    map_subreddit_to_observers = get_observers_to_message_per_subreddit(
+        df_subreddits
+    )
+
+    dump_observers_per_subreddit(map_subreddit_to_observers)
 
     print("Completed determining which users to message, per subreddit.")

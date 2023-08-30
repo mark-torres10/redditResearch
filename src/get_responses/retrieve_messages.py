@@ -6,7 +6,6 @@ posts have self-reported scores from their respective authors.
 We want to record the message, message ID, the author, our original message,
 the date that our DM was sent, and the date that we received the response.
 """
-import datetime
 import os
 from typing import Dict, List
 
@@ -18,17 +17,6 @@ from get_responses import constants
 from lib.helper import CURRENT_TIME_STR
 from lib.reddit import init_api_access
 from message.helper import AUTHOR_PHASE_MESSAGE_IDENTIFIER_STRING
-
-ALL_VALIDATED_RESPONSES_FILEPATH = os.path.join(
-    constants.VALIDATED_RESPONSES_ROOT_PATH,
-    constants.ALL_VALIDATED_RESPONSES_FILENAME
-)
-SESSION_VALIDATED_RESPONSES_FILEPATH = os.path.join(
-    constants.VALIDATED_RESPONSES_ROOT_PATH,
-    constants.SESSION_VALIDATED_RESPONSES_FILENAME.format(
-        timestamp=CURRENT_TIME_STR
-    )
-)
 
 api = init_api_access()
 

@@ -1,6 +1,6 @@
 import os
 
-from lib.helper import CODE_DIR
+from lib.helper import CODE_DIR, CURRENT_TIME_STR
 
 RESPONSES_ROOT_PATH = os.path.join(CODE_DIR, "get_responses")
 SUBREDDITS_ROOT_PATH = os.path.join(RESPONSES_ROOT_PATH, "subreddits")
@@ -20,6 +20,15 @@ SESSION_VALIDATED_RESPONSES_FILENAME = (
 ALL_RESPONSES_FILENAME = "all_{phase}_phase_responses.csv"
 ALL_VALIDATED_RESPONSES_FILENAME = "validated_responses_all.csv"
 HYDRATED_VALIDATED_RESPONSES_FILENAME = "hydrated_validated_responses.csv"
+ALL_VALIDATED_RESPONSES_FILEPATH = os.path.join(
+    VALIDATED_RESPONSES_ROOT_PATH, ALL_VALIDATED_RESPONSES_FILENAME
+)
+SESSION_VALIDATED_RESPONSES_FILEPATH = os.path.join(
+    VALIDATED_RESPONSES_ROOT_PATH,
+    SESSION_VALIDATED_RESPONSES_FILENAME.format(
+        timestamp=CURRENT_TIME_STR
+    )
+)
 
 SUBREDDITS_TO_OBSERVE = ["r/politics", "r/Conservative", "r/Liberal"]
 NUM_POSTS_PER_SUBREDDIT_TO_OBSERVE = 4
