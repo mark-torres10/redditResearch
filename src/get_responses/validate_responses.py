@@ -85,8 +85,9 @@ def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
         print('-' * 10)
         print(f"Labeling message {idx} out of {num_messages}")
         # print the body
-        print(f"Body: {msg.body}")
+        print(f"Body: {msg['body']}")
         # ask if valid (y/n) or if to exit session
+        breakpoint()
         user_input = ''
         valid_inputs = ['y', 'n', 'e']
         break_session = False
@@ -99,21 +100,22 @@ def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
                 print("Valid response.")
                 scores = input("Please enter their scores (e.g., 1123):\t")
                 responses_list.append({
-                    "id": msg.id,
-                    "body": msg.body,
-                    "phase": phase,
-                    "is_valid_response": 1,
-                    "scores": scores
+                    **msg,
+                    **{
+                        "phase": phase,
+                        "is_valid_response": 1,
+                        "scores": scores
+                    }
                 })
-
             elif user_input == 'n':
                 print("Invalid response")
                 responses_list.append({
-                    "id": msg.id,
-                    "body": msg.body,
-                    "phase": phase,
-                    "is_valid_response": 0,
-                    "scores": ''
+                    **msg,
+                    **{
+                        "phase": phase,
+                        "is_valid_response": 0,
+                        "scores": ''
+                    }
                 })
             elif user_input == 'e':
                 print("Exiting labeling session...")
@@ -137,6 +139,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     messages = load_messages(phase=args.phase)
     messages_with_validation_status = manually_validate_messages(
-        messages=messages
+        messages=messages, phase=args.phase
     )
     write_labels_to_csv(messages_with_validation_status)
