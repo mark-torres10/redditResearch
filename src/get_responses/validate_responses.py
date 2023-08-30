@@ -1,7 +1,7 @@
 """Validate the responses that were provided by users.
 
 Performs validation for one of the phases (author/observer). Does validation
-only for the messages that weren't previously validated.
+only for the messages that weren"t previously validated.
 """
 import argparse
 import os
@@ -64,13 +64,17 @@ def load_messages(phase: str) -> List[Dict]:
 
 def write_labels_to_csv(messages_with_validation_status: List[Dict]) -> None:
     """Writes the validated messages as a .csv file."""
-    colnames = ["id", "phase", "is_valid_response", "scores"]
+    colnames = [
+        "id", "body", "author_id", "author_screen_name", "created_utc",
+        "created_utc_string", "original_outreach_message_id",
+        "original_outreach_message_body", "phase", "is_valid_response",
+        "scores"
+    ]
     df = pd.DataFrame(messages_with_validation_status, columns=colnames)
     df.to_csv(constants.SESSION_VALIDATED_RESPONSES_FILEPATH)
+    print("Finished writing labeled samples to .csv")
 
 
-# TODO: add metadata (e.g., author id, author's full name) to output of
-# validated repsonses
 def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
     """Validates the messages that we have received.
     
@@ -82,17 +86,16 @@ def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
     responses_list: List[Dict] = []
 
     for idx, msg in enumerate(messages):
-        print('-' * 10)
+        print("-" * 10)
         print(f"Labeling message {idx} out of {num_messages}")
         # print the body
         print(f"Body: {msg['body']}")
         # ask if valid (y/n) or if to exit session
-        breakpoint()
-        user_input = ''
-        valid_inputs = ['y', 'n', 'e']
+        user_input = ""
+        valid_inputs = ["y", "n", "e"]
         break_session = False
-        if msg.id in previously_labeled_data_ids:
-            print(f"Previously labeled response, with id {msg.id}, skipping")
+        if msg["id"] in previously_labeled_data_ids:
+            print(f"Previously labeled response, with id {msg['id']}, skipping")
             continue
         while user_input not in valid_inputs:
             user_input = input("Is this a valid response? ('y', 'n', or 'e' to exit)\t") # noqa
@@ -114,7 +117,7 @@ def manually_validate_messages(phase: str, messages: List[Dict]) -> List[Dict]:
                     **{
                         "phase": phase,
                         "is_valid_response": 0,
-                        "scores": ''
+                        "scores": ""
                     }
                 })
             elif user_input == 'e':

@@ -131,7 +131,7 @@ def export_messages(phase_to_messages_map: Dict[str, List[Message]]) -> None:
             for message in original_outreach_messages_map.values()
         ]
         colnames = [
-            "id", "body", "author_id", "author_screen_names", "created_utc",
+            "id", "body", "author_id", "author_screen_name", "created_utc",
             "created_utc_string", "original_outreach_message_id",
             "original_outreach_message_body"
         ]
