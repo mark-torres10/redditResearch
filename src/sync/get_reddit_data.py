@@ -7,8 +7,9 @@ import copy
 import csv
 import os
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, List
 
+import praw
 from praw.models.reddit.comment import Comment
 
 from lib import helper
@@ -62,35 +63,57 @@ def transform_fields(comment: Comment, output_dict: Dict) -> Dict:
     }
 
 
-if __name__ == "__main__":
-    subreddit = sys.argv[1]
-    num_submissions = int(sys.argv[2])
-    num_comments_per_thread = int(sys.argv[3])
+def process_single_comment(comment: Comment) -> Dict:
+    created_utc_string = convert_utc_timestamp_to_datetime_string(
+        comment.created_utc
+    )
+    print(f"Comment: {comment.body}\nCreated at: {created_utc_string}")
+    print("-----")
+    output_dict = {}
+    for field, value in comment.__dict__.items():
+        # we want to dump to a .jsonl file eventually, so we want to
+        # verify that the value is JSON-serializable.
+        if helper.is_json_serializable(value):
+            output_dict[field] = value
+    output_dict = transform_fields(
+        comment=comment, output_dict=output_dict
+    )
+    return output_dict
 
+
+def process_comments_from_thread(
+    thread: praw.models.reddit.submission.Submission,
+    num_comments_per_thread: int
+) -> List[Dict]:
+    return [
+        process_single_comment(comment)
+        for comment in thread.comments[:num_comments_per_thread]
+    ]
+
+
+def process_comments_from_threads(
+    threads: List[praw.models.reddit.submission.Submission],
+    num_comments_per_thread: int
+) -> List[Dict]:
+    """Given a list of threads, process the comments from each thread."""
+    return [
+        process_comments_from_thread(thread, num_comments_per_thread)
+        for thread in threads
+    ]
+
+
+def sync_comments_from_one_subreddit(
+    subreddit: str, num_submissions: int, num_comments_per_thread: int
+) -> None:
+    """Syncs the comments from one subreddit.
+    
+    Does so by grabbing threads and looking at the most recent
+    comments in a given thread."""
     api = init_api_access()
 
     subreddit = api.subreddit(subreddit)
     hot_threads = subreddit.hot(limit=num_submissions)
-
-    posts_dict_list = []
-
-    for thread in hot_threads:
-        for comment in thread.comments[:num_comments_per_thread]:
-            created_utc_string = convert_utc_timestamp_to_datetime_string(
-                comment.created_utc
-            )
-            print(f"Comment: {comment.body}\nCreated at: {created_utc_string}")
-            print("-----")
-            output_dict = {}
-            for field, value in comment.__dict__.items():
-                # we want to dump to a .jsonl file eventually, so we want to
-                # verify that the value is JSON-serializable.
-                if helper.is_json_serializable(value):
-                    output_dict[field] = value
-            output_dict = transform_fields(
-                comment=comment, output_dict=output_dict
-            )
-            posts_dict_list.append(output_dict)
+    posts_dict_list = process_comments_from_threads(hot_threads, num_comments_per_thread)
 
     metadata_dict = {
         "subreddit": subreddit,
@@ -104,4 +127,15 @@ if __name__ == "__main__":
     write_metadata_file(metadata_dict=metadata_dict)
     print(
         f"Finished syncing data from Reddit for timestamp {helper.CURRENT_TIME_STR}"
+    )
+
+
+if __name__ == "__main__":
+    subreddit = sys.argv[1]
+    num_submissions = int(sys.argv[2])
+    num_comments_per_thread = int(sys.argv[3])
+    sync_comments_from_one_subreddit(
+        subreddit=subreddit,
+        num_submissions=num_submissions,
+        num_comments_per_thread=num_comments_per_thread
     )
