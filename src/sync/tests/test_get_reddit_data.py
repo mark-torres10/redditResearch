@@ -9,24 +9,32 @@ from sync.get_reddit_data import (
 )
 
 
+class MockComment:
+    def __init__(self):
+        pass
+
+
+class MockThread:
+    def __init__(self):
+        pass
+
 @pytest.fixture
 def mock_comment():
-    # Create a mock praw.models.reddit.comment.Comment object for testing
-    pass
+    return MockComment()
 
-# Write test cases for each function
 
-def test_write_metadata_file():
-    # Write tests for the write_metadata_file function
-    pass
+@pytest.fixture
+def mock_thread():
+    return MockThread()
+
 
 def test_transform_fields(mock_comment):
-    # Write tests for the transform_fields function
     pass
 
 def test_process_single_comment(mock_comment):
-    # Write tests for the process_single_comment function
-    pass
+    output_dict = process_single_comment(mock_comment)
+    expected_output_dict = {}
+    assert output_dict == expected_output_dict
 
 def test_process_comments_from_thread():
     # Write tests for the process_comments_from_thread function

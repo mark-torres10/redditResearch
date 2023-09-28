@@ -23,6 +23,20 @@ from sync.constants import (
 from sync.transformations import MAP_COL_TO_TRANSFORMATION
 
 
+def create_metadata_dict(
+    subreddit: str, thread_sort_type: str, num_threads: int,
+    num_posts_per_thread: int, num_total_posts_synced: int
+):
+    """Creates a metadata dictionary."""
+    return {
+        "subreddit": subreddit,
+        "thread_sort_type": thread_sort_type,
+        "num_threads": num_threads,
+        "num_posts_per_thread": num_posts_per_thread,
+        "num_total_posts_synced": num_total_posts_synced
+    }
+
+
 def write_metadata_file(metadata_dict: Dict[str, Any]) -> None:
     """Writes metadata to a file.
 
@@ -114,15 +128,16 @@ def sync_comments_from_one_subreddit(
 
     subreddit = api.subreddit(subreddit)
     hot_threads = subreddit.hot(limit=num_submissions)
+
     posts_dict_list = process_comments_from_threads(hot_threads, num_comments_per_thread)
 
-    metadata_dict = {
-        "subreddit": subreddit,
-        "thread_sort_type": "hot",
-        "num_threads": num_submissions,
-        "num_posts_per_thread": num_comments_per_thread,
-        "num_total_posts_synced": len(posts_dict_list)
-    }
+    metadata_dict = create_metadata_dict(
+        subreddit=subreddit,
+        thread_sort_type="hot",
+        num_threads=num_submissions,
+        num_posts_per_thread=num_comments_per_thread,
+        num_total_posts_synced=len(posts_dict_list)
+    )
 
     helper.write_list_dict_to_jsonl(posts_dict_list, SYNC_RESULTS_FILENAME)
     write_metadata_file(metadata_dict=metadata_dict)
