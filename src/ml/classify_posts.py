@@ -9,6 +9,7 @@ exports this to a .csv file.
 Example usage:
     python classify_posts.py 2023-03-20_1438
 """
+import argparse
 import sys
 from typing import Dict, List, Tuple
 import os
@@ -53,8 +54,14 @@ def perform_classifications(
 
 
 if __name__ == "__main__":
-    load_timestamp = sys.argv[1]
-
+    parser = argparse.ArgumentParser(
+        description="Script for classifying previously synced posts."
+    )
+    parser.add_argument(
+        "--timestamp", type=str, required=True
+    )
+    args = parser.parse_args()
+    load_timestamp = args.timestamp
     timestamp_dir = os.path.join(SYNC_ROOT_PATH, load_timestamp, '')
     if not os.path.exists(timestamp_dir):
         logger.error(

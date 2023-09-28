@@ -3,6 +3,7 @@
 Example run:
     python get_reddit_data.py politics 5 10
 """
+import argparse
 import copy
 import csv
 import os
@@ -131,11 +132,21 @@ def sync_comments_from_one_subreddit(
 
 
 if __name__ == "__main__":
-    subreddit = sys.argv[1]
-    num_submissions = int(sys.argv[2])
-    num_comments_per_thread = int(sys.argv[3])
+    parser = argparse.ArgumentParser(
+        description="Script for getting data from Reddit."
+    )
+    parser.add_argument(
+        "--subreddit", type=str, required=True, help="Subreddit to sync from"
+    )
+    parser.add_argument(
+        "--num_submissions", type=int, required=False, default=5
+    )
+    parser.add_argument(
+        "--num_comments_per_thread", type=int, required=False, default=10
+    )
+    args = parser.parse_args()
     sync_comments_from_one_subreddit(
-        subreddit=subreddit,
-        num_submissions=num_submissions,
-        num_comments_per_thread=num_comments_per_thread
+        subreddit=args.subreddit,
+        num_submissions=args.num_submissions,
+        num_comments_per_thread=args.num_comments_per_thread
     )

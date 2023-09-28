@@ -4,6 +4,7 @@ Determines which users to message.
 Example usage:
     python determine_who_to_message.py 2023-03-20_1438
 """
+import argparse
 import os
 import sys
 
@@ -19,8 +20,14 @@ from ml.constants import LABELED_DATA_FILENAME, ML_ROOT_PATH
 logger = RedditLogger(name=__name__)
 
 if __name__ == "__main__":
-    # load labeled data
-    load_timestamp = sys.argv[1]
+    parser = argparse.ArgumentParser(
+        description="Script for determining which users to message."
+    )
+    parser.add_argument(
+        "--timestamp", type=str, required=True
+    )
+    args = parser.parse_args()
+    load_timestamp = args.timestamp
     timestamp_dir = os.path.join(ML_ROOT_PATH, load_timestamp)
 
     if not os.path.exists(timestamp_dir):
