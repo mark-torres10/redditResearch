@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from lib.helper import write_dict_list_to_csv
+from lib.helper import (
+    convert_utc_timestamp_to_datetime_string,
+    get_author_name_from_author_id,
+    write_dict_list_to_csv
+)
 
 
 class TestWriteDictListToCsv:

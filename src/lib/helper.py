@@ -11,7 +11,8 @@ from lib.reddit import init_api_access
 
 CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
 #ROOT_DIR = "/Users/mark/Documents/work/redditResearch/"
-ROOT_DIR = "/workspaces/redditResearch"
+#ROOT_DIR = "/workspaces/redditResearch"
+ROOT_DIR = "/c/Users/mendo/Documents/redditResearch"
 CODE_DIR = os.path.join(ROOT_DIR, "src")
 BASE_REDDIT_URL = "https://www.reddit.com"
 
