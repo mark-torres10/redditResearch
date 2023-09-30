@@ -17,9 +17,14 @@ I also personally use Anaconda to do package management, since this is one way t
 In the root directory, not the `src` directory, create a .env file. In that .env file, insert the credentials for your Reddit app, as `REDDIT_CLIENT_ID`, `REDDIT_SECRET`, `REDDIT_REDIRECT_URI`, `REDDIT_USERNAME`, and `REDDIT_PASSWORD`. Create a new refresh token (see `lib/get_refresh_token.py`), then add that as `REFRESH_TOKEN` to the .env file.
 
 
-
 ### Install Postgres
-This project makes use of Postgres as its DB. To start, install Postgres for your system (https://www.enterprisedb.com/downloads/postgres-postgresql-downloads).
+This project makes use of Postgres as its DB. To start, install Postgres for your system.
+Here are the [Mac](https://www.geeksforgeeks.org/install-postgresql-on-mac/) and [Windows](https://www.geeksforgeeks.org/install-postgresql-on-windows/) installations.
+
+Use the SQL shell to create a new DB called `reddit_data`.
+
+`postgres=# CREATE DATABASE reddit_data;`
+
 ## How to run
 *For the latest information on how to run this code, check out the [runbook](https://torresmark.notion.site/Runbook-af1806fe333743bbb4c9932b0d3842f4?pvs=4) for this code.
 
