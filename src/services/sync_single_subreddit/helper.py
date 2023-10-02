@@ -1,12 +1,13 @@
 """Helper utilities for managing single subreddit sync."""
-import copy
 import csv
-from typing import Any, Literal
+import traceback
+from typing import Any, Literal, Union
 
 import pandas as pd
 from praw.models.comment_forest import CommentForest
 from praw.models.listing.generator import ListingGenerator
 from praw.models.reddit.comment import Comment
+from praw.models.reddit.more import MoreComments
 from praw.models.reddit.redditor import Redditor
 from praw.models.reddit.submission import Submission
 from praw.models.reddit.subreddit import Subreddit
@@ -29,11 +30,8 @@ DEFAULT_THREAD_SORT_TYPE = "hot"
 
 
 def write_metadata_file(metadata_dict: dict[str, Any]) -> None:
-    """Writes metadata to a file.
-
-    By default, writes data to a new directory named by the current timestamp.
-
-    Creates a one-row metadata .csv file.
+    """Writes metadata to a file. By default, writes data to a new directory
+    named by the current timestamp. Creates a one-row metadata .csv file.
     """
     data = [metadata_dict]
     header_names = list(metadata_dict.keys())
@@ -73,7 +71,7 @@ def get_comment_threads(
     elif thread_sort_type == "controversial":
         generator = subreddit.controversial(limit=num_threads)
     else:
-        raise ValueError(f"Unknown thread type: {thread_type}")
+        raise ValueError(f"Unknown thread type: {thread_sort_type}")
     return [thread for thread in generator]
 
 
@@ -122,7 +120,7 @@ def get_redditor_data(redditor: Redditor) -> dict:
 
 def parse_single_comment_data(
     comment: Comment
-) -> tuple(list[dict], list[dict]):
+) -> tuple[list[dict], list[dict]]:
     """Parses a `Comment` comment. Also recursively parses any nested child
     comments.
     
@@ -132,7 +130,9 @@ def parse_single_comment_data(
     users_list_info: list[dict] = []
     comments_list_info: list[dict] = []
 
-    if comment.author.name in DENYLIST_AUTHORS:
+    if comment.author is None:
+        print(f"Comment {comment.id} has no author, meaning it was deleted. Skipping.") # noqa
+    elif comment.author.name in DENYLIST_AUTHORS:
         print(f"Skipping comment by author {comment.author}")
     else:
         author: Redditor = comment.author
@@ -160,26 +160,47 @@ def parse_single_comment_data(
     return (users_list_info, comments_list_info)
 
 
+def parse_morecomments_data(
+    comment: MoreComments
+) ->  tuple[list[dict], list[dict]]:
+    """Parses a 'MoreComments' comment.
+    
+    Sometimes instead of getting a `Comment`, we get a `MoreComments` instance,
+    which means that we need to load the actual comments first before doing any
+    parsing. This loads those comments as a list of comments, then does
+    the parsing.
+
+    The `MoreComments` that we see represent the "Load more comments" or
+    "Load more data" or "continue this thread" that a user would see while
+    scrolling through the Reddit website.
+    """
+    more_comments: list[Comment] = comment.comments()
+    return parse_comments_data(more_comments)
+
+
 def parse_comments_data(
-    comments: CommentForest
-) -> tuple(list[dict], list[dict]):
-    # loop through all the comments
-    # track comment info as well as user info
-    # return two dicts
+    comments: Union[CommentForest, list[Comment]]
+) -> tuple[list[dict], list[dict]]:
     users_list_info: list[dict] = []
     comments_list_info: list[dict] = []
-    
-    for comment in comments:
-        users_info, comments_info = parse_single_comment_data(comment)
-        users_list_info.extend(users_info)
-        comments_list_info.extend(comments_info)
 
+    for comment in comments:
+        if isinstance(comment, Comment):
+            users_info, comments_info = parse_single_comment_data(comment)
+            users_list_info.extend(users_info)
+            comments_list_info.extend(comments_info)
+        elif isinstance(comment, MoreComments):
+            parse_morecomments_data(comment)
+        else:
+            comment_type = type(comment)
+            print(f"Unknown comment class: {comment_type}. Skipping...")
+            continue
     return (users_list_info, comments_list_info)
 
 
 def parse_comment_thread_data(
     thread: Submission
-) -> tuple(dict, list[dict], list[dict]):
+) -> tuple[dict, list[dict], list[dict]]:
     """
     Parses a comment thread. Returns a tuple of dictionaries that contains info
     about the thread, the comments in the thread (and the comments to those
@@ -195,7 +216,7 @@ def parse_comment_thread_data(
 
 def get_threads_data(
     threads: list[Submission]
-) -> tuple(pd.DataFrame, pd.DataFrame, pd.DataFrame):
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Given a list of threads, get the thread, comment, and user info for the
     thread, all comments in the thread (and their children comments), and the
     users who were involved/commented in the comment threads.
@@ -253,14 +274,49 @@ def sync_comments_from_one_subreddit(
     Does so by grabbing threads and looking at the most recent
     comments in a given thread."""
     subreddit = api.subreddit(subreddit)
-
-    subreddit_df = get_subreddit_data(subreddit)
+    subreddit_df = get_subreddit_data(subreddit)   
     threads = get_comment_threads(
         subreddit=subreddit,
         num_threads=num_threads,
         thread_sort_type=thread_sort_type
     )
-    threads_df, users_df, comments_df = get_threads_data(threads=threads)
+
+    col_to_dtype_map = {
+        col: subreddit_df[col].dtype
+        for col in subreddit_df.columns
+    }
+
+    from lib.db.sql.helper import convert_python_dtype_to_sql_type
+
+    col_to_sql_type_map = {
+        col: convert_python_dtype_to_sql_type(dtype)
+        for (col, dtype) in col_to_dtype_map.items()
+    }
+
+    breakpoint()
+
+    try:
+        write_df_to_database(
+            df=subreddit_df, table_name="subreddits"
+        )
+    except Exception as e:
+        print("unable to write to database")
+        print(e)
+        breakpoint()
+
+    breakpoint()
+    import sys
+    sys.exit(1)
+
+
+    try:
+        threads_df, users_df, comments_df = get_threads_data(threads=threads)
+    except Exception as e:
+        print(f"Unable to sync reddit data: {e}")
+        traceback.print_exc()
+        breakpoint()
+
+    print("Successfully synced data from Reddit. Now writing to DB...")
 
     write_df_to_database(
         df=subreddit_df, table_name="subreddits"
