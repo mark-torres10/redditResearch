@@ -3,20 +3,20 @@
 Returns list of payloads for syncing each individual subreddit.
 """
 from services.sync_single_subreddit.helper import (
-    DEFAULT_NUM_THREADS, DEFAULT_NUM_COMMENTS_PER_THREAD
+    DEFAULT_NUM_THREADS, DEFAULT_THREAD_SORT_TYPE
 )
 
 # TODO: implement
 def get_all_subreddits() -> list[str]:
-    return []
+    return [
+        "Politics", "Conservative", "Liberal"
+    ]
 
 
 def main(event: dict, context: dict) -> list[dict]:
     subreddits = event.get("subreddits", "all")
     num_threads = event.get("num_threads", DEFAULT_NUM_THREADS)
-    num_comments_per_thread = event.get(
-        "num_comments_per_thread", DEFAULT_NUM_COMMENTS_PER_THREAD
-    )
+    thread_sort_type = event.get("thread_sort_type", DEFAULT_THREAD_SORT_TYPE)
     if subreddits == "all":
         subreddits = get_all_subreddits()
     else:
@@ -25,7 +25,7 @@ def main(event: dict, context: dict) -> list[dict]:
         {
             "subreddit": subreddit,
             "num_threads": num_threads,
-            "num_comments_per_thread": num_comments_per_thread
+            "thread_sort_type": thread_sort_type
         }
         for subreddit in subreddits
     ]

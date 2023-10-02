@@ -1,0 +1,1 @@
+DENYLIST_AUTHORS = ["AutoModerator"]

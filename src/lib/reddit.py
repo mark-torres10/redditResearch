@@ -6,14 +6,14 @@ from typing import Any, Callable, Dict, List, Optional
 
 import praw
 
-
-load_dotenv(Path("../../.env"))
+current_file_directory = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.abspath(os.path.join(current_file_directory, "../../.env"))
+load_dotenv(env_path)
 
 CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
 CLIENT_SECRET = os.getenv("REDDIT_SECRET")
 REDIRECT_URI = os.getenv("REDDIT_REDIRECT_URI")
 REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
-# TODO: get lab username + PW at some point
 USERNAME = os.getenv("REDDIT_USERNAME")
 PASSWORD = os.getenv("REDDIT_PASSWORD")
 DEFAULT_USER_AGENT = "Reddit Research v1"

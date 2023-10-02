@@ -15,6 +15,7 @@ CURRENT_TIME_STR = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
 ROOT_DIR = "/c/Users/mendo/Documents/redditResearch"
 CODE_DIR = os.path.join(ROOT_DIR, "src")
 BASE_REDDIT_URL = "https://www.reddit.com"
+DENYLIST_AUTHORS = ["AutoModerator"]
 
 api = init_api_access()
 
@@ -128,3 +129,30 @@ def get_message_obj_from_id(
 ) -> praw.models.reddit.message.Message:
     """Get the message object from the message ID."""
     return api.inbox.message(message_id)
+
+
+def add_enrichment_fields(data: dict) -> dict:
+    """Add enrichment fields to a given dictionary.
+    
+    For example, adds the synctimestamp field.
+    """
+    enrichment_fields = {
+        "synctimestamp": datetime.datetime.utcnow().isoformat()
+    }
+    if "author" in data:
+        author_screen_name = get_author_name_from_author_id(data["author"])
+        enrichment_fields = {
+            **enrichment_fields,
+            **{"author_screen_name": author_screen_name}
+        }
+
+    if "created_utc" in data:
+        created_utc_string = convert_utc_timestamp_to_datetime_string(
+            data["created_utc"]
+        )
+        enrichment_fields = {
+            **enrichment_fields,
+            **{"created_utc_string": created_utc_string}
+        }
+
+    return {**data, **enrichment_fields}

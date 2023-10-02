@@ -1,6 +1,4 @@
 """Transformations to make to a given column's raw data."""
-from datetime import datetime
-
 from lib import helper
 
 
