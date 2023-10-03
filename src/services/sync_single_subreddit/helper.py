@@ -25,8 +25,14 @@ from services.sync_single_subreddit.enrichments import (
 )
 
 DEFAULT_NUM_THREADS = 5
-DEFAULT_NUM_COMMENTS_PER_THREAD = 10
 DEFAULT_THREAD_SORT_TYPE = "hot"
+DEFAULT_MAX_COMMENTS = 250
+
+previously_seen_threads = set()
+previously_seen_comments = set()
+previously_seen_users = set()
+
+total_synced_comments = 0
 
 
 def write_metadata_file(metadata_dict: dict[str, Any]) -> None:
@@ -136,11 +142,15 @@ def parse_single_comment_data(
         print(f"Skipping comment by author {comment.author}")
     else:
         author: Redditor = comment.author
-        author_info = get_redditor_data(author)
-        users_list_info.append(author_info)
+        if author.id not in previously_seen_users:
+            author_info = get_redditor_data(author)
+            previously_seen_users.add(author_info["id"])
+            users_list_info.append(author_info)
 
-        comment_info = get_comment_data(comment)
-        comments_list_info.append(comment_info)
+        if comment.id not in previously_seen_comments:
+            comment_info = get_comment_data(comment)
+            previously_seen_comments.add(comment_info["id"])
+            comments_list_info.append(comment_info)
 
         # process replies as well. Each reply is its own Comment instance that
         # can also be processed recursively. The `replies` field will still
@@ -179,12 +189,23 @@ def parse_morecomments_data(
 
 
 def parse_comments_data(
-    comments: Union[CommentForest, list[Comment]]
+    comments: Union[CommentForest, list[Comment]],
+    max_total_comments: int = DEFAULT_MAX_COMMENTS
 ) -> tuple[list[dict], list[dict]]:
     users_list_info: list[dict] = []
     comments_list_info: list[dict] = []
 
+    if total_synced_comments > max_total_comments:
+        print(f"Reached max total comments. Skipping...")
+        return (users_list_info, comments_list_info)
+
     for comment in comments:
+        if total_synced_comments > max_total_comments:
+            print(f"Reached max total comments...")
+            break
+        if comment.id in previously_seen_comments:
+            print(f"Already seen comment with id={comment.id}. Skipping...")
+            continue
         if isinstance(comment, Comment):
             users_info, comments_info = parse_single_comment_data(comment)
             users_list_info.extend(users_info)
@@ -195,27 +216,39 @@ def parse_comments_data(
             comment_type = type(comment)
             print(f"Unknown comment class: {comment_type}. Skipping...")
             continue
+        total_synced_comments += 1
     return (users_list_info, comments_list_info)
 
 
 def parse_comment_thread_data(
-    thread: Submission
+    thread: Submission,
+    max_total_comments: int = DEFAULT_MAX_COMMENTS
 ) -> tuple[dict, list[dict], list[dict]]:
     """
     Parses a comment thread. Returns a tuple of dictionaries that contains info
     about the thread, the comments in the thread (and the comments to those
     comments), and the users in that comment thread.
     """
-    thread_dict = get_thread_data(thread)
+    if thread.id in previously_seen_threads:
+        print(f"Thread with id={thread.id} has already been seen. Skipping.")
+        return ({}, [], [])
+    if total_synced_comments > max_total_comments:
+        print(f"Reached max total comments. Skippin thread {thread.id}")
+        return ({}, [], [])
 
+    thread_dict = get_thread_data(thread)
+    previously_seen_threads.add(thread_dict["id"])
     comments: CommentForest = thread.comments
-    users_list_dicts, comments_list_dicts = parse_comments_data(comments)
+    users_list_dicts, comments_list_dicts = parse_comments_data(
+        comments=comments, max_total_comments=max_total_comments
+    )
 
     return (thread_dict, users_list_dicts, comments_list_dicts)
 
 
 def get_threads_data(
-    threads: list[Submission]
+    threads: list[Submission],
+    max_total_comments: int = DEFAULT_MAX_COMMENTS
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Given a list of threads, get the thread, comment, and user info for the
     thread, all comments in the thread (and their children comments), and the
@@ -225,7 +258,9 @@ def get_threads_data(
     the comments in the thread, and one for the users in the thread.
     """
     parsed_comment_threads_data = [
-        parse_comment_thread_data(thread)
+        parse_comment_thread_data(
+            thread=thread, max_total_comments=max_total_comments
+        )
         for thread in threads
     ]
     threads_info_list: list[dict] = [data[0] for data in parsed_comment_threads_data]
@@ -267,6 +302,7 @@ def sync_comments_from_one_subreddit(
     api: Reddit,
     subreddit: str,
     num_threads: int = DEFAULT_NUM_THREADS,
+    max_total_comments: int = DEFAULT_MAX_COMMENTS,
     thread_sort_type: Literal["hot", "new", "top", "controversial"] = "hot"
 ) -> None:
     """Syncs the comments from one subreddit.
@@ -280,6 +316,15 @@ def sync_comments_from_one_subreddit(
         num_threads=num_threads,
         thread_sort_type=thread_sort_type
     )
+
+    try:
+        threads_df, users_df, comments_df = get_threads_data(
+            threads=threads,
+            max_total_comments=max_total_comments
+        )
+    except Exception as e:
+        print(f"Unable to sync reddit data: {e}")
+        traceback.print_exc()
 
     col_to_dtype_map = {
         col: subreddit_df[col].dtype
@@ -304,17 +349,6 @@ def sync_comments_from_one_subreddit(
         print(e)
         breakpoint()
 
-    breakpoint()
-    import sys
-    sys.exit(1)
-
-
-    try:
-        threads_df, users_df, comments_df = get_threads_data(threads=threads)
-    except Exception as e:
-        print(f"Unable to sync reddit data: {e}")
-        traceback.print_exc()
-        breakpoint()
 
     print("Successfully synced data from Reddit. Now writing to DB...")
 
