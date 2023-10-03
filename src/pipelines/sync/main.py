@@ -6,7 +6,7 @@ from services.sync_subreddits.handler import main as sync_subreddits
 
 @track_function_runtime
 def main() -> None:
-    event = {"subreddits": "all"}
+    event = {"subreddits": "Politics"}
     context = {}
     payloads = sync_subreddits(event, context)
     for payload in payloads:

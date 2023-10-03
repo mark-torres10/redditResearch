@@ -13,6 +13,7 @@ from praw.models.reddit.submission import Submission
 from praw.models.reddit.subreddit import Subreddit
 from praw.reddit import Reddit
 
+from data.helper import dump_df_to_csv
 from lib.db.sql.helper import write_df_to_database
 from lib.helper import (
     CURRENT_TIME_STR, DENYLIST_AUTHORS,
@@ -195,6 +196,8 @@ def parse_comments_data(
     users_list_info: list[dict] = []
     comments_list_info: list[dict] = []
 
+    global total_synced_comments
+
     if total_synced_comments > max_total_comments:
         print(f"Reached max total comments. Skipping...")
         return (users_list_info, comments_list_info)
@@ -263,7 +266,11 @@ def get_threads_data(
         )
         for thread in threads
     ]
-    threads_info_list: list[dict] = [data[0] for data in parsed_comment_threads_data]
+    # get only threads that we actually processed, not any threads that we
+    # skipped because we already had enough comments.
+    threads_info_list: list[dict] = [
+        data[0] for data in parsed_comment_threads_data if len(data[0]) > 0
+    ]
     users_list_dicts: list[list[dict]] = [data[1] for data in parsed_comment_threads_data]
     comments_info_list: list[list[dict]] = [data[2] for data in parsed_comment_threads_data]
 
@@ -276,23 +283,10 @@ def get_threads_data(
     for comments_list in comments_info_list:
         unnested_comments_list_dicts.extend(comments_list)
 
-    full_users_dict = {}
-
-    # dedupe user dictionary.
-    for user_dict in unnested_users_list_dicts:
-        full_users_dict = {
-            **full_users_dict,
-            **{
-                user_dict["id"]: user_dict
-            }
-        }
-
-    # fetch only the items in each dictionary and add to a list.
-    users_list = [item for item in full_users_dict.items()]
 
     # export
     threads_df = pd.DataFrame(threads_info_list)
-    users_df = pd.DataFrame(users_list)
+    users_df = pd.DataFrame(unnested_users_list_dicts)
     comments_df = pd.DataFrame(unnested_comments_list_dicts)
 
     return (threads_df, users_df, comments_df)
@@ -326,44 +320,38 @@ def sync_comments_from_one_subreddit(
         print(f"Unable to sync reddit data: {e}")
         traceback.print_exc()
 
-    col_to_dtype_map = {
-        col: subreddit_df[col].dtype
-        for col in subreddit_df.columns
-    }
-
-    from lib.db.sql.helper import convert_python_dtype_to_sql_type
-
-    col_to_sql_type_map = {
-        col: convert_python_dtype_to_sql_type(dtype)
-        for (col, dtype) in col_to_dtype_map.items()
-    }
-
-    breakpoint()
+    print("Successfully synced data from Reddit. Now writing to DB...")
 
     try:
+        # dump raw data as .csv files.
+        dump_df_to_csv(
+            df=subreddit_df, table_name="subreddits"
+        )
+        dump_df_to_csv(
+            df=users_df, table_name="users"
+        )
+        dump_df_to_csv(
+            df=threads_df, table_name="threads"
+        )
+        dump_df_to_csv(
+            df=comments_df, table_name="comments"
+        )
+        # write to DB
         write_df_to_database(
             df=subreddit_df, table_name="subreddits"
         )
+        write_df_to_database(
+            df=users_df, table_name="users"
+        )
+        write_df_to_database(
+            df=threads_df, table_name="threads"
+        )
+        write_df_to_database(
+            df=comments_df, table_name="comments"
+        )
     except Exception as e:
-        print("unable to write to database")
-        print(e)
-        breakpoint()
-
-
-    print("Successfully synced data from Reddit. Now writing to DB...")
-
-    write_df_to_database(
-        df=subreddit_df, table_name="subreddits"
-    )
-    write_df_to_database(
-        df=users_df, table_name="users"
-    )
-    write_df_to_database(
-        df=threads_df, table_name="threads"
-    )
-    write_df_to_database(
-        df=comments_df, table_name="comments"
-    )
+        print(f"unable to write data to database: {e}")
+        traceback.print_exc()
 
     metadata_dict = {
         "subreddit": subreddit,
