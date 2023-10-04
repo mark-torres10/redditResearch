@@ -21,8 +21,8 @@ from lib.helper import (
     is_json_serializable,
 )
 from services.sync_single_subreddit.constants import NEW_SYNC_METADATA_FULL_FP
-from services.sync_single_subreddit.enrichments import (
-    object_specific_enrichments
+from services.sync_single_subreddit.transformations import (
+    field_specific_parsing, object_specific_enrichments
 )
 
 DEFAULT_NUM_THREADS = 5
@@ -82,6 +82,7 @@ def get_comment_threads(
     return [thread for thread in generator]
 
 
+# TODO: get the author of the thread? Exists as df.author_fullname, in `t2_{id}` format
 def get_thread_data(thread: Submission) -> dict:
     """Given a `thread` object, get the thread data."""
     thread_dict = {}
@@ -107,9 +108,11 @@ def get_comment_data(comment: Comment) -> dict:
             comment_dict[field] = value
     comment_dict = add_enrichment_fields(comment_dict)
     object_specific_enrichments_dict = object_specific_enrichments(comment)
+    parse_specific_fields_dict = field_specific_parsing(comment_dict)
     comment_dict = {
         **comment_dict,
-        **object_specific_enrichments_dict
+        **object_specific_enrichments_dict,
+        **parse_specific_fields_dict
     }
     return comment_dict
 

@@ -6,6 +6,9 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import psycopg2
+from sqlalchemy import create_engine
+
+from lib.db.sql.tables import TABLE_TO_KEYS_MAP
 
 current_file_directory = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.abspath(os.path.join(current_file_directory, "../../../../.env"))
@@ -21,6 +24,11 @@ DB_PARAMS = {
 
 conn = psycopg2.connect(**DB_PARAMS)
 cursor = conn.cursor()
+
+# https://saturncloud.io/blog/writing-dataframes-to-a-postgres-database-using-psycopg2/
+engine = create_engine(
+    f"postgresql+psycopg2://{DB_PARAMS['user']}:{DB_PARAMS['password']}@{DB_PARAMS['host']}:{DB_PARAMS['port']}/{DB_PARAMS['database']}"
+)
 
 
 def convert_python_dtype_to_sql_type(dtype: np.dtype) -> str:
@@ -41,23 +49,38 @@ def convert_python_dtype_to_sql_type(dtype: np.dtype) -> str:
     return instance_type
 
 
-def create_foreign_key_statements() -> Optional[list[str]]:
-    return []
+def generate_single_foreign_key_statement(foreign_key: dict) -> str:
+    return f"""
+        FOREIGN KEY {foreign_key['key']}
+        REFERENCES {foreign_key['reference_table']} ({foreign_key['reference_table_key']})
+        ON DELETE {foreign_key['on_delete']}
+    """
+
+def create_foreign_key_statement(foreign_keys: list[dict]) -> str:
+    if len(foreign_keys) == 0:
+        return ""
+
+    foreign_key_statements = [
+        generate_single_foreign_key_statement(foreign_key)
+        for foreign_key in foreign_keys
+    ]
+    foreign_key_str = ',\n'.join(foreign_key_statements)
+    return f",{foreign_key_str}"
+
 
 # https://www.postgresqltutorial.com/postgresql-python/create-tables/
 def generate_create_table_statement(
-    table_name: str,
-    field_to_sql_type_map: dict,
-    primary_keys: Optional[list[str]]
+    table_name: str, field_to_sql_type_map: dict
 ) -> str:
-    primary_keys = []
+    primary_keys: list[str] = TABLE_TO_KEYS_MAP[table_name]["primary_keys"]
+    foreign_keys: list[dict] = TABLE_TO_KEYS_MAP[table_name]["foreign_keys"]
     fields_list = [
         f"{field_name} {field_type} NOT NULL"
         for field_name, field_type in field_to_sql_type_map.items()
     ]
     fields_query = ',\n'.join(fields_list)
     primary_keys = f",PRIMARY KEY ({', '.join(primary_keys)})"
-    foreign_keys = ',\n'.join(create_foreign_key_statements()) # TODO: need to implement
+    foreign_keys = create_foreign_key_statement(foreign_keys)
     create_table_sql = f"""CREATE TABLE {table_name} (
         {fields_query},
         {primary_keys},
@@ -68,7 +91,7 @@ def generate_create_table_statement(
    
 
 def generate_create_table_statement_from_df(
-    df: pd.DataFrame, table_name: str, primary_keys: Optional[list] = None
+    df: pd.DataFrame, table_name: str
 ) -> str:
     """Given a df, generate a create table statement.
     
@@ -85,8 +108,7 @@ def generate_create_table_statement_from_df(
 
     create_table_sql = generate_create_table_statement(
         table_name=table_name,
-        field_to_sql_type_map=col_to_sql_type_map,
-        primary_keys=primary_keys
+        field_to_sql_type_map=col_to_sql_type_map
     )
     print(f"Creating a new table, {table_name}, with the following CREATE TABLE statement:") # noqa
     print(create_table_sql)
@@ -94,7 +116,7 @@ def generate_create_table_statement_from_df(
 
 
 def create_new_table_from_df(
-    df: pd.DataFrame, table_name: str, primary_keys: Optional[list] = None
+    df: pd.DataFrame, table_name: str
 ) -> None:
     """Given a df, create a new table from it.
     
@@ -102,20 +124,21 @@ def create_new_table_from_df(
     """
     try:
         create_table_statement = generate_create_table_statement_from_df(
-            df=df, table_name=table_name, primary_keys=primary_keys
+            df=df, table_name=table_name
         )
         cursor.execute(create_table_statement)
         conn.commit()
+        print(f"Table {table_name} created successfully.")
     except Exception as e:
         print(f"Unable to create table {table_name}: {e}")
         raise
 
 
+# TODO: implement upsert
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,
-    upsert: bool = False,
-    primary_keys: Optional[list] = None
+    upsert: bool = False
 ) -> None:
     """Writes a dataframe to a Postgres table.
     
@@ -129,6 +152,7 @@ def write_df_to_database(
         )
         table_exists = cursor.fetchone()[0]
         if not table_exists:
+            print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
         col_to_sql_type_map = {
             col: convert_python_dtype_to_sql_type(df[col].dtype)
@@ -136,10 +160,9 @@ def write_df_to_database(
         }
         df.to_sql(
             table_name,
-            conn,
+            engine,
             if_exists="append",
-            index=False,
-            dtype=col_to_sql_type_map
+            index=False
         )
     except Exception as e:
         conn.rollback()
