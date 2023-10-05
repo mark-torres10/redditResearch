@@ -1,5 +1,6 @@
 """Helper utilities for managing single subreddit sync."""
 import csv
+import os
 import traceback
 from typing import Any, Literal, Union
 
@@ -20,14 +21,16 @@ from lib.helper import (
     add_enrichment_fields,
     is_json_serializable,
 )
-from services.sync_single_subreddit.constants import NEW_SYNC_METADATA_FULL_FP
+from services.sync_single_subreddit.constants import (
+    new_sync_metadata_dir, NEW_SYNC_METADATA_FULL_FP
+)
 from services.sync_single_subreddit.transformations import (
     field_specific_parsing, object_specific_enrichments
 )
 
 DEFAULT_NUM_THREADS = 5
 DEFAULT_THREAD_SORT_TYPE = "hot"
-DEFAULT_MAX_COMMENTS = 250
+DEFAULT_MAX_COMMENTS = 300
 
 previously_seen_threads = set()
 previously_seen_comments = set()
@@ -82,7 +85,6 @@ def get_comment_threads(
     return [thread for thread in generator]
 
 
-# TODO: get the author of the thread? Exists as df.author_fullname, in `t2_{id}` format
 def get_thread_data(thread: Submission) -> dict:
     """Given a `thread` object, get the thread data."""
     thread_dict = {}
@@ -92,9 +94,11 @@ def get_thread_data(thread: Submission) -> dict:
             thread_dict[field] = value
     thread_dict = add_enrichment_fields(thread_dict)
     object_specific_enrichments_dict = object_specific_enrichments(thread)
+    parse_specific_fields_dict = field_specific_parsing(thread_dict)
     thread_dict = {
         **thread_dict,
-        **object_specific_enrichments_dict
+        **object_specific_enrichments_dict,
+        **parse_specific_fields_dict
     }
     return thread_dict
 
@@ -102,7 +106,7 @@ def get_thread_data(thread: Submission) -> dict:
 def get_comment_data(comment: Comment) -> dict:
     """Given a `comment` object, get the comment data."""
     comment_dict = {}
-    print(f"Getting information for comment with id={comment.id}")
+    previously_seen_comments.add(comment.id)
     for field, value in comment.__dict__.items():
         if is_json_serializable(value):
             comment_dict[field] = value
@@ -120,11 +124,18 @@ def get_comment_data(comment: Comment) -> dict:
 def get_redditor_data(redditor: Redditor) -> dict:
     """Given a `redditor` object, get the redditor data."""
     redditor_dict = {}
-    print(f"Getting information for redditor with id={redditor.id}")
+    previously_seen_users.add(redditor.id)
     for field, value in redditor.__dict__.items():
         if is_json_serializable(value):
             redditor_dict[field] = value
     redditor_dict = add_enrichment_fields(redditor_dict)
+    object_specific_enrichments_dict = object_specific_enrichments(redditor)
+    parse_specific_fields_dict = field_specific_parsing(redditor_dict)
+    redditor_dict = {
+        **redditor_dict,
+        **object_specific_enrichments_dict,
+        **parse_specific_fields_dict
+    }
     return redditor_dict
 
 
@@ -148,12 +159,10 @@ def parse_single_comment_data(
         author: Redditor = comment.author
         if author.id not in previously_seen_users:
             author_info = get_redditor_data(author)
-            previously_seen_users.add(author_info["id"])
             users_list_info.append(author_info)
 
         if comment.id not in previously_seen_comments:
             comment_info = get_comment_data(comment)
-            previously_seen_comments.add(comment_info["id"])
             comments_list_info.append(comment_info)
 
         # process replies as well. Each reply is its own Comment instance that
@@ -164,12 +173,6 @@ def parse_single_comment_data(
             users_info, comments_info = parse_comments_data(replies)
             users_list_info.extend(users_info)
             comments_list_info.extend(comments_info)
-            """
-            for reply in replies:
-                users_info, comments_info = parse_single_comment_data(reply)
-                users_list_info.extend(users_info)
-                comments_list_info.extend(comments_info)
-            """
 
     return (users_list_info, comments_list_info)
 
@@ -239,7 +242,7 @@ def parse_comment_thread_data(
         print(f"Thread with id={thread.id} has already been seen. Skipping.")
         return ({}, [], [])
     if total_synced_comments > max_total_comments:
-        print(f"Reached max total comments. Skippin thread {thread.id}")
+        print(f"Reached max total comments. Skipping thread {thread.id}")
         return ({}, [], [])
 
     thread_dict = get_thread_data(thread)
@@ -340,6 +343,7 @@ def sync_comments_from_one_subreddit(
             df=comments_df, table_name="comments"
         )
         # write to DB
+        """
         write_df_to_database(
             df=subreddit_df, table_name="subreddits"
         )
@@ -352,6 +356,7 @@ def sync_comments_from_one_subreddit(
         write_df_to_database(
             df=comments_df, table_name="comments"
         )
+        """
     except Exception as e:
         print(f"unable to write data to database: {e}")
         traceback.print_exc()
@@ -364,6 +369,7 @@ def sync_comments_from_one_subreddit(
         "num_total_users": users_df.shape[0]
     }
 
+    os.makedirs(new_sync_metadata_dir)
     write_metadata_file(metadata_dict=metadata_dict)
     print(
         f"Finished syncing data from Reddit for timestamp {CURRENT_TIME_STR}"
