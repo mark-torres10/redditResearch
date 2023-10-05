@@ -32,13 +32,11 @@ DEFAULT_NUM_THREADS = 5
 DEFAULT_THREAD_SORT_TYPE = "hot"
 DEFAULT_MAX_COMMENTS = 200 # TODO: change back to 300
 
+
+# metadata counters, for QA of syncs
 previously_seen_threads = set()
 previously_seen_comments = set()
 previously_seen_users = set()
-
-# values to keep an eye on
-# total_synced_comments should equal total_comments + duplicate_comments + skipped_comments
-# total_synced_comments should equal total_users + duplicate_authors + skipped_authors
 total_synced_comments = 0
 total_comments = 0
 total_users = 0
@@ -184,11 +182,6 @@ def parse_single_comment_data(
     global total_comments
     global duplicate_comments
 
-    is_duplicate_user = False
-    added_new_comment = False
-    added_new_user = False
-    number_of_comments_before_sync = total_synced_comments
-
     if comment.author is None:
         print(f"Comment {comment.id} has no author, meaning it was deleted. Skipping.") # noqa
         skipped_comments += 1
@@ -203,17 +196,14 @@ def parse_single_comment_data(
             author_info = get_redditor_data(author)
             users_list_info.append(author_info)
             total_users += 1
-            added_new_user = True
         else:
             print(f"Author with id={author.id} has already been seen. Skipping...") # noqa
             duplicate_authors += 1
-            is_duplicate_user = True
 
         if comment.id not in previously_seen_comments:
             comment_info = get_comment_data(comment)
             comments_list_info.append(comment_info)
             total_comments += 1
-            added_new_comment = True
         else:
             print(f"Comment with id={comment.id} has already been seen. Skipping...") # noqa
             duplicate_comments += 1
@@ -229,28 +219,6 @@ def parse_single_comment_data(
             users_info, comments_info = parse_comments_data(replies)
             users_list_info.extend(users_info)
             comments_list_info.extend(comments_info)
-
-    if len(comments_list_info) != len(users_list_info):
-        print('-' * 10)
-        print("(comment-level) Comments and users should be equal...")
-        print(f"Number of comments in this function run: {len(comments_list_info)}")
-        print(f"Number of total synced comments prior to this function run: {number_of_comments_before_sync}") # noqa
-        print(f"Number of users: {len(users_list_info)}")
-        print(f"Number of total synced comments: {total_comments}\tNumber of unique users: {total_users}\tNumber of duplicate users: {duplicate_authors}") # noqa
-        print(f"Number of total synced comments should == number of unique users + number of duplicate users. Is this true? {total_synced_comments == total_users + duplicate_authors}") # noqa
-        print(f"Number of total synced comments should == comments prior to run + comments during run. Is this true? {total_synced_comments == number_of_comments_before_sync + len(comments_list_info)}") # noqa
-        print('-' * 5)
-        print(f"Number of skipped comments: {skipped_comments}\tNumber of duplicate comments: {duplicate_comments}") # noqa
-        print(f"Number of skipped users: {skipped_authors} (should equal # of skipped comments)") # noqa
-        print('-' * 5)
-        print(f"Did we add a new comment this iteration? {added_new_comment}")
-        print(f"Did we add a new user this iteration? {added_new_user}")
-        print(f"Did this user comment already (which means we have them in our data, so it's OK to not add): {is_duplicate_user}")
-        print("We need to look out for the case where we added a new comment but we didn't add a new user and the user wasn't a duplicate (so first should be True and one of the next two should be True)") # noqa
-        print(f"Is this true? {added_new_comment and (added_new_user or is_duplicate_user)}") # noqa
-        print("We have a problem if we see 1 True and 2 Falses...") # noqa
-        print("Needs more QA...")
-        print('-' * 10)
 
     return (users_list_info, comments_list_info)
 
@@ -330,8 +298,6 @@ def parse_comment_thread_data(
     about the thread, the comments in the thread (and the comments to those
     comments), and the users in that comment thread.
     """
-    print(f"Total synced comments before thread: {total_synced_comments}")
-    original_total_synced_comments = total_synced_comments
     if thread.id in previously_seen_threads:
         print(f"Thread with id={thread.id} has already been seen. Skipping.")
         return ({}, [], [])
@@ -345,26 +311,6 @@ def parse_comment_thread_data(
     users_list_dicts, comments_list_dicts = parse_comments_data(
         comments=comments, max_total_comments=max_total_comments
     )
-
-    # note: the number of comments should equal the number of users, since
-    # every comment that we sync should have an associated user..
-    # note: this isn't true, since a user can comment multiple times.
-    if len(comments_list_dicts) != len(users_list_dicts):
-        print('-' * 10)
-        print("(thread-level) Comments and users should be equal...")
-        print(f"Number of comments: {len(comments_list_dicts)}")
-        print(f"Number of users: {len(users_list_dicts)}")
-        print("Needs further QA")
-        print('-' * 10)
-    else:
-        print('-' * 10)
-        print(f"Number of synced comments in thread {thread.id}: {len(comments_list_dicts)}") # noqa
-        print(f"Number of comments left to sync: {max_total_comments - total_synced_comments}") # noqa
-        print(f"Number of comments synced prior to this thread: {original_total_synced_comments}") # noqa
-        print(f"Number of comments synced in this thread {thread.id}: {len(comments_list_dicts)}") # noqa
-        print(f"Is the counter of total synced comments what we expect? {total_synced_comments == original_total_synced_comments + len(comments_list_dicts)}") # noqa
-        print("valid thread...")
-        print('-' * 10)
 
     return (thread_dict, users_list_dicts, comments_list_dicts)
 
@@ -499,9 +445,14 @@ def sync_comments_from_one_subreddit(
     metadata_dict = {
         "subreddit": subreddit,
         "thread_sort_type": thread_sort_type,
+        "max_total_comments": max_total_comments,
         "num_comment_threads": threads_df.shape[0],
         "num_total_comments": comments_df.shape[0],
-        "num_total_users": users_df.shape[0]
+        "num_total_users": users_df.shape[0],
+        "num_duplicate_authors": duplicate_authors,
+        "num_duplicate_comments": duplicate_comments,
+        "num_skipped_comments": skipped_comments,
+        "num_skipped_authors": skipped_authors
     }
 
     os.makedirs(new_sync_metadata_dir)
