@@ -42,5 +42,16 @@ TABLE_TO_KEYS_MAP = {
     "users": {
         "primary_keys": ["id"],
         "foreign_keys": []
+    },
+    "classified_comments": {
+        "primary_keys": ["id"],
+        "foreign_keys": [
+            {
+                "key": "id",
+                "reference_table": "comments",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE"
+            }
+        ]
     }
 }

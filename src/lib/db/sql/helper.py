@@ -39,8 +39,12 @@ def convert_python_dtype_to_sql_type(dtype: np.dtype) -> str:
         instance_type = "text"
     elif dtype == np.dtype("bool"):
         instance_type = "bool"
+    elif dtype == np.dtype("int32"):
+        instance_type = "int"
     elif dtype == np.dtype("int64"):
         instance_type = "int"
+    elif dtype == np.dtype("float32"):
+        instance_type = "float"
     elif dtype == np.dtype("float64"):
         instance_type = "float"
     else:
@@ -187,7 +191,7 @@ def write_df_to_database(
             drop_table(table_name=table_name)
             table_exists = False
         else:
-            check_if_table_exists(table_name=table_name)
+            table_exists = check_if_table_exists(table_name=table_name)
         if not table_exists:
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
