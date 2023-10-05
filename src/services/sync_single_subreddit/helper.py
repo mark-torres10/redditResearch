@@ -30,13 +30,24 @@ from services.sync_single_subreddit.transformations import (
 
 DEFAULT_NUM_THREADS = 5
 DEFAULT_THREAD_SORT_TYPE = "hot"
-DEFAULT_MAX_COMMENTS = 300
+DEFAULT_MAX_COMMENTS = 200 # TODO: change back to 300
 
 previously_seen_threads = set()
 previously_seen_comments = set()
 previously_seen_users = set()
 
+# values to keep an eye on
+# total_synced_comments should equal total_comments + duplicate_comments + skipped_comments
+# total_synced_comments should equal total_users + duplicate_authors + skipped_authors
 total_synced_comments = 0
+total_comments = 0
+total_users = 0
+duplicate_authors = 0
+duplicate_comments = 0
+skipped_comments = 0
+skipped_authors = 0
+
+add_more_comments = True
 
 
 def write_metadata_file(metadata_dict: dict[str, Any]) -> None:
@@ -136,6 +147,20 @@ def get_redditor_data(redditor: Redditor) -> dict:
         **object_specific_enrichments_dict,
         **parse_specific_fields_dict
     }
+
+    # if any of "name", "is_employee", "id", "and "has_subscribed" aren't in
+    # the author, flag this. This is just a random subset of fields that are in
+    # the actual Redditor object but not in the generator version.
+    if any(
+        field not in redditor_dict
+        for field in ["name", "is_employee", "id", "has_subscribed"]
+    ):
+        print('-' * 10)
+        print(f"Redditor dict: {redditor_dict}")
+        print("Missing fields in redditor dict...")
+        print("Probably means it wasn't yielded correctly into memory...")
+        print("Needs QA...")
+        print('-' * 10)
     return redditor_dict
 
 
@@ -151,28 +176,81 @@ def parse_single_comment_data(
     users_list_info: list[dict] = []
     comments_list_info: list[dict] = []
 
+    global total_synced_comments
+    global skipped_comments
+    global skipped_authors
+    global total_users
+    global duplicate_authors
+    global total_comments
+    global duplicate_comments
+
+    is_duplicate_user = False
+    added_new_comment = False
+    added_new_user = False
+    number_of_comments_before_sync = total_synced_comments
+
     if comment.author is None:
         print(f"Comment {comment.id} has no author, meaning it was deleted. Skipping.") # noqa
+        skipped_comments += 1
+        skipped_authors += 1
     elif comment.author.name in DENYLIST_AUTHORS:
         print(f"Skipping comment by author {comment.author}")
+        skipped_comments += 1
+        skipped_authors += 1
     else:
         author: Redditor = comment.author
         if author.id not in previously_seen_users:
             author_info = get_redditor_data(author)
             users_list_info.append(author_info)
+            total_users += 1
+            added_new_user = True
+        else:
+            print(f"Author with id={author.id} has already been seen. Skipping...") # noqa
+            duplicate_authors += 1
+            is_duplicate_user = True
 
         if comment.id not in previously_seen_comments:
             comment_info = get_comment_data(comment)
             comments_list_info.append(comment_info)
+            total_comments += 1
+            added_new_comment = True
+        else:
+            print(f"Comment with id={comment.id} has already been seen. Skipping...") # noqa
+            duplicate_comments += 1
+
+        total_synced_comments += 1
 
         # process replies as well. Each reply is its own Comment instance that
         # can also be processed recursively. The `replies` field will still
         # exist even for comments that don't have any replies.
         replies: CommentForest = comment.replies
         if len(replies) > 0:
+            print(f"Need to process {len(replies)} replies...")
             users_info, comments_info = parse_comments_data(replies)
             users_list_info.extend(users_info)
             comments_list_info.extend(comments_info)
+
+    if len(comments_list_info) != len(users_list_info):
+        print('-' * 10)
+        print("(comment-level) Comments and users should be equal...")
+        print(f"Number of comments in this function run: {len(comments_list_info)}")
+        print(f"Number of total synced comments prior to this function run: {number_of_comments_before_sync}") # noqa
+        print(f"Number of users: {len(users_list_info)}")
+        print(f"Number of total synced comments: {total_comments}\tNumber of unique users: {total_users}\tNumber of duplicate users: {duplicate_authors}") # noqa
+        print(f"Number of total synced comments should == number of unique users + number of duplicate users. Is this true? {total_synced_comments == total_users + duplicate_authors}") # noqa
+        print(f"Number of total synced comments should == comments prior to run + comments during run. Is this true? {total_synced_comments == number_of_comments_before_sync + len(comments_list_info)}") # noqa
+        print('-' * 5)
+        print(f"Number of skipped comments: {skipped_comments}\tNumber of duplicate comments: {duplicate_comments}") # noqa
+        print(f"Number of skipped users: {skipped_authors} (should equal # of skipped comments)") # noqa
+        print('-' * 5)
+        print(f"Did we add a new comment this iteration? {added_new_comment}")
+        print(f"Did we add a new user this iteration? {added_new_user}")
+        print(f"Did this user comment already (which means we have them in our data, so it's OK to not add): {is_duplicate_user}")
+        print("We need to look out for the case where we added a new comment but we didn't add a new user and the user wasn't a duplicate (so first should be True and one of the next two should be True)") # noqa
+        print(f"Is this true? {added_new_comment and (added_new_user or is_duplicate_user)}") # noqa
+        print("We have a problem if we see 1 True and 2 Falses...") # noqa
+        print("Needs more QA...")
+        print('-' * 10)
 
     return (users_list_info, comments_list_info)
 
@@ -199,34 +277,48 @@ def parse_comments_data(
     comments: Union[CommentForest, list[Comment]],
     max_total_comments: int = DEFAULT_MAX_COMMENTS
 ) -> tuple[list[dict], list[dict]]:
-    users_list_info: list[dict] = []
-    comments_list_info: list[dict] = []
+    total_users_list_info: list[dict] = []
+    total_comments_list_info: list[dict] = []
 
     global total_synced_comments
+    global add_more_comments
+
+    if not add_more_comments:
+        print(f"Reached max total comments. Skipping...")
+        return (total_users_list_info, total_comments_list_info)
+
+    if total_synced_comments % 50 == 0:
+        print('-' * 10)
+        print(f"Synced comments: {total_synced_comments}")
+        print(f"Desired number of comments: {max_total_comments}")
+        print(f"Number of previously seen comments: {len(previously_seen_comments)}") # noqa
+        print(f"Number of previously seen users: {len(previously_seen_users)}")
+        print('-' * 10)
 
     if total_synced_comments > max_total_comments:
         print(f"Reached max total comments. Skipping...")
-        return (users_list_info, comments_list_info)
+        add_more_comments = False
+        return (total_users_list_info, total_comments_list_info)
 
     for comment in comments:
         if total_synced_comments > max_total_comments:
             print(f"Reached max total comments...")
+            add_more_comments = False
             break
         if comment.id in previously_seen_comments:
             print(f"Already seen comment with id={comment.id}. Skipping...")
             continue
         if isinstance(comment, Comment):
             users_info, comments_info = parse_single_comment_data(comment)
-            users_list_info.extend(users_info)
-            comments_list_info.extend(comments_info)
+            total_users_list_info.extend(users_info)
+            total_comments_list_info.extend(comments_info)
         elif isinstance(comment, MoreComments):
             parse_morecomments_data(comment)
         else:
             comment_type = type(comment)
             print(f"Unknown comment class: {comment_type}. Skipping...")
             continue
-        total_synced_comments += 1
-    return (users_list_info, comments_list_info)
+    return (total_users_list_info, total_comments_list_info)
 
 
 def parse_comment_thread_data(
@@ -238,6 +330,8 @@ def parse_comment_thread_data(
     about the thread, the comments in the thread (and the comments to those
     comments), and the users in that comment thread.
     """
+    print(f"Total synced comments before thread: {total_synced_comments}")
+    original_total_synced_comments = total_synced_comments
     if thread.id in previously_seen_threads:
         print(f"Thread with id={thread.id} has already been seen. Skipping.")
         return ({}, [], [])
@@ -251,6 +345,26 @@ def parse_comment_thread_data(
     users_list_dicts, comments_list_dicts = parse_comments_data(
         comments=comments, max_total_comments=max_total_comments
     )
+
+    # note: the number of comments should equal the number of users, since
+    # every comment that we sync should have an associated user..
+    # note: this isn't true, since a user can comment multiple times.
+    if len(comments_list_dicts) != len(users_list_dicts):
+        print('-' * 10)
+        print("(thread-level) Comments and users should be equal...")
+        print(f"Number of comments: {len(comments_list_dicts)}")
+        print(f"Number of users: {len(users_list_dicts)}")
+        print("Needs further QA")
+        print('-' * 10)
+    else:
+        print('-' * 10)
+        print(f"Number of synced comments in thread {thread.id}: {len(comments_list_dicts)}") # noqa
+        print(f"Number of comments left to sync: {max_total_comments - total_synced_comments}") # noqa
+        print(f"Number of comments synced prior to this thread: {original_total_synced_comments}") # noqa
+        print(f"Number of comments synced in this thread {thread.id}: {len(comments_list_dicts)}") # noqa
+        print(f"Is the counter of total synced comments what we expect? {total_synced_comments == original_total_synced_comments + len(comments_list_dicts)}") # noqa
+        print("valid thread...")
+        print('-' * 10)
 
     return (thread_dict, users_list_dicts, comments_list_dicts)
 
@@ -298,6 +412,23 @@ def get_threads_data(
     return (threads_df, users_df, comments_df)
 
 
+def filter_comments_by_users(
+    comments_df: pd.DataFrame,
+    users_df: pd.DataFrame
+) -> pd.DataFrame:
+    """Filters out any comments whose author isn't in our users df.
+    
+    We want to maintain data integrity and there appears to be some edge cases
+    where we get comments but we don't get the corresponding author id.
+
+    So, we filter out any comments whose "author_id" value isn't in the "id"
+    column of users_df.
+    """
+    users_ids = set(users_df["id"].unique())
+    comments_df = comments_df[comments_df["author_id"].isin(users_ids)]
+    return comments_df
+
+
 def sync_comments_from_one_subreddit(
     api: Reddit,
     subreddit: str,
@@ -321,6 +452,10 @@ def sync_comments_from_one_subreddit(
         threads_df, users_df, comments_df = get_threads_data(
             threads=threads,
             max_total_comments=max_total_comments
+        )
+        comments_df = filter_comments_by_users(
+            comments_df=comments_df,
+            users_df=users_df
         )
     except Exception as e:
         print(f"Unable to sync reddit data: {e}")
