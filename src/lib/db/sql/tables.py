@@ -15,9 +15,9 @@ TABLE_TO_KEYS_MAP = {
                 "on_delete": "CASCADE",
             },
             {
-                "key": "thread_id",
+                "key": "parent_thread_id",
                 "reference_table": "threads",
-                "referene_table_key": "id",
+                "reference_table_key": "id",
                 "on_delete": "CASCADE",
             },
             {
@@ -44,5 +44,3 @@ TABLE_TO_KEYS_MAP = {
         "foreign_keys": []
     }
 }
-
-# TODO: remove the t5_ prefix from subreddit_id

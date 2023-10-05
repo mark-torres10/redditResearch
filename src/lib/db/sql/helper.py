@@ -49,9 +49,24 @@ def convert_python_dtype_to_sql_type(dtype: np.dtype) -> str:
     return instance_type
 
 
+def drop_table(table_name: str, cascade: bool = True) -> None:
+    """Deletes a table from the database."""
+    try:
+        cursor.execute(f"DROP TABLE IF EXISTS {table_name} {'CASCADE' if cascade else ''};") # noqa
+        conn.commit()
+        print(f"Table {table_name} deleted successfully.")
+    except Exception as e:
+        print(f"Unable to delete table {table_name}: {e}")
+        raise
+
+
+def generate_primary_key_statement(primary_keys: list[str]) -> str:
+    return f"PRIMARY KEY ({', '.join(primary_keys)})"
+
+
 def generate_single_foreign_key_statement(foreign_key: dict) -> str:
     return f"""
-        FOREIGN KEY {foreign_key['key']}
+        FOREIGN KEY ({foreign_key['key']})
         REFERENCES {foreign_key['reference_table']} ({foreign_key['reference_table_key']})
         ON DELETE {foreign_key['on_delete']}
     """
@@ -65,7 +80,7 @@ def create_foreign_key_statement(foreign_keys: list[dict]) -> str:
         for foreign_key in foreign_keys
     ]
     foreign_key_str = ',\n'.join(foreign_key_statements)
-    return f",{foreign_key_str}"
+    return foreign_key_str
 
 
 # https://www.postgresqltutorial.com/postgresql-python/create-tables/
@@ -75,15 +90,22 @@ def generate_create_table_statement(
     primary_keys: list[str] = TABLE_TO_KEYS_MAP[table_name]["primary_keys"]
     foreign_keys: list[dict] = TABLE_TO_KEYS_MAP[table_name]["foreign_keys"]
     fields_list = [
-        f"{field_name} {field_type} NOT NULL"
+        f"""
+            {field_name} {field_type}
+            {
+                'NOT NULL' if field_name in primary_keys 
+                or field_name in [fk['key'] for fk in foreign_keys]
+                else ''
+            }
+        """
         for field_name, field_type in field_to_sql_type_map.items()
     ]
     fields_query = ',\n'.join(fields_list)
-    primary_keys = f",PRIMARY KEY ({', '.join(primary_keys)})"
+    primary_keys = generate_primary_key_statement(primary_keys)
     foreign_keys = create_foreign_key_statement(foreign_keys)
     create_table_sql = f"""CREATE TABLE {table_name} (
         {fields_query},
-        {primary_keys},
+        {primary_keys}{',' if foreign_keys else ''}
         {foreign_keys}
     )
     """
@@ -134,10 +156,24 @@ def create_new_table_from_df(
         raise
 
 
+def check_if_table_exists(table_name: str) -> bool:
+    """Checks if a table exists in the database."""
+    try:
+        cursor.execute(
+            f"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name='{table_name}');"
+        )
+        table_exists = cursor.fetchone()[0]
+        return table_exists
+    except Exception as e:
+        print(f"Unable to check if table {table_name} exists: {e}")
+        raise
+
+
 # TODO: implement upsert
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,
+    rebuild_table: bool = False,
     upsert: bool = False
 ) -> None:
     """Writes a dataframe to a Postgres table.
@@ -147,10 +183,11 @@ def write_df_to_database(
     """
     try:
         # check to see if table exists. If not, create it
-        cursor.execute(
-            f"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name='{table_name}');"
-        )
-        table_exists = cursor.fetchone()[0]
+        if rebuild_table:
+            drop_table(table_name=table_name)
+            table_exists = False
+        else:
+            check_if_table_exists(table_name=table_name)
         if not table_exists:
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
@@ -167,6 +204,22 @@ def write_df_to_database(
     except Exception as e:
         conn.rollback()
         print(f"Unable to write df to {table_name}: {e}")
+        raise
+
+
+def load_table_as_df(
+    table_name: str,
+    select_fields: list[str] = ['*'],
+    where_filter: str = ""
+) -> pd.DataFrame:
+    """Loads a table from the database into a dataframe."""
+    try:
+        select_fields_query = ', '.join(select_fields)
+        cursor.execute(f"SELECT {select_fields_query} FROM {table_name} {where_filter};") # noqa
+        df = pd.DataFrame(cursor.fetchall(), columns=[desc[0] for desc in cursor.description]) # noqa
+        return df
+    except Exception as e:
+        print(f"Unable to load table {table_name}: {e}")
         raise
 
 
