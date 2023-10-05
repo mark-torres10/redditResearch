@@ -191,10 +191,6 @@ def write_df_to_database(
         if not table_exists:
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
-        col_to_sql_type_map = {
-            col: convert_python_dtype_to_sql_type(df[col].dtype)
-            for col in df.columns
-        }
         df.to_sql(
             table_name,
             engine,

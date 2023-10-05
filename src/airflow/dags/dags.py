@@ -14,7 +14,7 @@ from airflow.operators.python import PythonOperator
 from analysis.perform_analysis import generate_analyses
 from lib.init_session import init_pipeline_run_parameters
 from message.handle_messages import receive_messages, send_messages
-from ml.inference import classify_reddit_text
+from services.classify_comments.inference import classify_reddit_text
 from sync.get_reddit_data import get_reddit_data
 
 

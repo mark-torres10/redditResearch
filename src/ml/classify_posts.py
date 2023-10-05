@@ -25,7 +25,7 @@ from lib.redditLogging import RedditLogger
 from ml.constants import (
     LABEL_COL, LABELED_DATA_FILENAME, ML_ROOT_PATH, PROB_COL
 )
-from ml.inference import (
+from services.classify_comments.inference import (
     classify_text, load_default_embedding_and_tokenizer
 )
 from sync.constants import (
