@@ -232,7 +232,7 @@ def determine_who_to_message() -> list[dict]:
         table_name=table_name
     )
     write_df_to_database(
-        df=user_to_message_status_df, table_name=table_name
+        df=user_to_message_status_df, table_name=table_name, upsert=True
     )
 
     number_of_new_users_to_message = (

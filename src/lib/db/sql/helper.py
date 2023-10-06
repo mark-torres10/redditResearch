@@ -173,7 +173,8 @@ def check_if_table_exists(table_name: str) -> bool:
         raise
 
 
-# TODO: implement upsert
+# TODO: implement upsert. If upsert=True, then update if PK conflict, else
+# if PK conflict, then fail the write due to duplicates.
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,

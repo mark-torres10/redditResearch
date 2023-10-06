@@ -156,7 +156,7 @@ def handle_message_users(payloads: list[dict], phase: str) -> None:
     user_to_message_status_df["last_update_timestamp"] = (
         datetime.datetime.utcnow().isoformat()
     )
-    user_to_message_status_df["last_update_step"] = "determine_authors_to_message" # noqa
+    user_to_message_status_df["last_update_step"] = "message_users"
     user_to_message_status_df["phase"] = phase
     user_to_message_status_df["dm_text"] = (
         user_to_message_status_df["message_body"]
@@ -170,7 +170,7 @@ def handle_message_users(payloads: list[dict], phase: str) -> None:
         table_name=table_name
     )
     write_df_to_database(
-        df=user_to_message_status_df, table_name=table_name
+        df=user_to_message_status_df, table_name=table_name, upsert=True
     )
 
     print(f"Completed messaging users for {phase} phase.")

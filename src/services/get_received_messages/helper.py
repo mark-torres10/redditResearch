@@ -95,6 +95,8 @@ def handle_received_messages() -> None:
         ]
         messages_received_df = messages_received_df[filter_list]
 
+    # hydrate the received messages with information on the DM that was
+    # initially sent.
     columns_to_extract = [
         "id", "author_id", "author_screen_name", "body", "created_utc_string",
         "synctimestamp"
