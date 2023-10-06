@@ -1,2 +1,0 @@
-subreddit,thread_sort_type,num_threads_to_sync,num_threads_actually_synced,num_posts_per_thread_to_sync,avg_num_comments_actually_synced_per_thread,output_filepath
-politics,hot,6,2,3,2.5,
