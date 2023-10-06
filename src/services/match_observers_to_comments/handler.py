@@ -7,4 +7,6 @@ Matches observers to comments. Then, triggers the `message_users` service with
 the list of authors and messages.
 """
 def main(event: dict, context: dict) -> list[dict]:
+    # note: we want to assign 1 observer to 1 comment, but we want to assign
+    # 1 comment to many observers.
     return []

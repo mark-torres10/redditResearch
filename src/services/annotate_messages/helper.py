@@ -35,11 +35,17 @@ def annotate_message(
             print(f"Invalid input: {user_input}")
 
 
+# TODO: need to make sure that there's only 1 valid annotated message per
+# comment. So, for example, if a user gives two possible sets of scores, we
+# should only take one of them.
 def annotate_messages() -> None:
     # load received messages from DB. Filter out those that are already in the
     # `annotated_messages` table.
     annotated_messages_table_exists = check_if_table_exists(table_name)
-    select_fields = ["id", "author_id", "body", "dm_text", "phase"]
+    select_fields = [
+        "id", "author_id", "comment_id", "body", "comment_text", "dm_text",
+        "phase"
+    ]
     where_filter = f"""
         WHERE id NOT IN (
             SELECT id FROM {table_name}
