@@ -2,4 +2,7 @@
 
 Triggers the `message_users` service with the list of authors and messages.
 """
-pass
+
+
+def main(event: dict, context: dict) -> list[dict]:
+    return [{}]
