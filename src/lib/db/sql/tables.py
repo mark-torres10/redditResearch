@@ -76,4 +76,15 @@ TABLE_TO_KEYS_MAP = {
             }
         ]
     },
+    "annotated_messages": {
+        "primary_keys": ["id"],
+        "foreign_keys": [
+            {
+                "key": "id",
+                "reference_table": "messages_received",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE"
+            }
+        ]
+    },
 }
