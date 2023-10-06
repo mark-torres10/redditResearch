@@ -19,6 +19,10 @@ table_fields = [
     "user_id", "message_status", "last_update_timestamp", "last_update_step",
     "phase", "comment_id", "comment_text", "dm_text", "author_screen_name"
 ]
+payload_required_fields = [
+    "author_screen_name", "user_id", "comment_id", "comment_text",
+    "message_subject", "message_body", "phase"
+]
 
 
 def filter_payloads_by_valid_users_to_dm(payloads: list[dict]) -> list[dict]:
@@ -45,6 +49,10 @@ def filter_payloads_by_valid_users_to_dm(payloads: list[dict]) -> list[dict]:
     return filtered_payloads
 
 
+def is_valid_payload(payload: dict) -> bool:
+    return set(payload.keys()) == set(payload_required_fields)
+
+
 def message_users(
     payloads: list[dict]
 ) -> tuple[list[dict], list[dict], list[dict]]:
@@ -57,6 +65,8 @@ def message_users(
     # TODO: maybe I can add this and the filter by valid users as one
     # data quality step?
     for payload in payloads:
+        if not is_valid_payload(payload):
+            raise ValueError(f"Invalid payload (fields are not correct): {payload}") # noqa
         status = message_single_user(payload, context)
         if status == 0:
             successful_messages.append(payload)

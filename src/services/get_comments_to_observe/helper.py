@@ -29,6 +29,11 @@ def get_comments_to_observe() -> None:
             SELECT comment_id FROM {table_name}
         )
     """ if comments_for_observer_phase_table_exists else ""
+    where_subfilter = f"""
+        {'AND ' if comments_for_observer_phase_table_exists else "WHERE "}
+            annotated_messages.phase = 'author'
+    """
+    where_filter += where_subfilter
     # hydrate comments to observe with information from the comments table.
     # in theory, all comments should exist in the `comments` table.
     join_query = f"""

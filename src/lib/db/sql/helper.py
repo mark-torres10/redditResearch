@@ -208,16 +208,37 @@ def write_df_to_database(
         raise
 
 
+def load_query_as_df(query: str) -> pd.DataFrame:
+    """Loads a query from the database into a dataframe."""
+    try:
+        cursor.execute(query)
+        df = pd.DataFrame(cursor.fetchall(), columns=[desc[0] for desc in cursor.description]) # noqa
+        return df
+    except Exception as e:
+        print(f"Unable to load query {query}: {e}")
+        raise
+
+
 def load_table_as_df(
     table_name: str,
     select_fields: list[str] = ['*'],
     join_query: str = "",
-    where_filter: str = ""
+    where_filter: str = "",
+    order_by_clause: str = "",
+    limit_clause: str = ""
 ) -> pd.DataFrame:
     """Loads a table from the database into a dataframe."""
     try:
         select_fields_query = ', '.join(select_fields)
-        cursor.execute(f"SELECT {select_fields_query} FROM {table_name} {join_query} {where_filter};") # noqa
+        cursor.execute(f"""
+            SELECT
+                {select_fields_query}
+            FROM {table_name}
+            {join_query}
+            {where_filter}
+            {order_by_clause}
+            {limit_clause};
+        """) # noqa
         df = pd.DataFrame(cursor.fetchall(), columns=[desc[0] for desc in cursor.description]) # noqa
         return df
     except Exception as e:
