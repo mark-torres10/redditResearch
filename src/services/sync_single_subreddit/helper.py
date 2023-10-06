@@ -52,6 +52,7 @@ def write_metadata_file(metadata_dict: dict[str, Any]) -> None:
     """Writes metadata to a file. By default, writes data to a new directory
     named by the current timestamp. Creates a one-row metadata .csv file.
     """
+    os.makedirs(new_sync_metadata_dir)
     data = [metadata_dict]
     header_names = list(metadata_dict.keys())
 
@@ -380,7 +381,8 @@ def sync_comments_from_one_subreddit(
     subreddit: str,
     num_threads: int = DEFAULT_NUM_THREADS,
     max_total_comments: int = DEFAULT_MAX_COMMENTS,
-    thread_sort_type: Literal["hot", "new", "top", "controversial"] = "hot"
+    thread_sort_type: Literal["hot", "new", "top", "controversial"] = "hot",
+    objects_to_sync: list[str] = ["subreddits", "users", "threads", "comments"]
 ) -> None:
     """Syncs the comments from one subreddit.
     
@@ -388,6 +390,26 @@ def sync_comments_from_one_subreddit(
     comments in a given thread."""
     subreddit = api.subreddit(subreddit)
     subreddit_df = get_subreddit_data(subreddit)   
+    
+    if len(objects_to_sync) == 1 and objects_to_sync[0] == "subreddits":
+        print("Only syncing subreddit data. Skipping comments...")
+        print("Dumping updated subreddit data to .csv file and writing to DB...") # noqa
+        dump_df_to_csv(
+            df=subreddit_df, table_name="subreddits"
+        )
+        write_df_to_database(
+            df=subreddit_df, table_name="subreddits"
+        )
+        metadata_dict = {
+            "subreddit": subreddit,
+            "num_total_comments": 0
+        }
+        write_metadata_file(metadata_dict=metadata_dict)
+        print(
+            f"Finished syncing data from Reddit for timestamp {CURRENT_TIME_STR}" # noqa
+        )
+        return
+
     threads = get_comment_threads(
         subreddit=subreddit,
         num_threads=num_threads,
@@ -410,34 +432,47 @@ def sync_comments_from_one_subreddit(
     print("Successfully synced data from Reddit. Now writing to DB...")
 
     try:
-        # dump raw data as .csv files.
-        dump_df_to_csv(
-            df=subreddit_df, table_name="subreddits"
-        )
-        dump_df_to_csv(
-            df=users_df, table_name="users"
-        )
-        dump_df_to_csv(
-            df=threads_df, table_name="threads"
-        )
-        dump_df_to_csv(
-            df=comments_df, table_name="comments"
-        )
-        # write to DB
-        """
-        write_df_to_database(
-            df=subreddit_df, table_name="subreddits"
-        )
-        write_df_to_database(
-            df=users_df, table_name="users"
-        )
-        write_df_to_database(
-            df=threads_df, table_name="threads"
-        )
-        write_df_to_database(
-            df=comments_df, table_name="comments"
-        )
-        """
+        for sync_object in objects_to_sync:
+            if sync_object == "subreddits":
+                print("Dumping subreddits to .csv, writing to DB...")
+                dump_df_to_csv(
+                    df=subreddit_df, table_name="subreddits"
+                )
+                """
+                write_df_to_database(
+                    df=subreddit_df, table_name="subreddits"
+                )
+                """
+            elif sync_object == "users":
+                print("Dumping users to .csv, writing to DB...")
+                dump_df_to_csv(
+                    df=users_df, table_name="users"
+                )
+                """
+                write_df_to_database(
+                    df=users_df, table_name="users"
+                )
+                """
+            elif sync_object == "threads":
+                print("Dumping threads to .csv, writing to DB...")
+                dump_df_to_csv(
+                    df=threads_df, table_name="threads"
+                )
+                """
+                write_df_to_database(
+                    df=threads_df, table_name="threads"
+                )
+                """
+            elif sync_object == "comments":
+                print("Dumping comments to .csv, writing to DB...")
+                dump_df_to_csv(
+                    df=comments_df, table_name="comments"
+                )
+                """
+                write_df_to_database(
+                    df=comments_df, table_name="comments"
+                )
+                """
     except Exception as e:
         print(f"unable to write data to database: {e}")
         traceback.print_exc()
@@ -454,8 +489,6 @@ def sync_comments_from_one_subreddit(
         "num_skipped_comments": skipped_comments,
         "num_skipped_authors": skipped_authors
     }
-
-    os.makedirs(new_sync_metadata_dir)
     write_metadata_file(metadata_dict=metadata_dict)
     print(
         f"Finished syncing data from Reddit for timestamp {CURRENT_TIME_STR}"

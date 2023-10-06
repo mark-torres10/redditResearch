@@ -16,10 +16,14 @@ def main(event: dict, context: dict) -> int:
     subreddit = event["subreddit"]
     num_threads = event.get("num_threads", DEFAULT_NUM_THREADS)
     thread_sort_type = event.get("thread_sort_type", DEFAULT_THREAD_SORT_TYPE)
+    objects_to_sync = event.get(
+        "object_to_sync", ["subreddits", "threads", "comments", "users"]
+    )
     sync_comments_from_one_subreddit(
         api=api,
         subreddit=subreddit,
         num_threads=num_threads,
-        thread_sort_type=thread_sort_type
+        thread_sort_type=thread_sort_type,
+        objects_to_sync=objects_to_sync
     )
     return 0
