@@ -5,4 +5,8 @@ or the observer phase. If there are valid scores, write down the valid scores.
 
 Writes the annotated DMs to the DB.
 """
-pass
+from services.annotate_messages.helper import annotate_messages
+
+
+def main(event: dict, context: dict) -> None:
+    annotate_messages()
