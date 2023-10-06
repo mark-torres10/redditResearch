@@ -87,4 +87,15 @@ TABLE_TO_KEYS_MAP = {
             }
         ]
     },
+    "comments_available_to_evaluate_for_observer_phase": {
+        "primary_keys": ["comment_id"],
+        "foreign_keys": [
+            {
+                "key": "annotated_message_id",
+                "reference_table": "annotated_messages",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE"
+            }
+        ]
+    }
 }
