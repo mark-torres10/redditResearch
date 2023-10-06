@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional
 
@@ -25,3 +26,45 @@ def dump_df_to_csv(
     
     # dump df to csv
     df.to_csv(os.path.join(table_dir, filename), index=False)
+
+
+def dump_dict_as_tmp_json(data: dict, table_name: str, filename: str) -> None:
+    """Write a dictionary to a temporary filepath."""
+    try:
+        table_dir = os.path.join(DATA_DIR, table_name)
+        if not os.path.exists(table_dir):
+            os.makedirs(table_dir)
+        tmp_dir = os.path.join(table_dir, "tmp")
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir)
+        with open(os.path.join(tmp_dir, filename), "w") as f:
+            json.dump(data, f)
+        print(f"Successfully wrote {filename} to {tmp_dir}.")
+    except Exception as e:
+        print(f"Error writing {filename} to {tmp_dir}.")
+        print(e)
+    
+
+def load_tmp_json_data_as_df(
+    table_name: str, delete_tmp_data: bool=False
+) -> pd.DataFrame:
+    """Load json data from a temporary filepath as a pandas df."""
+    dir = os.path.join(DATA_DIR, table_name, "tmp")
+    if not os.path.exists(dir):
+        raise ValueError(f"Directory {dir} doesn't exist.")
+    files = os.listdir(dir)
+    if len(files) == 0:
+        raise ValueError(f"No files in directory {dir}.")
+
+    data = []
+    for file in files:
+        with open(os.path.join(dir, file), "r") as f:
+            data.append(json.load(f))
+    df = pd.DataFrame(data)
+
+    if delete_tmp_data:
+        for file in files:
+            os.remove(os.path.join(dir, file))
+        os.rmdir(dir)
+
+    return df

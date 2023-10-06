@@ -8,6 +8,7 @@ from data.helper import dump_df_to_csv
 from lib.db.sql.helper import (
     check_if_table_exists, load_table_as_df, write_df_to_database
 )
+from services.message_users.helper import table_fields, table_name
 
 DENYLIST_AUTHORS = ["AutoModerator"]
 LABEL_COL = "label"
@@ -47,10 +48,9 @@ AUTHOR_PHASE_MESSAGE_IDENTIFIER_STRING = (
     "Take a moment to think about what was happening at the time you posted."
 )
 
-table_name = "user_to_message_status"
 table_fields = [
-    "user_id", "message_status", "last_update_timestamp", "phase",
-    "comment_id", "comment_text", "dm_text", "author_screen_name"
+    "user_id", "message_status", "last_update_timestamp", "last_update_step",
+    "phase", "comment_id", "comment_text", "dm_text", "author_screen_name"
 ]
 
 
@@ -204,6 +204,7 @@ def determine_who_to_message() -> list[dict]:
     balanced_classified_comments_df["last_update_timestamp"] = (
         datetime.datetime.utcnow().isoformat()
     )
+    balanced_classified_comments_df["last_update_step"] = "determine_authors_to_message" # noqa
     balanced_classified_comments_df["phase"] = "author"
     balanced_classified_comments_df["comment_id"] = (
         balanced_classified_comments_df["id"]
@@ -239,15 +240,28 @@ def determine_who_to_message() -> list[dict]:
     ).sum()
     print(f"Marked {number_of_new_users_to_message} new users as pending message.")  # noqa
     
+    # TODO: maybe I don't need to explicitly pass down this info? I could just
+    # load the `user_to_message_status` and hydrate the field values that I
+    # don't have.
     # pass on payloads to messaging service.
     user_to_message_list = [
         {
             "author_screen_name": author_screen_name,
+            "user_id": user_id,
+            "comment_id": comment_id,
+            "comment_text": comment_text,
             "message_subject": AUTHOR_DM_SUBJECT_LINE,
-            "message_body": direct_message
+            "message_body": direct_message,
+            "phase": "author"
         }
-        for (author_screen_name, direct_message)
+        for (
+            user_id, comment_id, comment_text, author_screen_name,
+            direct_message
+        )
         in zip(
+            user_to_message_status_df["user_id"],
+            user_to_message_status_df["comment_id"],
+            user_to_message_status_df["comment_text"],
             user_to_message_status_df["author_screen_name"],
             user_to_message_status_df["dm_text"]
         )

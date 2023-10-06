@@ -53,5 +53,16 @@ TABLE_TO_KEYS_MAP = {
                 "on_delete": "CASCADE"
             }
         ]
+    },
+    "user_to_message_status": {
+        "primary_keys": ["user_id"],
+        "foreign_keys": [
+            {
+                "key": "user_id",
+                "reference_table": "users",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE"
+            }
+        ]
     }
 }

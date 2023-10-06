@@ -18,7 +18,10 @@ def main() -> None:
     )
 
     # send DMs
-    message_event = {"user_message_payloads": user_message_payloads}
+    message_event = {
+        "phase": "author",
+        "user_message_payloads": user_message_payloads
+    }
     message_context = {}
     message_users(event=message_event, context=message_context)
     print("Completed author phase.")
