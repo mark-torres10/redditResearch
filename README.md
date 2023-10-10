@@ -25,7 +25,7 @@ The following system architecture diagrams describe the basic logic of the code:
 ### Sync Reddit data
 
 We sync comments, users, threads, and subreddit data from Reddit. We then classify the comments using the classification service. We dump both the raw data as well as the classified data into Postgres.
-[!Sync Reddit Data](assets/sync_diagram.png "System architecture for syncing Reddit data")
+![Sync Reddit Data](assets/sync_diagram.png "System architecture for syncing Reddit data")
 
 ### Ask authors to report their level of outrage when posting a comment ("author phase" of project)
 
@@ -38,13 +38,13 @@ We then message authors and ask them to report the level of outrage that they ha
 
 We record the messages that we've sent as well as the authors and related comments, all in Postgres.
 
-[!Ask authors to self-report their level of outrage](assets/author_phase.png "System architecture for implementing 'author phase' of project")
+![Ask authors to self-report their level of outrage](assets/author_phase.png "System architecture for implementing 'author phase' of project")
 
 ### Collect messages from authors and get their scores
 
 We then collect the messages that we receive from authors and annotate + validate them. Not all replies that we get will be proper scores, plus a regex-style solution is infeasible for the variety of responses that we could get. We collect the messages that we've received on Reddit, manually annotate them and validate in order to get the scores that the authors self-reported (if any), and dump these into Postgres.
 
-[!Collect messages from authors and get their scores](assets/dm_collection_annotation_phase.png "System architecture for collecting and annotating author phase responses")
+![Collect messages from authors and get their scores](assets/dm_collection_annotation_phase.png "System architecture for collecting and annotating author phase responses")
 
 ### Ask Redditors to rate comments ("observer phase")
 
@@ -58,13 +58,13 @@ After we have some comments whose authors provided us their self-reported degree
 
 We record the messages that we've sent as well as the authors and related comments, all in Postgres.
 
-[!Ask Redditors to rate comments](assets/observer_phase.png "System architecture for implementing 'observer phase' of project")
+![Ask Redditors to rate comments](assets/observer_phase.png "System architecture for implementing 'observer phase' of project")
 
 ### Report analytics and project statistics
 
 Once we've done the above, we want to look at the data that we've gathered. (STILL TO BE IMPLEMENTED)
 
-[!Reporting service](assets/reporting_service.png "Proposed archicture for reporting service")
+![Reporting service](assets/reporting_service.png "Proposed archicture for reporting service")
 
 ## Package and environment setup
 
