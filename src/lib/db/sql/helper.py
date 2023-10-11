@@ -173,8 +173,29 @@ def check_if_table_exists(table_name: str) -> bool:
         raise
 
 
-# TODO: implement upsert. If upsert=True, then update if PK conflict, else
-# if PK conflict, then fail the write due to duplicates.
+def create_upsert_query_from_df(
+    df: pd.DataFrame, table_name: str, upsert_keys: list[str]
+) -> str:
+    """Creates an upsert query from a dataframe.
+    
+    Upsert keys, more likely than not, should correspond to the primary keys
+    of their respective tables.
+    """
+    upsert_query = f"""
+        INSERT INTO {table_name} ({', '.join(df.columns)})
+        VALUES {', '.join(['%s'] * len(df.columns))}
+        ON CONFLICT ({', '.join(upsert_keys)})
+        DO UPDATE SET
+    """
+    update_fields = [
+        f"{col} = EXCLUDED.{col}"
+        for col in df.columns
+        if col not in upsert_keys
+    ]
+    upsert_query += ', '.join(update_fields)
+    return upsert_query
+
+
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,
@@ -196,12 +217,31 @@ def write_df_to_database(
         if not table_exists:
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
-        df.to_sql(
-            table_name,
-            engine,
-            if_exists="append",
-            index=False
-        )
+        if upsert:
+            upsert_query = create_upsert_query_from_df(
+                df=df,
+                table_name=table_name,
+                upsert_keys=TABLE_TO_KEYS_MAP[table_name]["primary_keys"]
+            )
+            # cursor.mogrify is faster than cursor.executemany()?
+            # https://www.datacareer.de/blog/improve-your-psycopg2-executions-for-postgresql-in-python/
+            # https://naysan.ca/2020/08/02/pandas-to-postgresql-using-psycopg2-mogrify-then-execute/
+            sql_statements = [
+                cursor.mogrify(upsert_query, tuple(row))
+                for _, row in df.iterrows()
+            ]
+            print(f"Upserting {len(sql_statements)} rows into {table_name}...") # noqa
+            for statement in sql_statements:
+                cursor.execute(statement)
+            print(f"Finished upserting {len(sql_statements)} rows into {table_name}.") # noqa
+        else:
+            df.to_sql(
+                table_name,
+                engine,
+                if_exists="append",
+                index=False
+            )
+            print(f"Finished inserting (not upserting) {len(df)} rows to {table_name}.") # noqa
     except Exception as e:
         conn.rollback()
         print(f"Unable to write df to {table_name}: {e}")
