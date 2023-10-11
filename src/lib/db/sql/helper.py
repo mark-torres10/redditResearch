@@ -1,5 +1,6 @@
 """Helper utilities for interacting with Postgres."""
 from dotenv import load_dotenv
+import json
 import os
 from typing import Optional
 
@@ -8,7 +9,6 @@ import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
 
-from data.helper import backup_postgres_data
 from lib.db.sql.tables import TABLE_TO_KEYS_MAP
 
 current_file_directory = os.path.dirname(os.path.abspath(__file__))
@@ -32,26 +32,33 @@ engine = create_engine(
 )
 
 
+dtype_to_sql_type_map = {
+    np.dtype('O'): "text",
+    np.dtype("bool"): "bool",
+    np.dtype("int32"): "int",
+    np.dtype("int64"): "int",
+    np.dtype("float32"): "float",
+    np.dtype("float64"): "float"
+}
+
+
 def convert_python_dtype_to_sql_type(dtype: np.dtype) -> str:
     """Converts a Python dtype to a SQL type."""
     # https://www.psycopg.org/docs/usage.html#adaptation-of-python-values-to-sql-types
-    instance_type = ""
-    if dtype == np.dtype('O'):
-        instance_type = "text"
-    elif dtype == np.dtype("bool"):
-        instance_type = "bool"
-    elif dtype == np.dtype("int32"):
-        instance_type = "int"
-    elif dtype == np.dtype("int64"):
-        instance_type = "int"
-    elif dtype == np.dtype("float32"):
-        instance_type = "float"
-    elif dtype == np.dtype("float64"):
-        instance_type = "float"
-    else:
-        raise ValueError(f"Unknown dtype: {dtype}")
-
+    instance_type = dtype_to_sql_type_map[dtype]
     return instance_type
+
+
+def get_sql_cols_for_df_fields(df: pd.DataFrame) -> dict:
+    col_to_dtype_map = {
+        col: df[col].dtype
+        for col in df.columns
+    }
+    col_to_sql_type_map = {
+        col: convert_python_dtype_to_sql_type(dtype)
+        for col, dtype in col_to_dtype_map.items()
+    }
+    return col_to_sql_type_map
 
 
 def drop_table(table_name: str, cascade: bool = True) -> None:
@@ -135,14 +142,7 @@ def generate_create_table_statement_from_df(
     
     Infers the columns and dtypes from the pandas df.
     """
-    col_to_dtype_map = {
-        col: df[col].dtype
-        for col in df.columns
-    }
-    col_to_sql_type_map = {
-        col: convert_python_dtype_to_sql_type(dtype)
-        for col, dtype in col_to_dtype_map.items()
-    }
+    col_to_sql_type_map = get_sql_cols_for_df_fields(df)
 
     create_table_sql = generate_create_table_statement(
         table_name=table_name,
@@ -208,6 +208,14 @@ def create_upsert_query_from_df(
     return upsert_query
 
 
+def convert_dict_fields_to_json(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert dictionary fields in a DataFrame to JSON strings."""
+    for col in df.columns:
+        if df[col].apply(lambda x: isinstance(x, dict)).all():
+            df[col] = df[col].apply(json.dumps)
+    return df
+
+
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,
@@ -255,11 +263,13 @@ def write_df_to_database(
             row_count_before = get_table_row_count(table_name=table_name)
             print(f"Table {table_name} exists. Inserting {len(df)} rows...")
             print(f"Row count before insert: {row_count_before}.")
+            df = convert_dict_fields_to_json(df)
             df.to_sql(
                 table_name,
                 engine,
                 if_exists="append",
-                index=False
+                index=False,
+                dtype=get_sql_cols_for_df_fields(df)
             )
             print(f"Finished inserting (not upserting) {len(df)} rows to {table_name}.") # noqa
             row_count_after = get_table_row_count(table_name=table_name)
