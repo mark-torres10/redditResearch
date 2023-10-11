@@ -8,6 +8,7 @@ import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
 
+from data.helper import backup_postgres_data
 from lib.db.sql.tables import TABLE_TO_KEYS_MAP
 
 current_file_directory = os.path.dirname(os.path.abspath(__file__))
@@ -61,6 +62,17 @@ def drop_table(table_name: str, cascade: bool = True) -> None:
         print(f"Table {table_name} deleted successfully.")
     except Exception as e:
         print(f"Unable to delete table {table_name}: {e}")
+        raise
+
+
+def get_table_row_count(table_name: str) -> Optional[int]:
+    """Gets the number of rows in a table."""
+    try:
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
+        row_count = cursor.fetchone()[0]
+        return row_count
+    except Exception as e:
+        print(f"Unable to get row count for table {table_name}: {e}")
         raise
 
 
@@ -196,6 +208,7 @@ def create_upsert_query_from_df(
     return upsert_query
 
 
+@backup_postgres_data
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,
@@ -217,7 +230,10 @@ def write_df_to_database(
         if not table_exists:
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
-        if upsert:
+        if upsert and table_exists:
+            row_count_before = get_table_row_count(table_name=table_name)
+            print(f"Table {table_name} exists. Upserting {len(df)} rows...")
+            print(f"Row count before upsert: {row_count_before}.")
             upsert_query = create_upsert_query_from_df(
                 df=df,
                 table_name=table_name,
@@ -234,7 +250,12 @@ def write_df_to_database(
             for statement in sql_statements:
                 cursor.execute(statement)
             print(f"Finished upserting {len(sql_statements)} rows into {table_name}.") # noqa
+            row_count_after = get_table_row_count(table_name=table_name)
+            print(f"Row count after upsert: {row_count_after}.")
         else:
+            row_count_before = get_table_row_count(table_name=table_name)
+            print(f"Table {table_name} exists. Inserting {len(df)} rows...")
+            print(f"Row count before insert: {row_count_before}.")
             df.to_sql(
                 table_name,
                 engine,
@@ -242,6 +263,8 @@ def write_df_to_database(
                 index=False
             )
             print(f"Finished inserting (not upserting) {len(df)} rows to {table_name}.") # noqa
+            row_count_after = get_table_row_count(table_name=table_name)
+            print(f"Row count after insert: {row_count_after}.")
     except Exception as e:
         conn.rollback()
         print(f"Unable to write df to {table_name}: {e}")

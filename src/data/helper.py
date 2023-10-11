@@ -68,3 +68,27 @@ def load_tmp_json_data_as_df(
         os.rmdir(dir)
 
     return df
+
+
+def backup_postgres_data_to_sql() -> None:
+    """Dump Postgres data to .sql file for backup."""
+    postgres_dir = os.path.join(DATA_DIR, "postgres_data")
+    if not os.path.exists(postgres_dir):
+        os.makedirs(postgres_dir)
+    filename = f"{CURRENT_TIME_STR}.sql"
+    compressed_filename= f"{CURRENT_TIME_STR}.sql.gz"
+    full_fp = os.path.join(postgres_dir, filename)
+    compressed_fp = os.path.join(postgres_dir, compressed_filename)
+    print(f"Dumping Postgres data into {full_fp}.")
+    os.system(f"pg_dump -h localhost -U postgres -d reddit_data -f {full_fp}")
+    os.system(f"pg_dump -h localhost -U postgres -d reddit_data | gzip > {compressed_fp}") # noqa
+    print(f"Successfully dumped Postgres data into {full_fp}.")
+
+
+def backup_postgres_data(func):
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        backup_postgres_data_to_sql()
+        return result
+
+    return wrapper
