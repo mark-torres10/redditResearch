@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 from typing import Optional
 
 import pandas as pd
@@ -70,6 +71,7 @@ def load_tmp_json_data_as_df(
     return df
 
 
+# TODO: do we need a .sql file if we have a .sql.gz file?
 def backup_postgres_data_to_sql() -> None:
     """Dump Postgres data to .sql file for backup."""
     postgres_dir = os.path.join(DATA_DIR, "postgres_data")
@@ -77,12 +79,23 @@ def backup_postgres_data_to_sql() -> None:
         os.makedirs(postgres_dir)
     filename = f"{CURRENT_TIME_STR}.sql"
     compressed_filename= f"{CURRENT_TIME_STR}.sql.gz"
-    full_fp = os.path.join(postgres_dir, filename)
-    compressed_fp = os.path.join(postgres_dir, compressed_filename)
-    print(f"Dumping Postgres data into {full_fp}.")
-    os.system(f"pg_dump -h localhost -U postgres -d reddit_data -f {full_fp}")
-    os.system(f"pg_dump -h localhost -U postgres -d reddit_data | gzip > {compressed_fp}") # noqa
-    print(f"Successfully dumped Postgres data into {full_fp}.")
+
+    command = [
+        "pg_dump", "-h", "localhost", "-U", "postgres", "-d", "reddit_data",
+        "-f", os.path.join(postgres_dir, filename)
+    ]
+    compressed_command = [
+        "pg_dump", "-h", "localhost", "-U", "postgres", "-d", "reddit_data",
+        "|", "gzip", ">", os.path.join(postgres_dir, compressed_filename)
+    ]
+    try:
+        print(f"Dumping Postgres data into {postgres_dir}.")
+        subprocess.run(command, check=True)
+        subprocess.run(compressed_command, check=True)
+        print(f"Successfully dumped Postgres data into {postgres_dir}.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        print(f"Failed to dump Postgres data into {postgres_dir}.")
 
 
 def backup_postgres_data(func):

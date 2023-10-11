@@ -208,7 +208,6 @@ def create_upsert_query_from_df(
     return upsert_query
 
 
-@backup_postgres_data
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,

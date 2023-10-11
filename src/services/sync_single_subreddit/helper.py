@@ -14,7 +14,7 @@ from praw.models.reddit.submission import Submission
 from praw.models.reddit.subreddit import Subreddit
 from praw.reddit import Reddit
 
-from data.helper import dump_df_to_csv
+from data.helper import backup_postgres_data_to_sql, dump_df_to_csv
 from lib.db.sql.helper import write_df_to_database
 from lib.helper import (
     CURRENT_TIME_STR, DENYLIST_AUTHORS,
@@ -438,44 +438,39 @@ def sync_comments_from_one_subreddit(
                 dump_df_to_csv(
                     df=subreddit_df, table_name="subreddits"
                 )
-                """
                 write_df_to_database(
                     df=subreddit_df, table_name="subreddits"
                 )
-                """
             elif sync_object == "users":
                 print("Dumping users to .csv, writing to DB...")
                 dump_df_to_csv(
                     df=users_df, table_name="users"
                 )
-                """
                 write_df_to_database(
                     df=users_df, table_name="users"
                 )
-                """
             elif sync_object == "threads":
                 print("Dumping threads to .csv, writing to DB...")
                 dump_df_to_csv(
                     df=threads_df, table_name="threads"
                 )
-                """
                 write_df_to_database(
                     df=threads_df, table_name="threads"
                 )
-                """
             elif sync_object == "comments":
                 print("Dumping comments to .csv, writing to DB...")
                 dump_df_to_csv(
                     df=comments_df, table_name="comments"
                 )
-                """
                 write_df_to_database(
                     df=comments_df, table_name="comments"
                 )
-                """
+
     except Exception as e:
         print(f"unable to write data to database: {e}")
         traceback.print_exc()
+
+    backup_postgres_data_to_sql()
 
     metadata_dict = {
         "subreddit": subreddit,
