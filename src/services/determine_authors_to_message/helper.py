@@ -10,7 +10,7 @@ from lib.db.sql.helper import (
 )
 from services.message_users.helper import table_fields, table_name
 
-DENYLIST_AUTHORS = ["AutoModerator"]
+DENYLIST_AUTHORS = ["AutoModerator", "PoliticsModeratorBot"]
 LABEL_COL = "label"
 TO_MESSAGE_COL = "to_message"
 AUTHOR_DM_SUBJECT_LINE = "Yale Researchers Looking to Learn More About Your Beliefs"
@@ -123,7 +123,7 @@ def determine_which_posts_to_message(
 
 def create_author_phase_message(row: pd.Series) -> str:
     return AUTHOR_DM_SCRIPT.format(
-        name=row["author"],
+        name=row["author_screen_name"],
         date=row["created_utc"],
         subreddit=row["subreddit_name_prefixed"],
         post=row["body"],
@@ -135,9 +135,10 @@ def init_user_to_message_status_table() -> None:
     """Create the initial version of the `user_to_message_status` table based
     on the `users` table.
     """
-    print(f"Initializing the {table_name} table with `users` table...")
+    print(f"Initializing the {table_name} table with data from the `users` table...") # noqa
     default_values = {
         "message_status": "not_messaged",
+        "last_update_step": None,
         "last_update_timestamp": None,
         "phase": None,
         "comment_id": None,
@@ -146,13 +147,13 @@ def init_user_to_message_status_table() -> None:
     }
     users_df = load_table_as_df(
         table_name="users",
-        select_fields=["id", "name"],
+        select_fields=["id AS user_id", "name AS author_screen_name"],
         where_filter=""
     )
     init_values = [
-        {**row, **default_values}
+        {**{key: item for (key, item) in row.items()}, **default_values}
         for _, row in users_df.iterrows()
-        if row["name"] not in DENYLIST_AUTHORS
+        if row["author_screen_name"] not in DENYLIST_AUTHORS
     ]
     df = pd.DataFrame(init_values)
     dump_df_to_csv(df=df, table_name=table_name)
@@ -163,7 +164,14 @@ def init_user_to_message_status_table() -> None:
 def determine_who_to_message() -> list[dict]:
     # get previously messaged users, if table exists.
     user_to_message_status_table_exists = check_if_table_exists(table_name)
+
+    # TODO: remove the drop table
+    from lib.db.sql.helper import drop_table
+    drop_table(table_name)
+    user_to_message_status_table_exists = False
+
     if not user_to_message_status_table_exists:
+        print(f"{table_name} doesn't exist. Creating new table.")
         init_user_to_message_status_table()
     # load classified comments, but filter out comments whose authors have not
     # been messaged yet.
@@ -173,7 +181,7 @@ def determine_who_to_message() -> list[dict]:
             SELECT
                 user_id
             FROM user_to_message_status
-            WHERE message_status = 'messaged'
+            WHERE message_status != 'not_messaged'
         )
     """ if user_to_message_status_table_exists else ""
     classified_comments_df = load_table_as_df(
@@ -215,7 +223,7 @@ def determine_who_to_message() -> list[dict]:
     balanced_classified_comments_df["dm_text"] = [
         create_author_phase_message(row)
         if row["message_status"] == "pending_message"
-        else "NOT MESSAGED"
+        else "not_messaged"
         for _, row in balanced_classified_comments_df.iterrows()
     ]
     
@@ -225,12 +233,25 @@ def determine_who_to_message() -> list[dict]:
     # indeed have assigned them to be messaged.
     user_to_message_status_df = balanced_classified_comments_df[table_fields] # noqa
 
+    # add any author-phase users that are pending message but haven't been
+    # messaged yet.
+    users_pending_message_df = load_table_as_df(
+        table_name=table_name,
+        select_fields=["*"],
+        where_filter="""
+            WHERE phase = 'author' AND message_status = 'pending_message'
+        """
+    )
+
+    if len(users_pending_message_df) > 0:
+        print(f"Appending {len(users_pending_message_df)} users, with pending messages, to the list of users to message...") # noqa
+        user_to_message_status_df = pd.concat(
+            [user_to_message_status_df, users_pending_message_df]
+        )
+
     # dump to .csv, upsert to DB (so that, for example, users who were not DMed
     # before will have their statuses updated.)
-    dump_df_to_csv(
-        df=user_to_message_status_df,
-        table_name=table_name
-    )
+    dump_df_to_csv(df=user_to_message_status_df, table_name=table_name)
     write_df_to_database(
         df=user_to_message_status_df, table_name=table_name, upsert=True
     )
@@ -239,11 +260,7 @@ def determine_who_to_message() -> list[dict]:
         user_to_message_status_df["message_status"] == "pending_message"
     ).sum()
     print(f"Marked {number_of_new_users_to_message} new users as pending message.")  # noqa
-    
-    # TODO: maybe I don't need to explicitly pass down this info? I could just
-    # load the `user_to_message_status` and hydrate the field values that I
-    # don't have.
-    # pass on payloads to messaging service.
+
     user_to_message_list = [
         {
             "author_screen_name": author_screen_name,

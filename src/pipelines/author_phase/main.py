@@ -25,3 +25,7 @@ def main() -> None:
     message_context = {}
     message_users(event=message_event, context=message_context)
     print("Completed author phase.")
+
+
+if __name__ == "__main__":
+    main()
