@@ -428,19 +428,19 @@ def sync_comments_from_one_subreddit(
         for sync_object in objects_to_sync:
             if sync_object == "subreddits":
                 print("Dumping subreddits to .csv, writing to DB...")
-                write_df_to_database(df=subreddit_df, table_name="subreddits")
+                write_df_to_database(df=subreddit_df, table_name="subreddits", upsert=True)
                 dump_df_to_csv(df=subreddit_df, table_name="subreddits")
             elif sync_object == "users":
                 print("Dumping users to .csv, writing to DB...")
-                write_df_to_database(df=users_df, table_name="users")
+                write_df_to_database(df=users_df, table_name="users", upsert=True)
                 dump_df_to_csv(df=users_df, table_name="users")
             elif sync_object == "threads":
                 print("Dumping threads to .csv, writing to DB...")
-                write_df_to_database(df=threads_df, table_name="threads")
+                write_df_to_database(df=threads_df, table_name="threads", upsert=True)
                 dump_df_to_csv(df=threads_df, table_name="threads")
             elif sync_object == "comments":
                 print("Dumping comments to .csv, writing to DB...")
-                write_df_to_database(df=comments_df, table_name="comments")
+                write_df_to_database(df=comments_df, table_name="comments", upsert=True)
                 dump_df_to_csv(df=comments_df, table_name="comments")
 
     except Exception as e:

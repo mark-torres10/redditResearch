@@ -10,7 +10,7 @@ import pandas as pd
 import tensorflow as tf
 
 from lib.helper import ROOT_DIR
-from preprocess.strings import obtain_string_features_dict
+from services.classify_comments.preprocess.strings import obtain_string_features_dict # noqa
 
 MODEL_NAME = os.path.join(ROOT_DIR, "model_files/GRU.h5")
 TOKENIZER_JOBLIB_FILE = os.path.join(ROOT_DIR, "model_files/26k_training_data.joblib")

@@ -263,6 +263,7 @@ def write_df_to_database(
         if not table_exists:
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
+        df = convert_dict_fields_to_json(df)
         if upsert and table_exists:
             row_count_before = get_table_row_count(table_name=table_name)
             print(f"Table {table_name} exists. Upserting {len(df)} rows...")

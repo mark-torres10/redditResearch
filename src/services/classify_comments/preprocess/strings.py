@@ -13,13 +13,11 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import TweetTokenizer, word_tokenize
 import numpy as np
 
-from lib.helper import ROOT_DIR
-from preprocess.emoji_helper import (
+from services.classify_comments.preprocess.emoji_helper import (
     emoji_name_to_unicode_map,
     emoji_unicode_to_name_map,
     TOP_EMOJIS,
 )
-from preprocess.model_loader import get_nb_vectorizer
 
 PUNCTUATION_REGEX = r"[%s]" % re.escape("""!"$%&()*+,-./:;<=>?@[\]^_`{|}~""")
 SHORT_LINK_REGEX = "//t.co\S+"
@@ -34,9 +32,6 @@ exp_outrage = os.path.join(
     ROOT_DIR, "model_files/expanded_outrage_dictionary_stemmed.csv"
 )
 """
-#nb_model_fp = os.path.join(ROOT_DIR, "model_files/NB_sentiment_model.pkl")
-#nb_vectorizer_fp = os.path.join(ROOT_DIR, "model_files/NB_vectorizer.pkl")
-#NB_MODEL, NB_VECTORIZER = get_nb_vectorizer(nb_model_fp, nb_vectorizer_fp)
 
 def char_is_emoji(char: str) -> bool:
     return char in emoji_name_to_unicode_map.values()

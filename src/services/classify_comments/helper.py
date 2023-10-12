@@ -15,34 +15,24 @@ embedding, tokenizer = load_default_embedding_and_tokenizer()
 
 
 def classify_comments(classify_new_comments_only: bool = True) -> None:
-    # load comments
+    classified_comments_table_exists = check_if_table_exists(table_name)
     select_fields = ["*"]
-    where_filter = ""
+    where_filter = f"""
+        WHERE id NOT IN (
+            SELECT
+                id
+            FROM {table_name}
+            WHERE is_classified = FALSE
+        )
+    """ if classified_comments_table_exists and classify_new_comments_only else "" # noqa
     comments_df = load_table_as_df(
         table_name="comments",
         select_fields=select_fields,
         where_filter=where_filter
     )
-
-    # load previously classified comments
-    if classify_new_comments_only:
-        table_exists = check_if_table_exists(table_name)
-        if table_exists:
-            previous_ids_fields = ["id"]
-            previous_ids_where_filter = (
-                "WHERE is_classified = FALSE"
-                if classify_new_comments_only else ""
-            )
-            previous_ids_df = load_table_as_df(
-                table_name="classified_comments",
-                select_fields=previous_ids_fields,
-                where_filter=previous_ids_where_filter
-            )
-            previous_ids = previous_ids_df["id"].tolist()
-            comments_df = comments_df[~comments_df["id"].isin(previous_ids)]
-            if comments_df.shape[0] == 0:
-                print("No new comments to classify...")
-                return
+    if comments_df.shape[0] == 0:
+        print("No new comments to classify...")
+        return
 
     # get only the subset of relevant columns from comments df that we want in
     # the table of classified comments. These are the information that we need
@@ -70,9 +60,5 @@ def classify_comments(classify_new_comments_only: bool = True) -> None:
     comments_df["is_classified"] = True
 
     # write to CSV, upload to DB
-    dump_df_to_csv(
-        df=comments_df, table_name=table_name
-    )
-    write_df_to_database(
-        df=comments_df, table_name=table_name, rebuild_table=True
-    )
+    dump_df_to_csv(df=comments_df, table_name=table_name)
+    write_df_to_database(df=comments_df, table_name=table_name, rebuild_table=True)
