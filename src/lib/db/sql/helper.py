@@ -332,7 +332,7 @@ def load_table_as_df(
     """Loads a table from the database into a dataframe."""
     try:
         select_fields_query = ', '.join(select_fields)
-        cursor.execute(f"""
+        query = f"""
             SELECT
                 {select_fields_query}
             FROM {table_name}
@@ -340,7 +340,8 @@ def load_table_as_df(
             {where_filter}
             {order_by_clause}
             {limit_clause};
-        """) # noqa
+        """
+        cursor.execute(query)
         df = pd.DataFrame(cursor.fetchall(), columns=[desc[0] for desc in cursor.description]) # noqa
         return df
     except Exception as e:

@@ -22,7 +22,7 @@ def classify_comments(classify_new_comments_only: bool = True) -> None:
             SELECT
                 id
             FROM {table_name}
-            WHERE is_classified = FALSE
+            WHERE is_classified = TRUE
         )
     """ if classified_comments_table_exists and classify_new_comments_only else "" # noqa
     comments_df = load_table_as_df(
@@ -61,4 +61,4 @@ def classify_comments(classify_new_comments_only: bool = True) -> None:
 
     # write to CSV, upload to DB
     dump_df_to_csv(df=comments_df, table_name=table_name)
-    write_df_to_database(df=comments_df, table_name=table_name, rebuild_table=True)
+    write_df_to_database(df=comments_df, table_name=table_name, upsert=True)
