@@ -212,7 +212,7 @@ def create_upsert_query_from_df(
     """
     upsert_query = f"""
         INSERT INTO {table_name} ({', '.join(df.columns)})
-        VALUES {', '.join(['%s'] * len(df.columns))}
+        VALUES ({', '.join(['%s'] * len(df.columns))})
         ON CONFLICT ({', '.join(upsert_keys)})
         DO UPDATE SET
     """
@@ -221,7 +221,8 @@ def create_upsert_query_from_df(
         for col in df.columns
         if col not in upsert_keys
     ]
-    upsert_query += ', '.join(update_fields)
+    update_fields_string = ', '.join(update_fields)
+    upsert_query += f"{update_fields_string};"
     return upsert_query
 
 

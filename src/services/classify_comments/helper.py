@@ -2,6 +2,7 @@ from data.helper import dump_df_to_csv
 from lib.db.sql.helper import (
     check_if_table_exists, load_table_as_df, write_df_to_database
 )
+from lib.helper import CURRENT_TIME_STR
 from services.classify_comments.inference import (
     classify_text, load_default_embedding_and_tokenizer
 )
@@ -58,7 +59,9 @@ def classify_comments(classify_new_comments_only: bool = True) -> None:
     comments_df["prob"] = probs
     comments_df["label"] = labels
     comments_df["is_classified"] = True
+    comments_df["classification_timestamp"] = CURRENT_TIME_STR 
 
-    # write to CSV, upload to DB
+    # write to CSV, upload to DB. Should not have to upsert since we only
+    # classify comments that we haven't seen before.
     dump_df_to_csv(df=comments_df, table_name=table_name)
-    write_df_to_database(df=comments_df, table_name=table_name, upsert=True)
+    write_df_to_database(df=comments_df, table_name=table_name)

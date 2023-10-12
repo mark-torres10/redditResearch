@@ -1,0 +1,2 @@
+subreddit,thread_sort_type,max_total_comments,num_comment_threads,num_total_comments,num_total_users,num_duplicate_authors,num_duplicate_comments,num_skipped_comments,num_skipped_authors
+politics,hot,50,1,57,46,15,0,0,0
