@@ -175,8 +175,8 @@ def convert_legacy_data() -> None:
     table_to_converted_legacy_data_map = convert_legacy_sync_data()
     for table_name, df in table_to_converted_legacy_data_map.items():
         print(f"Dumping legacy data to {table_name}...")
-        dump_df_to_csv(df=df, table_name=f"legacy_{table_name}")
         write_df_to_database(df=df, table_name=table_name)
+        dump_df_to_csv(df=df, table_name=f"legacy_{table_name}")
         print(f"Finished dumping legacy data to {table_name}")
 
 
