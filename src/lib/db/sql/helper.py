@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
+from sqlalchemy.types import Integer, Text, Boolean, Float
 
 from lib.db.sql.tables import TABLE_TO_KEYS_MAP
 
@@ -41,6 +42,13 @@ dtype_to_sql_type_map = {
     np.dtype("float64"): "float"
 }
 
+sql_string_type_to_native_type = {
+    "text": Text,
+    "bool": Boolean,
+    "int": Integer,
+    "float": Float
+}
+
 
 def convert_python_dtype_to_sql_type(dtype: np.dtype) -> str:
     """Converts a Python dtype to a SQL type."""
@@ -49,7 +57,9 @@ def convert_python_dtype_to_sql_type(dtype: np.dtype) -> str:
     return instance_type
 
 
-def get_sql_cols_for_df_fields(df: pd.DataFrame) -> dict:
+def get_sql_cols_for_df_fields(
+    df: pd.DataFrame, return_native_sqlalchemy_types: bool = False
+) -> dict:
     col_to_dtype_map = {
         col: df[col].dtype
         for col in df.columns
@@ -58,12 +68,19 @@ def get_sql_cols_for_df_fields(df: pd.DataFrame) -> dict:
         col: convert_python_dtype_to_sql_type(dtype)
         for col, dtype in col_to_dtype_map.items()
     }
+    if return_native_sqlalchemy_types:
+        col_to_sql_type_map = {
+            col: sql_string_type_to_native_type[string_dtype]
+            for col, string_dtype in col_to_sql_type_map.items()
+        }
+
     return col_to_sql_type_map
 
 
 def drop_table(table_name: str, cascade: bool = True) -> None:
     """Deletes a table from the database."""
     try:
+        print(f"Dropping table {table_name}...")
         cursor.execute(f"DROP TABLE IF EXISTS {table_name} {'CASCADE' if cascade else ''};") # noqa
         conn.commit()
         print(f"Table {table_name} deleted successfully.")
@@ -148,8 +165,8 @@ def generate_create_table_statement_from_df(
         table_name=table_name,
         field_to_sql_type_map=col_to_sql_type_map
     )
-    print(f"Creating a new table, {table_name}, with the following CREATE TABLE statement:") # noqa
-    print(create_table_sql)
+    #print(f"Creating a new table, {table_name}, with the following CREATE TABLE statement:") # noqa
+    #print(create_table_sql)
     return create_table_sql
 
 
@@ -209,9 +226,18 @@ def create_upsert_query_from_df(
 
 
 def convert_dict_fields_to_json(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert dictionary fields in a DataFrame to JSON strings."""
+    """Convert dictionary and list of dictionaries fields in a DataFrame to
+    JSON strings."""
     for col in df.columns:
-        if df[col].apply(lambda x: isinstance(x, dict)).all():
+        if (
+            df[col].apply(
+                lambda x: isinstance(x, dict)
+                or (
+                    isinstance(x, list)
+                    and all(isinstance(item, dict)for item in x)
+                )
+            ).all()
+        ):
             df[col] = df[col].apply(json.dumps)
     return df
 
@@ -264,12 +290,15 @@ def write_df_to_database(
             print(f"Table {table_name} exists. Inserting {len(df)} rows...")
             print(f"Row count before insert: {row_count_before}.")
             df = convert_dict_fields_to_json(df)
+            dtype_mapping = get_sql_cols_for_df_fields(
+                df=df, return_native_sqlalchemy_types=True
+            )
             df.to_sql(
                 table_name,
                 engine,
                 if_exists="append",
                 index=False,
-                dtype=get_sql_cols_for_df_fields(df)
+                dtype=dtype_mapping
             )
             print(f"Finished inserting (not upserting) {len(df)} rows to {table_name}.") # noqa
             row_count_after = get_table_row_count(table_name=table_name)

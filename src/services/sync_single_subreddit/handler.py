@@ -18,7 +18,7 @@ def main(event: dict, context: dict) -> int:
     thread_sort_type = event.get("thread_sort_type", DEFAULT_THREAD_SORT_TYPE)
     max_total_comments = event.get("max_total_comments", DEFAULT_MAX_COMMENTS)
     objects_to_sync = event.get(
-        "object_to_sync", ["subreddits", "threads", "comments", "users"]
+        "object_to_sync", ["subreddits", "threads", "users", "comments"]
     )
     sync_comments_from_one_subreddit(
         api=api,
