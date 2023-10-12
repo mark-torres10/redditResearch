@@ -44,11 +44,9 @@ def dump_dict_as_tmp_json(data: dict, table_name: str, filename: str) -> None:
     except Exception as e:
         print(f"Error writing {filename} to {tmp_dir}.")
         print(e)
-    
 
-def load_tmp_json_data_as_df(
-    table_name: str, delete_tmp_data: bool=False
-) -> pd.DataFrame:
+
+def load_tmp_json_data(table_name: str) -> list[dict]:
     """Load json data from a temporary filepath as a pandas df."""
     dir = os.path.join(DATA_DIR, table_name, "tmp")
     if not os.path.exists(dir):
@@ -61,13 +59,34 @@ def load_tmp_json_data_as_df(
     for file in files:
         with open(os.path.join(dir, file), "r") as f:
             data.append(json.load(f))
+    
+    return data
+
+
+def delete_tmp_json_data(table_name: str) -> None:
+    """Delete tmp json data from tmp directory."""
+    table_dir = os.path.join(DATA_DIR, table_name)
+    if not os.path.exists(table_dir):
+        print(f"No tmp data to delete. Directory {table_dir} doesn't exist.")
+        return
+    tmp_dir = os.path.join(table_dir, "tmp")
+    files = os.listdir(tmp_dir)
+    if not files:
+        print("No tmp data to delete.")
+        return
+    for file in files:
+        os.remove(os.path.join(tmp_dir, file))
+    os.rmdir(tmp_dir)
+    print(f"Successfully deleted {len(files)} files from tmp directory.")
+
+
+def load_tmp_json_data_as_df(
+    table_name: str, delete_tmp_data: bool=False
+) -> pd.DataFrame:
+    data = load_tmp_json_data(table_name)
     df = pd.DataFrame(data)
-
     if delete_tmp_data:
-        for file in files:
-            os.remove(os.path.join(dir, file))
-        os.rmdir(dir)
-
+        delete_tmp_json_data(table_name)
     return df
 
 

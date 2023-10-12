@@ -30,7 +30,7 @@ from services.sync_single_subreddit.transformations import (
 
 DEFAULT_NUM_THREADS = 5
 DEFAULT_THREAD_SORT_TYPE = "hot"
-DEFAULT_MAX_COMMENTS = 200 # TODO: change back to 300
+DEFAULT_MAX_COMMENTS = 200
 
 
 # metadata counters, for QA of syncs

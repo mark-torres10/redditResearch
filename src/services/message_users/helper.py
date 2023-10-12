@@ -3,7 +3,10 @@ import datetime
 import pandas as pd
 from praw.exceptions import RedditAPIException
 
-from data.helper import dump_df_to_csv, dump_dict_as_tmp_json
+from data.helper import (
+    delete_tmp_json_data, dump_df_to_csv, dump_dict_as_tmp_json,
+    load_tmp_json_data
+)
 from lib.db.sql.helper import load_table_as_df, write_df_to_database
 from services.message_single_user.handler import main as message_single_user
 from services.message_single_user.helper import catch_rate_limit_and_sleep
@@ -46,8 +49,51 @@ def filter_payloads_by_valid_users_to_dm(payloads: list[dict]) -> list[dict]:
         for payload in payloads
         if payload["author_screen_name"] in valid_users_to_dm
     ]
+    num_payloads_removed = len(payloads) - len(filtered_payloads)
+    if num_payloads_removed > 0:
+        print(f"Removing {num_payloads_removed} possible DMs, since they would be to users who don't allow DMs.") # noqa
     return filtered_payloads
 
+
+def dedupe_payloads(payloads: list[dict]) -> list[dict]:
+    """Dedupes payloads by comment and user ID.
+    
+    Theoretically this shouldn't be necessary, but to avoid the possibility of
+    it happening, we do filtering here. This guarantees that we don't
+    accidentally double-DM a user during a given run.
+    """
+    seen_user_ids = set()
+    seen_comment_ids = set()
+    duplicate_payloads_count = 0
+
+    deduped_payloads = []
+
+    for payload in payloads:
+        user_id = payload["user_id"]
+        comment_id = payload["comment_id"]
+        if (
+            user_id not in seen_user_ids
+            and comment_id not in seen_comment_ids
+        ):
+            deduped_payloads.append(payload)
+            seen_user_ids.add(user_id)
+            seen_comment_ids.add(comment_id)
+        else:
+            print("Duplicate payload spotted. Removing...")
+            duplicate_payloads_count += 1
+
+    if duplicate_payloads_count:
+        print(f"Filtered out {duplicate_payloads_count} duplicate payloads.")
+
+    return deduped_payloads
+
+
+def preprocess_payloads(payloads: list[dict]) -> list[dict]:
+    """Performs any necessary preprocessing and checks on the list of DMs to
+    send."""
+    filtered_payloads = filter_payloads_by_valid_users_to_dm(payloads)
+    deduped_payloads = dedupe_payloads(filtered_payloads)
+    return deduped_payloads
 
 def is_valid_payload(payload: dict) -> bool:
     return set(payload.keys()) == set(payload_required_fields)
@@ -60,14 +106,11 @@ def message_users(
     messages_to_retry = []
     failed_messages = []
     context = {}
-    # TODO: add data quality checks? e.g., ensure that there's only one
-    # instance of each comment and only one instance of each user
-    # TODO: maybe I can add this and the filter by valid users as one
-    # data quality step?
     for payload in payloads:
         if not is_valid_payload(payload):
             raise ValueError(f"Invalid payload (fields are not correct): {payload}") # noqa
         status = message_single_user(payload, context)
+        tmp_filename = f"{payload['user_id']}_{payload['comment_id']}.json" # noqa
         if status == 0:
             successful_messages.append(payload)
             # write successful DMs to a temporary table, so that in case the
@@ -76,7 +119,11 @@ def message_users(
             updated_payload = {
                 **payload, **{"message_status": "messaged_successfully"}
             }
-            dump_dict_as_tmp_json(updated_payload, tmp_table_name)
+            dump_dict_as_tmp_json(
+                data=updated_payload,
+                table_name=tmp_table_name,
+                filename=tmp_filename
+            )
         else:
             # TODO: should make sure that if I hit a rate error, that this is
             # caught and I sleep for the appropriate amount of time.
@@ -94,9 +141,65 @@ def message_users(
                     **payload,
                     **{"message_status": "message_failed_dm_forbidden"}
                 }
-                dump_dict_as_tmp_json(updated_payload, tmp_table_name)
+                dump_dict_as_tmp_json(
+                    data=updated_payload,
+                    table_name=tmp_table_name,
+                    filename=tmp_filename
+                )
 
     return (successful_messages, messages_to_retry, failed_messages)
+
+
+def add_cached_payloads_to_session(
+    payloads: list[dict],
+    cached_payloads: list[dict],
+    successful_messages: list[dict],
+    messages_to_retry: list[dict],
+    failed_messages: list[dict]
+) -> tuple[
+    list[dict], list[dict], list[dict], list[dict]
+]:
+    """Add cached payloads to the current DMing session.
+    
+    We don't want to re-send DMs that we sent in a prior session. The only
+    payloads that would be cached are those from DMs that we sent but for some
+    reason the session was interrupted and we couldn't finish it. In that case,
+    this will let us continue a session without repeating DMs that we've sent
+    in the past, while counting the previously sent cached DMs to our count of
+    successful/failed DMs.
+    """
+    cached_successful_messages: list[dict] = []
+    cached_messages_to_retry: list[dict] = []
+    cached_failed_messages: list[dict] = []
+
+    # we use the combination of user id + comment id to map the cached payloads
+    # against the current payloads. For some reason a direct search of the
+    # dict object doesn't work, but doing it like this also removes duplicate
+    # DMs anyways.
+    map_cache_key_to_cache_data = {
+        (cache_payload["user_id"], cache_payload["comment_id"]) : cache_payload
+        for cache_payload in cached_payloads
+    }
+
+    map_key_to_data = {
+        (payload["user_id"], payload["comment_id"]): payload
+        for payload in payloads
+    }
+
+    for cache_key, cached_payload in map_cache_key_to_cache_data.items():
+        if cache_key in map_key_to_data:
+            map_key_to_data.pop(cache_key)
+        if cached_payload["message_status"] == "messaged_successfully":
+            cached_successful_messages.append(cached_payload)
+        elif cached_payload["message_status"] == "message_failed_dm_forbidden":
+            cached_failed_messages.append(cached_payload)
+
+    successful_messages.extend(cached_successful_messages)
+    messages_to_retry.extend(cached_messages_to_retry)
+    failed_messages.extend(cached_failed_messages)
+    payloads = [item for item in map_key_to_data.values()]
+
+    return (payloads, successful_messages, messages_to_retry, failed_messages)
 
 
 def handle_message_users(payloads: list[dict], phase: str) -> None:
@@ -110,11 +213,24 @@ def handle_message_users(payloads: list[dict], phase: str) -> None:
     messages_to_retry: list[dict] = []
     failed_messages: list[dict] = []
 
-    payloads = filter_payloads_by_valid_users_to_dm(payloads)
-
-    successful_messages, messages_to_retry, failed_messages = (
-        message_users(payloads)
+    payloads = preprocess_payloads(payloads)
+    cached_payloads = load_tmp_json_data(table_name=tmp_table_name)
+    payloads, successful_messages, messages_to_retry, failed_messages = (
+        add_cached_payloads_to_session(
+            payloads=payloads,
+            cached_payloads=cached_payloads,
+            successful_messages=successful_messages,
+            messages_to_retry=messages_to_retry,
+            failed_messages=failed_messages
+        )
     )
+
+    if payloads:
+        successful_messages, messages_to_retry, failed_messages = (
+            message_users(payloads)
+        )
+    else:
+        print("No more DMs to send, after filtering out cached DMs.")
 
     print('-' * 10)
     print(f"After initial DM attempt...")
@@ -172,15 +288,17 @@ def handle_message_users(payloads: list[dict], phase: str) -> None:
         user_to_message_status_df["message_body"]
     )
 
-    # TODO: still need to figure out upsert functionality...
+    user_to_message_status_df = user_to_message_status_df[table_fields]
+
     # dump to .csv, upsert to DB (so that, for example, users who were not DMed
     # before will have their statuses updated.)
-    dump_df_to_csv(
-        df=user_to_message_status_df,
-        table_name=table_name
-    )
+    dump_df_to_csv(df=user_to_message_status_df, table_name=table_name)
     write_df_to_database(
         df=user_to_message_status_df, table_name=table_name, upsert=True
     )
+
+    # delete tmp json data (it exists solely in case there is an interruption
+    # in the run, so that we don't lose data on which users we've DMed).
+    delete_tmp_json_data(table_name=tmp_table_name)
 
     print(f"Completed messaging users for {phase} phase.")

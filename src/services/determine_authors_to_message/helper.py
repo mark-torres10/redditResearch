@@ -162,14 +162,7 @@ def init_user_to_message_status_table() -> None:
 
 
 def determine_who_to_message() -> list[dict]:
-    # get previously messaged users, if table exists.
     user_to_message_status_table_exists = check_if_table_exists(table_name)
-
-    # TODO: remove the drop table
-    from lib.db.sql.helper import drop_table
-    drop_table(table_name)
-    user_to_message_status_table_exists = False
-
     if not user_to_message_status_table_exists:
         print(f"{table_name} doesn't exist. Creating new table.")
         init_user_to_message_status_table()
@@ -222,8 +215,6 @@ def determine_who_to_message() -> list[dict]:
     )
     balanced_classified_comments_df["dm_text"] = [
         create_author_phase_message(row)
-        if row["message_status"] == "pending_message"
-        else "not_messaged"
         for _, row in balanced_classified_comments_df.iterrows()
     ]
     
