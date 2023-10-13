@@ -15,7 +15,7 @@ from praw.models.reddit.subreddit import Subreddit
 from praw.reddit import Reddit
 
 from data.helper import dump_df_to_csv
-from lib.db.sql.helper import write_df_to_database
+from lib.db.sql.helper import load_table_as_df, write_df_to_database
 from lib.helper import (
     CURRENT_TIME_STR, DENYLIST_AUTHORS,
     add_enrichment_fields,
@@ -83,12 +83,16 @@ def get_comment_threads(
     """Given a `subreddit` object, get the comment threads."""
     generator: ListingGenerator = None
     if thread_sort_type == "hot":
+        print("Getting hot threads...")
         generator = subreddit.hot(limit=num_threads)
     elif thread_sort_type == "new":
+        print("Getting new threads...")
         generator = subreddit.new(limit=num_threads)
     elif thread_sort_type == "top":
+        print("Getting top threads...")
         generator = subreddit.top(limit=num_threads)
     elif thread_sort_type == "controversial":
+        print("Getting controversial threads...")
         generator = subreddit.controversial(limit=num_threads)
     else:
         raise ValueError(f"Unknown thread type: {thread_sort_type}")
@@ -193,6 +197,16 @@ def parse_single_comment_data(
         skipped_authors += 1
     else:
         author: Redditor = comment.author
+        if not hasattr(author, "id") and author._fetched:
+            if hasattr(author, "is_suspended") and author.is_suspended:
+                print(f"Author {author.name} has a suspended account. Skipping this user and comment...") # noqa
+                return (users_list_info, comments_list_info)
+            else:
+                print(f"Need to fetch author with id={author.id}")
+        if not hasattr(author, "id"):
+            print(f"Still no author id for author. Skipping this author and comment.") # noqa
+            print("(this can happen, for example, with a deleted author)...")
+            return (users_list_info, comments_list_info)
         if author.id not in previously_seen_users:
             author_info = get_redditor_data(author)
             users_list_info.append(author_info)
@@ -376,6 +390,50 @@ def filter_comments_by_users(
     return comments_df
 
 
+def consolidate_field_mismatches(
+    df: pd.DataFrame, table_name: str
+) -> pd.DataFrame:
+    """Consolidates any field mismatches between a dataframe and the
+    corresponding table.
+    
+    We use the Postgres table as the source of truth. For any fields that the
+    df has but the table doesn't, we will remove those fields. For the fields
+    that the table has but the df doesn't, we will add those fields to the df
+    and provide a sensible default based on dtype.
+
+    Returns the df with the field mismatches consolidated.
+    """
+    table_df = load_table_as_df(table_name)
+    df_cols_set = set(df.columns)
+    table_cols_set = set(table_df.columns)
+    if df_cols_set == table_cols_set:
+        print(f"No mismatches in cols for df and table {table_name}")
+        return df
+    df_cols_not_in_table = df_cols_set - table_cols_set
+    table_cols_not_in_df = table_cols_set - df_cols_set
+
+    print(f"Total number of conflicting columns: {len(df_cols_not_in_table) + len(table_cols_not_in_df)}") # noqa
+    max_num_conflicting_cols = 5
+    if len(df_cols_not_in_table) + len(table_cols_not_in_df) > max_num_conflicting_cols: # noqa
+        raise ValueError(f"Too many conflicting columns between df and table {table_name}") # noqa
+
+    if df_cols_not_in_table:
+        print(f"{len(df_cols_not_in_table)} cols in df but not in table {table_name}. Dropping...") # noqa
+        df = df.drop(columns=df_cols_not_in_table)
+        print(f"Columns dropped: {df_cols_not_in_table}")
+
+    if table_cols_not_in_df:
+        print(f"{len(table_cols_not_in_df)} cols in table {table_name} but not in df. Adding...") # noqa
+        for col in table_cols_not_in_df:
+            print(f"Adding col {col} to df with default value...")
+            default_value = None
+            if table_df[col].dtype == "object":
+                default_value = ""
+            df[col] = default_value
+        print(f"Columns added: {table_cols_not_in_df}")
+
+    return df
+
 def sync_comments_from_one_subreddit(
     api: Reddit,
     subreddit: str,
@@ -424,23 +482,46 @@ def sync_comments_from_one_subreddit(
 
     print("Successfully synced data from Reddit. Now writing to DB...")
 
+    # consolidate field mismatch, if any, in the sync objects (this can happen
+    # due to modifications either in the Reddit API or in the `praw` wrapper)
+    subreddit_df = consolidate_field_mismatches(
+        df=subreddit_df, table_name="subreddits"
+    )
+    threads_df = consolidate_field_mismatches(
+        df=threads_df, table_name="threads"
+    )
+    users_df = consolidate_field_mismatches(
+        df=users_df, table_name="users"
+    )
+    comments_df = consolidate_field_mismatches(
+        df=comments_df, table_name="comments"
+    )
+
     try:
         for sync_object in objects_to_sync:
             if sync_object == "subreddits":
                 print("Dumping subreddits to .csv, writing to DB...")
-                write_df_to_database(df=subreddit_df, table_name="subreddits", upsert=True)
+                write_df_to_database(
+                    df=subreddit_df, table_name="subreddits", upsert=True
+                )
                 dump_df_to_csv(df=subreddit_df, table_name="subreddits")
             elif sync_object == "users":
                 print("Dumping users to .csv, writing to DB...")
-                write_df_to_database(df=users_df, table_name="users", upsert=True)
+                write_df_to_database(
+                    df=users_df, table_name="users", upsert=True
+                )
                 dump_df_to_csv(df=users_df, table_name="users")
             elif sync_object == "threads":
                 print("Dumping threads to .csv, writing to DB...")
-                write_df_to_database(df=threads_df, table_name="threads", upsert=True)
+                write_df_to_database(
+                    df=threads_df, table_name="threads", upsert=True
+                )
                 dump_df_to_csv(df=threads_df, table_name="threads")
             elif sync_object == "comments":
                 print("Dumping comments to .csv, writing to DB...")
-                write_df_to_database(df=comments_df, table_name="comments", upsert=True)
+                write_df_to_database(
+                    df=comments_df, table_name="comments", upsert=True
+                )
                 dump_df_to_csv(df=comments_df, table_name="comments")
 
     except Exception as e:

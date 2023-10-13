@@ -1,6 +1,6 @@
 """Object-speciific enrichments for Reddit raw data."""
 from praw.models.reddit.comment import Comment
-from praw.models.reddit.message import Message, SubredditMessage
+from praw.models.reddit.message import Message
 
 from praw.models.reddit.submission import Submission
 
@@ -32,6 +32,7 @@ def object_specific_enrichments(obj) -> dict:
         enrichments["author_id"] = remove_prefix_from_id(obj.author_fullname)
     elif isinstance(obj, Submission):
         enrichments["author_screen_name"] = obj.author.name
+        enrichments["edited"] = float(obj.edited) # sometimes it's a float and sometimes a bool? Unclear why, but casting all to float.
     elif isinstance(obj, Message):
         enrichments["author_id"] = remove_prefix_from_id(obj.author_fullname)
 
