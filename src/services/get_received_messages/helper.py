@@ -18,6 +18,20 @@ from services.sync_single_subreddit.transformations import (
 table_name = "messages_received"
 api = init_api_access()
 
+table_fields = [
+    "id", "author_id", "author_screen_name", "phase", "body", "created_utc",
+    "created_utc_string", "comment_id", "comment_text", "dm_text",
+    "synctimestamp"
+]
+message_columns_to_extract = [
+    "id", "author_id", "body", "created_utc", "created_utc_string",
+    "synctimestamp"
+]
+user_to_message_status_select_fields = [
+    "user_id", "author_screen_name", "phase", "comment_id", "comment_text",
+    "dm_text"
+]
+
 
 def is_valid_message_type(message) -> bool:
     """We only want messages that we get directly from other users. We don't
@@ -107,14 +121,7 @@ def handle_received_messages() -> None:
     # initially sent. Join the DMs with the information in the
     # `user_to_message_status` table, so that for each DM we get we also get
     # information about the original message that was sent.
-    columns_to_extract = [
-        "id", "author_id", "body", "created_utc_string", "synctimestamp"
-    ]
-    messages_received_df = messages_received_df[columns_to_extract]
-
-    user_to_message_status_select_fields = [
-        "user_id", "phase", "comment_id", "comment_text", "dm_text"
-    ]
+    messages_received_df = messages_received_df[message_columns_to_extract]
     author_ids_string = ', '.join(
         f"'{author}'" for author in messages_received_df["author_id"]
     )
@@ -148,7 +155,7 @@ def handle_received_messages() -> None:
         )
         print("These author_ids are:")
         print(author_ids_not_in_hydrated_dms_received)
-
+    hydrated_dms_received = hydrated_dms_received[table_fields]
     # write to DB.
     dump_df_to_csv(df=hydrated_dms_received, table_name=table_name)
     write_df_to_database(df=hydrated_dms_received, table_name=table_name)
