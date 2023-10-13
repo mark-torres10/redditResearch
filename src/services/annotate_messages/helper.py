@@ -31,6 +31,9 @@ def annotate_message(
         elif user_input == 'n':
             print("Invalid message")
             return (False, "")
+        elif user_input == 'e':
+            print("Exiting session...")
+            return (None, None)
         else:
             print(f"Invalid input: {user_input}")
 
@@ -56,16 +59,26 @@ def annotate_messages() -> None:
         select_fields=select_fields,
         where_filter=where_filter
     )
+    if len(messages_to_annotate_df) == 0:
+        print("No messages to annotate.")
+        return
     print(f"Annotating {len(messages_to_annotate_df)} messages...")
-    annotation_results: list[tuple] = [
-        annotate_message(text, phase)
-        for text, phase in zip(
-            messages_to_annotate_df["body"],
-            messages_to_annotate_df["phase"]
-        )
-    ]
+    annotation_results: list[tuple] = []
+    for (text, phase) in zip(messages_to_annotate_df["body"], messages_to_annotate_df["phase"]): # noqa
+        annotation_result = annotate_message(text, phase)
+        annotation_results.append(annotation_result)
+        if annotation_result[0] is None:
+            print(f"Stopping annotation session early, after {len(annotation_results)} annotations") # noqa
+            break
+
     is_valid_message_lst: list[bool] = [res[0] for res in annotation_results]
     score_lst: list[str] = [res[1] for res in annotation_results]
+
+    # filter messages_to_annotate_df, return only the first x rows
+    if len(annotation_results) != len(messages_to_annotate_df):
+        messages_to_annotate_df = messages_to_annotate_df.head(
+            len(annotation_results)
+        )
 
     messages_to_annotate_df["is_valid_message"] = is_valid_message_lst
     messages_to_annotate_df["score"] = score_lst
@@ -75,5 +88,11 @@ def annotate_messages() -> None:
     # write the annotated messages to the DB. Should be straight inserts since
     # we only annotated data that we haven't previously annotated before.
     dump_df_to_csv(df=messages_to_annotate_df, table_name=table_name)
-    write_df_to_database(df=messages_to_annotate_df, table_name=table_name)
+    write_df_to_database(
+        df=messages_to_annotate_df, table_name=table_name, upsert=True
+    )
     print(f"Completed annotation for {len(messages_to_annotate_df)} messages.")
+
+
+if __name__ == "__main__":
+    annotate_messages()
