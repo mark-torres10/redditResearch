@@ -287,6 +287,7 @@ def write_df_to_database(
             print(f"Finished upserting {len(sql_statements)} rows into {table_name}.") # noqa
             row_count_after = get_table_row_count(table_name=table_name)
             print(f"Row count after upsert: {row_count_after}.")
+            conn.commit()
         else:
             row_count_before = get_table_row_count(table_name=table_name)
             print(f"Table {table_name} exists. Inserting {len(df)} rows...")
