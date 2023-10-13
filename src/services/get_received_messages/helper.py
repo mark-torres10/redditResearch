@@ -49,6 +49,9 @@ def get_message_data(message: Message) -> dict:
 
 # TODO: figure out how to do time-based filter so that we only load messages
 # that are new since the last time we ran this script.
+# NOTE: looks like it's possible to pass in an id (e.g., `t4_1y1185x`) and
+# get any messages received after that one?
+# https://www.reddit.com/dev/api/#GET_message_inbox
 def get_messages() -> pd.DataFrame:
     """Get DMs that we received on Reddit.
     
@@ -69,12 +72,17 @@ def get_messages() -> pd.DataFrame:
     ]
     message_dicts_list = [get_message_data(msg) for msg in messages_received]
     messages_df = pd.DataFrame(message_dicts_list)
+    print(f"Collected {len(messages_df)} messages.")
     return messages_df
 
 
 def handle_received_messages() -> None:
     # get DMs received.
-    messages_received_df = get_messages()
+    #messages_received_df = get_messages()
+    from data.helper import DATA_DIR
+    import os
+    fp = os.path.join(DATA_DIR, "tmp_messaged_users", "tmp_messaged_users.csv")
+    messages_received_df = pd.read_csv(fp)
 
     # check table of DMs already received, filter out DMs received
     # by that table.
@@ -96,10 +104,11 @@ def handle_received_messages() -> None:
         messages_received_df = messages_received_df[filter_list]
 
     # hydrate the received messages with information on the DM that was
-    # initially sent.
+    # initially sent. Join the DMs with the information in the
+    # `user_to_message_status` table, so that for each DM we get we also get
+    # information about the original message that was sent.
     columns_to_extract = [
-        "id", "author_id", "author_screen_name", "body", "created_utc_string",
-        "synctimestamp"
+        "id", "author_id", "body", "created_utc_string", "synctimestamp"
     ]
     messages_received_df = messages_received_df[columns_to_extract]
 
@@ -107,7 +116,7 @@ def handle_received_messages() -> None:
         "user_id", "phase", "comment_id", "comment_text", "dm_text"
     ]
     author_ids_string = ', '.join(
-        author for author in messages_received_df["author_id"]
+        f"'{author}'" for author in messages_received_df["author_id"]
     )
     user_to_message_status_where_filter = f"WHERE user_id IN ({author_ids_string})" # noqa
     user_to_message_status_df = load_table_as_df(
@@ -145,3 +154,6 @@ def handle_received_messages() -> None:
     write_df_to_database(df=hydrated_dms_received, table_name=table_name)
 
     print("Completed getting received messages.")
+
+if __name__ == "__main__":
+    handle_received_messages()

@@ -5,9 +5,14 @@ from services.get_received_messages.handler import main as get_received_messages
 
 
 @track_function_runtime
-def main() -> None:
+def main(annotation_only: bool=False) -> None:
     event = {}
     context = {}
-    get_received_messages(event, context)
+    if not annotation_only:
+        get_received_messages(event, context)
     annotate_messages(event, context)
     print("Completed message retrieval and annotation phase.")
+
+
+if __name__ == "__main__":
+    main()

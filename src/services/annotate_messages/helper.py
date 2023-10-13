@@ -10,7 +10,7 @@ table_name = "annotated_messages"
 
 def annotate_message(
     text: str, phase: Literal["author", "observer"]
-) -> tuple(bool, str):
+) -> tuple[bool, str]:
     """Annotate a single message.
     
     Return whether it is a valid message and if so, the associated score.

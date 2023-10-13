@@ -401,7 +401,7 @@ def convert_legacy_messaging_data() -> list[dict]:
     # the old pipeline (don't think we did an explicit check on this).
     legacy_messaging_df = legacy_messaging_df.drop_duplicates(subset=["user_id"]) # noqa
 
-    output_list = [
+    user_to_message_status_lst = [
         {
             "table_name": "user_to_message_status",
             "df": legacy_messaging_df,
@@ -454,13 +454,17 @@ def convert_legacy_messaging_data() -> list[dict]:
         # add `users` table updates to beginning of output list so that the
         # missing users are added to the `users` table before we try to write
         # the legacy data to the `user_to_message_status` table.
-        output_list = [
+        user_list = [
             {
                 "table_name": "users",
                 "df": missing_users_df,
                 "upsert": False
             }
-        ] + output_list
+        ]
+    else:
+        user_list = []
+
+    output_list = user_list + user_to_message_status_lst
 
     return output_list
 
