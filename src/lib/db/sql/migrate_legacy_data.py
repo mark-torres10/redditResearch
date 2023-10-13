@@ -478,6 +478,7 @@ def convert_legacy_messaging_data() -> list[dict]:
 def load_legacy_messages_received_data_as_df() -> pd.DataFrame:
     fp = os.path.join(LEGACY_MESSAGES_RECEIVED_DIR, "messages_received.csv")
     df = pd.read_csv(fp)
+    df = df.drop_duplicates(subset=["id"])
     return df
 
 
@@ -590,7 +591,12 @@ def convert_legacy_messages_received_data() -> list[dict]:
             }
             missing_messages_formatted_for_user_to_message_status_table.append(combined_data) # noqa
 
-        missing_user_to_message_status_df = pd.DataFrame(missing_messages_formatted_for_user_to_message_status_table) # noqa
+        if len(missing_messages_formatted_for_user_to_message_status_table) > 0: # noqa
+            missing_user_to_message_status_df = pd.DataFrame(missing_messages_formatted_for_user_to_message_status_table) # noqa
+        else:
+            missing_user_to_message_status_df = pd.DataFrame(
+                [], columns=existing_user_to_message_status_df.columns
+            )
 
     else:
         manually_hydrated_legacy_messages_received_df = pd.DataFrame(
@@ -657,6 +663,13 @@ def convert_legacy_messages_received_data() -> list[dict]:
         hydrated_legacy_messages_received_df,
         manually_hydrated_legacy_messages_received_df
     ])
+
+    if len(missing_users_df) == 0:
+        print("From the messages received data, no users to add to the `users` table") # noqa
+    if len(missing_user_to_message_status_df) == 0:
+        print("From the messages received data, no users to add to the `user_to_message_status` table") # noqa
+    if len(messages_received_df) == 0:
+        print("From the messages received data, no messages to add to the `messages_received` table") # noqa
 
     output.append({
         "table_name": "users",
