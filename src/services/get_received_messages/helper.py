@@ -92,11 +92,7 @@ def get_messages() -> pd.DataFrame:
 
 def handle_received_messages() -> None:
     # get DMs received.
-    #messages_received_df = get_messages()
-    from data.helper import DATA_DIR
-    import os
-    fp = os.path.join(DATA_DIR, "tmp_messaged_users", "tmp_messaged_users.csv")
-    messages_received_df = pd.read_csv(fp)
+    messages_received_df = get_messages()
 
     # check table of DMs already received, filter out DMs received
     # by that table.
@@ -110,12 +106,22 @@ def handle_received_messages() -> None:
             where_filter=where_filter
         )
         most_recent_timestamp = most_recent_timestamp.iloc[0][0]
-        # filter dms_received by most_recent_timestamp
+        # filter dms_received by most_recent_timestamp. If the DM was received
+        # more recently than the last time that we appended data to the
+        # messages_received table, then we want to keep it.
+        created_utc_list = messages_received_df["created_utc"].tolist()
+        created_utc_isoformat_list = [
+            pd.to_datetime(utc_float, unit="s").isoformat()
+            for utc_float in created_utc_list
+        ]
         filter_list: list[bool] = [
-            row["created_utc_string"] > most_recent_timestamp
-            for _, row in messages_received_df.iterrows()
+            isoformat_timestamp > most_recent_timestamp
+            for isoformat_timestamp in created_utc_isoformat_list
         ]
         messages_received_df = messages_received_df[filter_list]
+        if len(messages_received_df) == 0:
+            print("No new messages received. Exiting.")
+            return
 
     # hydrate the received messages with information on the DM that was
     # initially sent. Join the DMs with the information in the
