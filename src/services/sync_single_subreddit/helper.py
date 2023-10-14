@@ -423,7 +423,7 @@ def consolidate_field_mismatches(
     table_cols_not_in_df = table_cols_set - df_cols_set
 
     print(f"Total number of conflicting columns: {len(df_cols_not_in_table) + len(table_cols_not_in_df)}") # noqa
-    max_num_conflicting_cols = 5
+    max_num_conflicting_cols = 8
     if len(df_cols_not_in_table) + len(table_cols_not_in_df) > max_num_conflicting_cols: # noqa
         raise ValueError(f"Too many conflicting columns between df and table {table_name}") # noqa
 
