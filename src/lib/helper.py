@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 import praw
+import prawcore
 
 from lib.reddit import init_api_access
 
@@ -156,3 +157,17 @@ def add_enrichment_fields(data: dict) -> dict:
         }
 
     return {**data, **enrichment_fields}
+
+
+def generic_rate_limiter_decorator(func):
+    """Generic rate limiter, waits if a prawcore.exceptions.TooManyRequests is seen."""
+    minutes_delay = 1.5
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+        except prawcore.exceptions.TooManyRequests:
+            print(f"Rate limit exceeded, sleeping for {minutes_delay} minutes...") # noqa
+            time.sleep(minutes_delay * 60)
+            result = func(*args, **kwargs)
+        return result
+    return wrapper

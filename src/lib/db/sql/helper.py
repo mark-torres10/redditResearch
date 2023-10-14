@@ -237,6 +237,8 @@ def convert_dict_fields_to_json(df: pd.DataFrame) -> pd.DataFrame:
                     isinstance(x, list)
                     and all(isinstance(item, dict)for item in x)
                 )
+                or isinstance(x, list)
+                or isinstance(x, tuple)
             ).all()
         ):
             df[col] = df[col].apply(json.dumps)

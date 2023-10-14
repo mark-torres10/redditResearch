@@ -19,6 +19,7 @@ from lib.db.sql.helper import load_table_as_df, write_df_to_database
 from lib.helper import (
     CURRENT_TIME_STR, DENYLIST_AUTHORS,
     add_enrichment_fields,
+    generic_rate_limiter_decorator,
     is_json_serializable,
 )
 from services.sync_single_subreddit.constants import (
@@ -167,8 +168,9 @@ def get_redditor_data(redditor: Redditor) -> dict:
     return redditor_dict
 
 
+@generic_rate_limiter_decorator
 def parse_single_comment_data(
-    comment: Comment
+    comment: Comment, max_total_comments: int
 ) -> tuple[list[dict], list[dict]]:
     """Parses a `Comment` comment. Also recursively parses any nested child
     comments.
@@ -231,7 +233,7 @@ def parse_single_comment_data(
         replies: CommentForest = comment.replies
         if len(replies) > 0:
             print(f"Need to process {len(replies)} replies...")
-            users_info, comments_info = parse_comments_data(replies)
+            users_info, comments_info = parse_comments_data(replies, max_total_comments) # noqa
             users_list_info.extend(users_info)
             comments_list_info.extend(comments_info)
 
@@ -239,7 +241,7 @@ def parse_single_comment_data(
 
 
 def parse_morecomments_data(
-    comment: MoreComments
+    comment: MoreComments, max_total_comments: int
 ) ->  tuple[list[dict], list[dict]]:
     """Parses a 'MoreComments' comment.
     
@@ -253,12 +255,12 @@ def parse_morecomments_data(
     scrolling through the Reddit website.
     """
     more_comments: list[Comment] = comment.comments()
-    return parse_comments_data(more_comments)
+    return parse_comments_data(more_comments, max_total_comments)
 
 
 def parse_comments_data(
     comments: Union[CommentForest, list[Comment]],
-    max_total_comments: int = DEFAULT_MAX_COMMENTS
+    max_total_comments: int
 ) -> tuple[list[dict], list[dict]]:
     total_users_list_info: list[dict] = []
     total_comments_list_info: list[dict] = []
@@ -292,11 +294,11 @@ def parse_comments_data(
             print(f"Already seen comment with id={comment.id}. Skipping...")
             continue
         if isinstance(comment, Comment):
-            users_info, comments_info = parse_single_comment_data(comment)
+            users_info, comments_info = parse_single_comment_data(comment, max_total_comments) # noqa
             total_users_list_info.extend(users_info)
             total_comments_list_info.extend(comments_info)
         elif isinstance(comment, MoreComments):
-            parse_morecomments_data(comment)
+            parse_morecomments_data(comment, max_total_comments)
         else:
             comment_type = type(comment)
             print(f"Unknown comment class: {comment_type}. Skipping...")
@@ -306,7 +308,7 @@ def parse_comments_data(
 
 def parse_comment_thread_data(
     thread: Submission,
-    max_total_comments: int = DEFAULT_MAX_COMMENTS
+    max_total_comments: int
 ) -> tuple[dict, list[dict], list[dict]]:
     """
     Parses a comment thread. Returns a tuple of dictionaries that contains info
@@ -330,9 +332,10 @@ def parse_comment_thread_data(
     return (thread_dict, users_list_dicts, comments_list_dicts)
 
 
+@generic_rate_limiter_decorator
 def get_threads_data(
     threads: list[Submission],
-    max_total_comments: int = DEFAULT_MAX_COMMENTS
+    max_total_comments: int
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Given a list of threads, get the thread, comment, and user info for the
     thread, all comments in the thread (and their children comments), and the
@@ -437,8 +440,8 @@ def consolidate_field_mismatches(
 def sync_comments_from_one_subreddit(
     api: Reddit,
     subreddit: str,
-    num_threads: int = DEFAULT_NUM_THREADS,
-    max_total_comments: int = DEFAULT_MAX_COMMENTS,
+    num_threads: int,
+    max_total_comments: int,
     thread_sort_type: Literal["hot", "new", "top", "controversial"] = "hot",
     objects_to_sync: list[str] = ["subreddits", "threads", "users", "comments"]
 ) -> None:
@@ -479,6 +482,7 @@ def sync_comments_from_one_subreddit(
     except Exception as e:
         print(f"Unable to sync reddit data: {e}")
         traceback.print_exc()
+        raise
 
     print("Successfully synced data from Reddit. Now writing to DB...")
 
@@ -496,6 +500,10 @@ def sync_comments_from_one_subreddit(
     comments_df = consolidate_field_mismatches(
         df=comments_df, table_name="comments"
     )
+
+    print("Finished consolidating field mismatches. Now writing to DB...")
+    print(f"Number of users: {users_df.shape[0]}")
+    print(f"Number of comments: {comments_df.shape[0]}")
 
     try:
         for sync_object in objects_to_sync:
