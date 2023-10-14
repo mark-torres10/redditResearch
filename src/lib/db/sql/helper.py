@@ -226,20 +226,21 @@ def create_upsert_query_from_df(
     return upsert_query
 
 
-def convert_dict_fields_to_json(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert dictionary and list of dictionaries fields in a DataFrame to
-    JSON strings."""
+def convert_complex_fields_to_string(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert complex fields in a DataFrame to
+    JSON strings.
+    
+    Converts to string if any of the values in the series is one ofthese
+    complex values. We can dump as a string and then load as a JSON object.
+    """
     for col in df.columns:
         if (
             df[col].apply(
-                lambda x: isinstance(x, dict)
-                or (
-                    isinstance(x, list)
-                    and all(isinstance(item, dict)for item in x)
+                lambda x: (
+                    isinstance(x, dict) or isinstance(x, list)
+                    or isinstance(x, tuple)
                 )
-                or isinstance(x, list)
-                or isinstance(x, tuple)
-            ).all()
+            ).any()
         ):
             df[col] = df[col].apply(json.dumps)
     return df
@@ -266,7 +267,7 @@ def write_df_to_database(
         if not table_exists:
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
-        df = convert_dict_fields_to_json(df)
+        df = convert_complex_fields_to_string(df)
         if upsert and table_exists:
             row_count_before = get_table_row_count(table_name=table_name)
             print(f"Table {table_name} exists. Upserting {len(df)} rows...")
@@ -279,10 +280,24 @@ def write_df_to_database(
             # cursor.mogrify is faster than cursor.executemany()?
             # https://www.datacareer.de/blog/improve-your-psycopg2-executions-for-postgresql-in-python/
             # https://naysan.ca/2020/08/02/pandas-to-postgresql-using-psycopg2-mogrify-then-execute/
-            sql_statements = [
-                cursor.mogrify(upsert_query, tuple(row))
-                for _, row in df.iterrows()
-            ]
+            sql_statements = []
+            for _, row in df.iterrows():
+                try:
+                    sql_statements.append(cursor.mogrify(upsert_query, tuple(row)))
+                except psycopg2.ProgrammingError as e:
+                    foo = row
+                    print(f"Unable to mogrify upsert query: {e}")
+                    raise
+            """
+            try:
+                sql_statements = [
+                    cursor.mogrify(upsert_query, tuple(row))
+                    for _, row in df.iterrows()
+                ]
+            except psycopg2.ProgrammingError as e:
+                print(f"Unable to mogrify upsert query: {e}")
+                raise
+            """
             print(f"Upserting {len(sql_statements)} rows into {table_name}...") # noqa
             for statement in sql_statements:
                 cursor.execute(statement)
@@ -294,7 +309,7 @@ def write_df_to_database(
             row_count_before = get_table_row_count(table_name=table_name)
             print(f"Table {table_name} exists. Inserting {len(df)} rows...")
             print(f"Row count before insert: {row_count_before}.")
-            df = convert_dict_fields_to_json(df)
+            df = convert_complex_fields_to_string(df)
             dtype_mapping = get_sql_cols_for_df_fields(
                 df=df, return_native_sqlalchemy_types=True
             )

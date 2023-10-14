@@ -276,8 +276,8 @@ def parse_comments_data(
         print('-' * 10)
         print(f"Synced comments: {total_synced_comments}")
         print(f"Desired number of comments: {max_total_comments}")
-        print(f"Number of previously seen comments: {len(previously_seen_comments)}") # noqa
-        print(f"Number of previously seen users: {len(previously_seen_users)}")
+        print(f"Number of unique comments in this session: {len(previously_seen_comments)}") # noqa
+        print(f"Number of unique users in this session: {len(previously_seen_users)}")
         print('-' * 10)
 
     if total_synced_comments > max_total_comments:
