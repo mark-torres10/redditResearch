@@ -1,7 +1,7 @@
 """Object-speciific enrichments for Reddit raw data."""
+import pandas as pd
 from praw.models.reddit.comment import Comment
 from praw.models.reddit.message import Message
-
 from praw.models.reddit.submission import Submission
 
 
@@ -31,7 +31,11 @@ def object_specific_enrichments(obj) -> dict:
         # example author_fullname value: t2_519wf. These are Redditor IDs.
         enrichments["author_id"] = remove_prefix_from_id(obj.author_fullname)
     elif isinstance(obj, Submission):
-        enrichments["author_screen_name"] = obj.author.name
+        author = obj.author
+        if author is None:
+            enrichments["author_screen_name"] = None
+        else:
+            enrichments["author_screen_name"] = obj.author.name
         enrichments["edited"] = float(obj.edited) # sometimes it's a float and sometimes a bool? Unclear why, but casting all to float.
     elif isinstance(obj, Message):
         enrichments["author_id"] = remove_prefix_from_id(obj.author_fullname)
@@ -45,4 +49,9 @@ def field_specific_parsing(obj) -> dict:
         res["subreddit_id"] = remove_prefix_from_id(obj["subreddit_id"])
     if "parent_id" in obj:
         res["parent_id"] = remove_prefix_from_id(obj["parent_id"])
+    if "author_premium" in obj:
+        res["author_premium"] = (
+            False if pd.isna(obj["author_premium"])
+            else bool(obj["author_premium"])
+        )
     return res

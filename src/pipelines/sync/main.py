@@ -6,7 +6,7 @@ from services.sync_subreddits.handler import main as sync_subreddits
 
 @track_function_runtime
 def main() -> None:
-    event = {"subreddits": "Liberal", "thread_sort_type": "top", "max_total_comments": 400}
+    event = {"subreddits": "Liberal", "thread_sort_type": "controversial", "max_num_threads": 15, "max_total_comments": 400}
     context = {}
     payloads = sync_subreddits(event, context)
     for payload in payloads:

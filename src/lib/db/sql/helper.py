@@ -202,6 +202,19 @@ def check_if_table_exists(table_name: str) -> bool:
         raise
 
 
+def get_table_col_to_dtype_map(table_name: str) -> dict:
+    """Returns a map of col:dtype for a given Postgres table."""
+    query = f"""
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = '{table_name}';
+    """
+    cursor.execute(query)
+    column_info = cursor.fetchall()
+    column_datatypes = {col[0]: col[1] for col in column_info}
+    return column_datatypes
+
+
 def create_upsert_query_from_df(
     df: pd.DataFrame, table_name: str, upsert_keys: list[str]
 ) -> str:
@@ -246,6 +259,27 @@ def convert_complex_fields_to_string(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def process_df_based_on_expected_dtypes(
+    df: pd.DataFrame, table_name: str
+) -> pd.DataFrame:
+    """Based on the schema of the table in Postgres, process the dataframe
+    accordingly.
+
+    For example, we can't have nulls/NaNs in fields that are going to be bools
+    in Postgres.
+
+    This function is to help us avoid any DatatypeMismatch problems encountered
+    when inserting into Postgres.
+    """
+    table_col_to_dtype_map = get_table_col_to_dtype_map(table_name=table_name)
+    for col in df.columns:
+        table_dtype = table_col_to_dtype_map[col]
+        if table_dtype == "boolean":
+            df[col] = df[col].fillna(False)
+
+    return df
+
+
 def write_df_to_database(
     df: pd.DataFrame,
     table_name: str,
@@ -268,6 +302,7 @@ def write_df_to_database(
             print(f"Table {table_name} doesn't exist. Creating now...")
             create_new_table_from_df(df=df, table_name=table_name)
         df = convert_complex_fields_to_string(df)
+        df = process_df_based_on_expected_dtypes(df=df, table_name=table_name)
         if upsert and table_exists:
             row_count_before = get_table_row_count(table_name=table_name)
             print(f"Table {table_name} exists. Upserting {len(df)} rows...")
@@ -280,6 +315,11 @@ def write_df_to_database(
             # cursor.mogrify is faster than cursor.executemany()?
             # https://www.datacareer.de/blog/improve-your-psycopg2-executions-for-postgresql-in-python/
             # https://naysan.ca/2020/08/02/pandas-to-postgresql-using-psycopg2-mogrify-then-execute/
+            sql_statements = [
+                cursor.mogrify(upsert_query, tuple(row))
+                for _, row in df.iterrows()
+            ]
+            """
             sql_statements = []
             for _, row in df.iterrows():
                 try:
@@ -288,7 +328,7 @@ def write_df_to_database(
                     foo = row
                     print(f"Unable to mogrify upsert query: {e}")
                     raise
-            """
+
             try:
                 sql_statements = [
                     cursor.mogrify(upsert_query, tuple(row))
@@ -299,8 +339,11 @@ def write_df_to_database(
                 raise
             """
             print(f"Upserting {len(sql_statements)} rows into {table_name}...") # noqa
-            for statement in sql_statements:
-                cursor.execute(statement)
+            try:
+                for statement in sql_statements:
+                    cursor.execute(statement)
+            except Exception as e:
+                print(f"Unable to execute SQL statement: {e}")
             print(f"Finished upserting {len(sql_statements)} rows into {table_name}.") # noqa
             row_count_after = get_table_row_count(table_name=table_name)
             print(f"Row count after upsert: {row_count_after}.")
@@ -309,7 +352,6 @@ def write_df_to_database(
             row_count_before = get_table_row_count(table_name=table_name)
             print(f"Table {table_name} exists. Inserting {len(df)} rows...")
             print(f"Row count before insert: {row_count_before}.")
-            df = convert_complex_fields_to_string(df)
             dtype_mapping = get_sql_cols_for_df_fields(
                 df=df, return_native_sqlalchemy_types=True
             )

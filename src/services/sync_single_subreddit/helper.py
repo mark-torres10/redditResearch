@@ -13,6 +13,7 @@ from praw.models.reddit.redditor import Redditor
 from praw.models.reddit.submission import Submission
 from praw.models.reddit.subreddit import Subreddit
 from praw.reddit import Reddit
+import prawcore
 
 from data.helper import dump_df_to_csv
 from lib.db.sql.helper import load_table_as_df, write_df_to_database
@@ -29,8 +30,8 @@ from services.sync_single_subreddit.transformations import (
     field_specific_parsing, object_specific_enrichments
 )
 
-DEFAULT_NUM_THREADS = 5
 DEFAULT_THREAD_SORT_TYPE = "hot"
+DEFAULT_MAX_NUM_THREADS = 10
 DEFAULT_MAX_COMMENTS = 200
 
 
@@ -78,23 +79,23 @@ def get_subreddit_data(subreddit: Subreddit) -> pd.DataFrame:
 
 def get_comment_threads(
     subreddit: Subreddit,
-    num_threads: int = DEFAULT_NUM_THREADS,
+    max_num_threads: int,
     thread_sort_type: Literal["hot", "new", "top", "controversial"] = "hot"
 ) -> list[Submission]:
     """Given a `subreddit` object, get the comment threads."""
     generator: ListingGenerator = None
     if thread_sort_type == "hot":
         print("Getting hot threads...")
-        generator = subreddit.hot(limit=num_threads)
+        generator = subreddit.hot(limit=max_num_threads)
     elif thread_sort_type == "new":
         print("Getting new threads...")
-        generator = subreddit.new(limit=num_threads)
+        generator = subreddit.new(limit=max_num_threads)
     elif thread_sort_type == "top":
         print("Getting top threads...")
-        generator = subreddit.top(limit=num_threads)
+        generator = subreddit.top(limit=max_num_threads)
     elif thread_sort_type == "controversial":
         print("Getting controversial threads...")
-        generator = subreddit.controversial(limit=num_threads)
+        generator = subreddit.controversial(limit=max_num_threads)
     else:
         raise ValueError(f"Unknown thread type: {thread_sort_type}")
     return [thread for thread in generator]
@@ -199,6 +200,12 @@ def parse_single_comment_data(
         skipped_authors += 1
     else:
         author: Redditor = comment.author
+        try:
+            hasattr(author, "id")
+            author._fetched
+        except prawcore.exceptions.NotFound:
+            print(f"Author {author.name} has a deleted account. Skipping this user and comment...")
+            return (users_list_info, comments_list_info)
         if not hasattr(author, "id") and author._fetched:
             if hasattr(author, "is_suspended") and author.is_suspended:
                 print(f"Author {author.name} has a suspended account. Skipping this user and comment...") # noqa
@@ -440,7 +447,7 @@ def consolidate_field_mismatches(
 def sync_comments_from_one_subreddit(
     api: Reddit,
     subreddit: str,
-    num_threads: int,
+    max_num_threads: int,
     max_total_comments: int,
     thread_sort_type: Literal["hot", "new", "top", "controversial"] = "hot",
     objects_to_sync: list[str] = ["subreddits", "threads", "users", "comments"]
@@ -466,7 +473,7 @@ def sync_comments_from_one_subreddit(
 
     threads = get_comment_threads(
         subreddit=subreddit,
-        num_threads=num_threads,
+        max_num_threads=max_num_threads,
         thread_sort_type=thread_sort_type
     )
 
