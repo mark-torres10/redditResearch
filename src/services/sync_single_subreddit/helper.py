@@ -1,5 +1,6 @@
 """Helper utilities for managing single subreddit sync."""
 import csv
+from datetime import datetime
 import os
 import traceback
 from typing import Any, Literal, Union
@@ -33,6 +34,9 @@ from services.sync_single_subreddit.transformations import (
 DEFAULT_THREAD_SORT_TYPE = "hot"
 DEFAULT_MAX_NUM_THREADS = 10
 DEFAULT_MAX_COMMENTS = 200
+NUM_DAYS_COMMENT_RECENCY_FILTER = 30
+
+curr_datetime = datetime.utcfromtimestamp(pd.Timestamp.utcnow().timestamp())
 
 
 # metadata counters, for QA of syncs
@@ -46,6 +50,7 @@ duplicate_authors = 0
 duplicate_comments = 0
 skipped_comments = 0
 skipped_authors = 0
+old_threads_and_comments = 0
 
 add_more_comments = True
 
@@ -62,6 +67,38 @@ def write_metadata_file(metadata_dict: dict[str, Any]) -> None:
         writer = csv.DictWriter(csvfile, fieldnames=header_names)
         writer.writeheader()
         writer.writerows(data)
+
+
+def check_if_post_is_recent(
+    post: Union[Comment, Submission]
+) -> bool:
+    """Check if a post (a comment or thread) has been posted recently."""
+    # a comment has to have been posted in the last X days
+    num_days_recency_filter = 30
+    timestamp_datetime = datetime.utcfromtimestamp(post.created_utc)
+    return (curr_datetime - timestamp_datetime).days <= num_days_recency_filter
+
+
+def check_if_post_is_valid(
+    post: Union[Comment, Submission]
+) -> bool:
+    """Checks to see if the 'post' is valid."""
+    obj_type = "thread" if type(post).__name__ == "Submission" else "comment"
+    if post.author is None:
+        print(f"{obj_type} {post.id} has no author, meaning it was deleted. Skipping.") # noqa
+        return False
+    elif post.author.name in DENYLIST_AUTHORS:
+        print(f"Skipping {obj_type} by author {post.author}")
+        return False
+    elif not check_if_post_is_recent(post):
+        print(f"Skipping {obj_type}, as it was not posted recently.")
+        global old_threads_and_comments
+        old_threads_and_comments += 1
+        return False
+    elif isinstance(post, Submission) and post.id in previously_seen_threads:
+        print(f"{obj_type} with id={post.id} has already been seen. Skipping...")
+        return False
+    return True
 
 
 def get_subreddit_data(subreddit: Subreddit) -> pd.DataFrame:
@@ -190,15 +227,7 @@ def parse_single_comment_data(
     global total_comments
     global duplicate_comments
 
-    if comment.author is None:
-        print(f"Comment {comment.id} has no author, meaning it was deleted. Skipping.") # noqa
-        skipped_comments += 1
-        skipped_authors += 1
-    elif comment.author.name in DENYLIST_AUTHORS:
-        print(f"Skipping comment by author {comment.author}")
-        skipped_comments += 1
-        skipped_authors += 1
-    else:
+    if check_if_post_is_valid(comment):
         author: Redditor = comment.author
         try:
             hasattr(author, "id")
@@ -243,7 +272,10 @@ def parse_single_comment_data(
             users_info, comments_info = parse_comments_data(replies, max_total_comments) # noqa
             users_list_info.extend(users_info)
             comments_list_info.extend(comments_info)
-
+    else:
+        print(f"Skipping comment with id={comment.id}...")
+        skipped_comments += 1
+        skipped_authors += 1
     return (users_list_info, comments_list_info)
 
 
@@ -322,21 +354,22 @@ def parse_comment_thread_data(
     about the thread, the comments in the thread (and the comments to those
     comments), and the users in that comment thread.
     """
-    if thread.id in previously_seen_threads:
-        print(f"Thread with id={thread.id} has already been seen. Skipping.")
-        return ({}, [], [])
     if total_synced_comments > max_total_comments:
         print(f"Reached max total comments. Skipping thread {thread.id}")
         return ({}, [], [])
 
-    thread_dict = get_thread_data(thread)
-    previously_seen_threads.add(thread_dict["id"])
-    comments: CommentForest = thread.comments
-    users_list_dicts, comments_list_dicts = parse_comments_data(
-        comments=comments, max_total_comments=max_total_comments
-    )
-
-    return (thread_dict, users_list_dicts, comments_list_dicts)
+    if check_if_post_is_valid(thread):
+        print(f"Getting comments for thread with id={thread.id}")
+        thread_dict = get_thread_data(thread)
+        previously_seen_threads.add(thread_dict["id"])
+        comments: CommentForest = thread.comments
+        users_list_dicts, comments_list_dicts = parse_comments_data(
+            comments=comments, max_total_comments=max_total_comments
+        )
+        return (thread_dict, users_list_dicts, comments_list_dicts)
+    else:
+        print(f"Skipping thread with id={thread.id}...")
+        return ({}, [], [])
 
 
 @generic_rate_limiter_decorator
@@ -444,6 +477,7 @@ def consolidate_field_mismatches(
 
     return df
 
+
 def sync_comments_from_one_subreddit(
     api: Reddit,
     subreddit: str,
@@ -482,16 +516,22 @@ def sync_comments_from_one_subreddit(
             threads=threads,
             max_total_comments=max_total_comments
         )
-        comments_df = filter_comments_by_users(
-            comments_df=comments_df,
-            users_df=users_df
-        )
+        if len(comments_df) > 0 and len(users_df) > 0:
+            comments_df = filter_comments_by_users(
+                comments_df=comments_df,
+                users_df=users_df
+            )
     except Exception as e:
         print(f"Unable to sync reddit data: {e}")
         traceback.print_exc()
         raise
 
     print("Successfully synced data from Reddit. Now writing to DB...")
+
+    # if we didn't sync any data, return. Nothing to write.
+    if len(comments_df) == 0 and len(users_df) == 0:
+        print("No comments or users synced. Exiting...")
+        return
 
     # consolidate field mismatch, if any, in the sync objects (this can happen
     # due to modifications either in the Reddit API or in the `praw` wrapper)
@@ -553,7 +593,8 @@ def sync_comments_from_one_subreddit(
         "num_duplicate_authors": duplicate_authors,
         "num_duplicate_comments": duplicate_comments,
         "num_skipped_comments": skipped_comments,
-        "num_skipped_authors": skipped_authors
+        "num_skipped_authors": skipped_authors,
+        "old_threads_and_comments": old_threads_and_comments
     }
     write_metadata_file(metadata_dict=metadata_dict)
     print(
