@@ -14,7 +14,7 @@ from lib.db.sql.helper import (
 from lib.helper import CURRENT_TIME_STR
 
 def init_directory() -> str:
-    backup_dir = os.path.join(current_file_directory, "backup")
+    backup_dir = os.path.join(current_file_directory, "snapshots")
     if not os.path.exists(backup_dir):
         os.mkdir(backup_dir)
     timestamp_dir = os.path.join(backup_dir, CURRENT_TIME_STR)
