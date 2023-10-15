@@ -202,6 +202,17 @@ def check_if_table_exists(table_name: str) -> bool:
         raise
 
 
+def get_all_tables_in_db() -> list[str]:
+    query = """
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+    """
+    cursor.execute(query)
+    table_names = cursor.fetchall()
+    return [table[0] for table in table_names]
+
+
 def get_table_col_to_dtype_map(table_name: str) -> dict:
     """Returns a map of col:dtype for a given Postgres table."""
     query = f"""
