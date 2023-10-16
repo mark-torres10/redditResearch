@@ -35,6 +35,7 @@ DEFAULT_THREAD_SORT_TYPE = "hot"
 DEFAULT_MAX_NUM_THREADS = 10
 DEFAULT_MAX_COMMENTS = 200
 NUM_DAYS_COMMENT_RECENCY_FILTER = 30
+NUM_DAYS_THREAD_RECENCY_FILTER = 60
 
 curr_datetime = datetime.utcfromtimestamp(pd.Timestamp.utcnow().timestamp())
 
@@ -69,12 +70,18 @@ def write_metadata_file(metadata_dict: dict[str, Any]) -> None:
         writer.writerows(data)
 
 
-def check_if_post_is_recent(
-    post: Union[Comment, Submission]
-) -> bool:
-    """Check if a post (a comment or thread) has been posted recently."""
-    # a comment has to have been posted in the last X days
-    num_days_recency_filter = 30
+def check_if_post_is_recent(post: Union[Comment, Submission]) -> bool:
+    """Check if a post (a comment or thread) has been posted recently.
+    
+    We use a different recency filter for comments and days since we expect
+    threads to be older than the comments within them. We're okay with the
+    threads being somewhat older as long as the comments within them are
+    not stale.
+    """
+    num_days_recency_filter = (
+        NUM_DAYS_THREAD_RECENCY_FILTER if isinstance(post, Submission)
+        else NUM_DAYS_COMMENT_RECENCY_FILTER
+    )
     timestamp_datetime = datetime.utcfromtimestamp(post.created_utc)
     return (curr_datetime - timestamp_datetime).days <= num_days_recency_filter
 
@@ -119,7 +126,12 @@ def get_comment_threads(
     max_num_threads: int,
     thread_sort_type: Literal["hot", "new", "top", "controversial"] = "hot"
 ) -> list[Submission]:
-    """Given a `subreddit` object, get the comment threads."""
+    """Given a `subreddit` object, get the comment threads.
+    
+    For the 'top' and 'controversial' threads, these default to the top and the
+    most controversial threads in the month, by default, since we only want
+    threads that are recent.
+    """
     generator: ListingGenerator = None
     if thread_sort_type == "hot":
         print("Getting hot threads...")
@@ -129,10 +141,14 @@ def get_comment_threads(
         generator = subreddit.new(limit=max_num_threads)
     elif thread_sort_type == "top":
         print("Getting top threads...")
-        generator = subreddit.top(limit=max_num_threads)
+        generator = subreddit.top(
+            limit=max_num_threads, time_filter="month"
+        )
     elif thread_sort_type == "controversial":
         print("Getting controversial threads...")
-        generator = subreddit.controversial(limit=max_num_threads)
+        generator = subreddit.controversial(
+            limit=max_num_threads, time_filter="month"
+        )
     else:
         raise ValueError(f"Unknown thread type: {thread_sort_type}")
     return [thread for thread in generator]
