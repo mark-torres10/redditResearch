@@ -411,8 +411,6 @@ def return_statuses_of_user_to_message_status_table() -> None:
         FROM user_to_message_status
         GROUP BY message_status
     """
-    status_df = load_query_as_df(query=status_query)
-    print(f"After update, the statuses of users to message are:\n{status_df}")
     num_users_per_phase_query = """
         SELECT
             phase,
@@ -420,8 +418,19 @@ def return_statuses_of_user_to_message_status_table() -> None:
         FROM user_to_message_status
         GROUP BY phase
     """
+    num_users_per_last_update_step = """
+        SELECT
+            last_update_step,
+            COUNT(*) AS num_users
+        FROM user_to_message_status
+        GROUP BY last_update_step
+    """
+    status_df = load_query_as_df(query=status_query)
     phase_df = load_query_as_df(query=num_users_per_phase_query)
-    print(f"After update, the number of users per phase are:\n{phase_df}")
+    last_update_step_df = load_query_as_df(query=num_users_per_last_update_step) # noqa
+    print(f"After update, the number of users per message status is::\n{status_df}") # noqa
+    print(f"After update, the number of users per phase is:\n{phase_df}")
+    print(f"After update, the number of users per last update step is:\n{last_update_step_df}") # noqa
 
 
 if __name__ == "__main__":
