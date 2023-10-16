@@ -7,23 +7,26 @@ from services.message_users.handler import main as message_users
 
 
 @track_function_runtime
-def main() -> None:
-    event = {}
+def main(send_messages: bool) -> None:
+    event = {
+        "batch_size": None,
+        "use_only_pending_author_phase_messages": False,
+        "max_num_assign_to_message": None,
+        "max_ratio_assign_to_message": None
+    }
     context = {}
 
     # determine who to message. Each payload has the metadata needed to message
     # the user as well as the DM to send to the user.
-    user_message_payloads: list[dict] = determine_authors_to_message(
-        event, context
-    )
+    user_message_payloads: list[dict] = determine_authors_to_message(event, context) # noqa
 
-    # send DMs
-    message_event = {
-        "phase": "author",
-        "user_message_payloads": user_message_payloads
-    }
-    message_context = {}
-    message_users(event=message_event, context=message_context)
+    if send_messages:
+        message_event = {
+            "phase": "author",
+            "user_message_payloads": user_message_payloads
+        }
+        message_context = {}
+        message_users(event=message_event, context=message_context)
     print("Completed author phase.")
 
 
