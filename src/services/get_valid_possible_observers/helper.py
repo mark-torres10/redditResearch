@@ -12,8 +12,8 @@ def get_valid_possible_observers() -> None:
     new assignments.
     """
     unavailable_message_statuses = [
-        "pending_message", "messaged_successfully",
-        "message_failed_dm_forbidden", "message_failed_rate_limit",
+        "messaged_successfully", "message_failed_dm_forbidden",
+        "message_failed_rate_limit",
     ]
     unavailable_message_statuses_str = ', '.join(unavailable_message_statuses)
     where_filter = f"""
