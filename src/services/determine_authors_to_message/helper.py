@@ -155,6 +155,7 @@ def determine_which_posts_to_message(
             "`max_ratio_assign_to_message`."
         )
     label_col: pd.Series = labeled_data[LABEL_COL]
+    print(f"Number of users with each label: {label_col.value_counts()}")
     min_label_count = label_col.value_counts().min()
     default_max_num_users_to_message = 2 * min_label_count
     num_people_to_message = determine_number_of_people_to_message(
