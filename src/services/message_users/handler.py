@@ -10,4 +10,4 @@ def main(event: dict, context: dict) -> None:
     payloads = event["user_message_payloads"]
     phase = event["phase"]
     batch_size = event.get("batch_size", None)
-    handle_message_users(payloasd=payloads, phase=phase, batch_size=batch_size)
+    handle_message_users(payloads=payloads, phase=phase, batch_size=batch_size)

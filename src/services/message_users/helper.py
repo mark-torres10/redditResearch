@@ -227,6 +227,11 @@ def handle_message_users(
     if phase not in ["author", "observer"]:
         raise ValueError(f"Invalid phase: {phase}")
 
+    if batch_size:
+        print(f"Sending maximum of {batch_size} DMs, including cached DMs.")
+    else:
+        print(f"No batch size provided, sending {len(payloads)} DMs...")
+
     successful_messages: list[dict] = []
     messages_to_retry: list[dict] = []
     failed_messages: list[dict] = []

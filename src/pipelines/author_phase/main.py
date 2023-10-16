@@ -16,9 +16,11 @@ def main(event: dict, context: dict) -> None:
     if send_messages:
         message_event = {
             "phase": "author",
-            "user_message_payloads": user_message_payloads
+            "user_message_payloads": user_message_payloads,
+            "batch_size": event.get("batch_size", None)
         }
         message_context = {}
+        print(f"Running message_users with the event {message_event}")
         message_users(event=message_event, context=message_context)
     print("Completed author phase.")
 
@@ -42,6 +44,7 @@ if __name__ == "__main__":
     """
 
     # to reassign users that have been messaged, you need a payload like this:
+    """
     event = {
         "use_only_pending_author_phase_messages": False,
         "add_pending_author_phase_messages": False,
@@ -50,17 +53,16 @@ if __name__ == "__main__":
         "reassign_unmessaged_users": True,
         "send_messages": False 
     }
-
-
+    """
     # to send messages, you only need a payload like this:
     # note: this assumes that the `determine_authors_to_message` function has
     # been run already.
-    """
+
     event = {
-        "batch_size": 50,
+        "batch_size": 40,
         "use_only_pending_author_phase_messages": True,
         "send_messages": True
     }
-    """
+
     context = {}
     main(event=event, context=context)
