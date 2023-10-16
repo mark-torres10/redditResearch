@@ -187,7 +187,7 @@ def create_author_phase_message(row: pd.Series) -> str:
     return AUTHOR_DM_SCRIPT.format(
         name=row["author_screen_name"],
         date=convert_utc_timestamp_to_datetime_string(
-            row["created_utc_string"]
+            row["created_utc"]
         ),
         subreddit=row["subreddit_name_prefixed"],
         post=row["body"],
