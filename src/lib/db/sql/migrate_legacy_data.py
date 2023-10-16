@@ -12,8 +12,8 @@ from legacy.helper import (
     LEGACY_OBSERVER_PHASE_DATA_DIR, LEGACY_SYNC_DATA_DIR
 )
 from lib.db.sql.helper import load_table_as_df, write_df_to_database
+from lib.helper import DENYLIST_AUTHORS
 from lib.reddit import init_api_access
-from services.determine_authors_to_message.helper import DENYLIST_AUTHORS
 from services.get_received_messages.helper import (
     message_columns_to_extract,
     table_fields as messages_received_table_fields

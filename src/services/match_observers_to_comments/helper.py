@@ -2,9 +2,10 @@ import pandas as pd
 
 from data.helper import dump_df_to_csv
 from lib.db.sql.helper import (
-    load_query_as_df, load_table_as_df, write_df_to_database
+    load_query_as_df, load_table_as_df,
+    return_statuses_of_user_to_message_status_table, write_df_to_database
 )
-from services.message_users.helper import table_fields as mandatory_payload_fields # noqa
+from lib.helper import BASE_REDDIT_URL
 
 DEFAULT_RECENCY_FILTER = ""
 DEFAULT_NUMBER_OF_OBSERVERS_PER_COMMENT = 10
@@ -90,7 +91,7 @@ def create_observer_phase_message(row: pd.Series) -> str:
         date=row["created_utc"],
         subreddit=row["subreddit_name_prefixed"],
         post=row["comment_text"],
-        permalink=row["permalink"]
+        permalink="".join([BASE_REDDIT_URL, row["permalink"]])
     )
 
 
@@ -139,6 +140,18 @@ def match_observers_to_comments() -> list[dict]:
         create_observer_phase_message(row)
         for _, row in hydrated_observer_phase_df.iterrows()
     ]
+    # dump to .csv, upsert to DB (so that, for example, users who were not DMed
+    # before will have their statuses updated.)
+    dump_df_to_csv(
+        df=hydrated_observer_phase_df,
+        table_name="user_to_message_status"
+    )
+    write_df_to_database(
+        df=hydrated_observer_phase_df,
+        table_name="user_to_message_status",
+        upsert=True
+    )
+    return_statuses_of_user_to_message_status_table()
     user_to_message_list = [
         {
             "author_screen_name": author_screen_name,

@@ -16,7 +16,8 @@ LIB_FP = os.path.dirname(CURRENT_FP)
 CODE_DIR = os.path.dirname(LIB_FP) # "/src"
 ROOT_DIR = os.path.dirname(CODE_DIR)
 BASE_REDDIT_URL = "https://www.reddit.com"
-DENYLIST_AUTHORS = ["AutoModerator"]
+DENYLIST_AUTHORS = ["AutoModerator", "PoliticsModeratorBot"]
+
 
 api = init_api_access()
 

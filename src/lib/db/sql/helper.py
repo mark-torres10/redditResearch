@@ -330,25 +330,6 @@ def write_df_to_database(
                 cursor.mogrify(upsert_query, tuple(row))
                 for _, row in df.iterrows()
             ]
-            """
-            sql_statements = []
-            for _, row in df.iterrows():
-                try:
-                    sql_statements.append(cursor.mogrify(upsert_query, tuple(row)))
-                except psycopg2.ProgrammingError as e:
-                    foo = row
-                    print(f"Unable to mogrify upsert query: {e}")
-                    raise
-
-            try:
-                sql_statements = [
-                    cursor.mogrify(upsert_query, tuple(row))
-                    for _, row in df.iterrows()
-                ]
-            except psycopg2.ProgrammingError as e:
-                print(f"Unable to mogrify upsert query: {e}")
-                raise
-            """
             print(f"Upserting {len(sql_statements)} rows into {table_name}...") # noqa
             try:
                 for statement in sql_statements:
@@ -419,6 +400,28 @@ def load_table_as_df(
     except Exception as e:
         print(f"Unable to load table {table_name}: {e}")
         raise
+
+
+def return_statuses_of_user_to_message_status_table() -> None:
+    """Returns a dataframe of statuses of users to message."""
+    status_query = """
+        SELECT
+            message_status,
+            COUNT(*) AS num_users
+        FROM user_to_message_status
+        GROUP BY message_status
+    """
+    status_df = load_query_as_df(query=status_query)
+    print(f"After update, the statuses of users to message are:\n{status_df}")
+    num_users_per_phase_query = """
+        SELECT
+            phase,
+            COUNT(*) AS num_users
+        FROM user_to_message_status
+        GROUP BY phase
+    """
+    phase_df = load_query_as_df(query=num_users_per_phase_query)
+    print(f"After update, the number of users per phase are:\n{phase_df}")
 
 
 if __name__ == "__main__":

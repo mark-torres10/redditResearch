@@ -50,7 +50,8 @@ def load_tmp_json_data(table_name: str) -> list[dict]:
     """Load json data from a temporary filepath as a pandas df."""
     dir = os.path.join(DATA_DIR, table_name, "tmp")
     if not os.path.exists(dir):
-        raise ValueError(f"Directory {dir} doesn't exist.")
+        print("No tmp data to load.")
+        return []
     files = os.listdir(dir)
     if len(files) == 0:
         raise ValueError(f"No files in directory {dir}.")
@@ -88,51 +89,3 @@ def load_tmp_json_data_as_df(
     if delete_tmp_data:
         delete_tmp_json_data(table_name)
     return df
-
-
-# TODO: do we need a .sql file if we have a .sql.gz file?
-def backup_postgres_data_to_sql() -> None:
-    """Dump Postgres data to .sql file for backup."""
-    postgres_dir = os.path.join(DATA_DIR, "postgres_data")
-    if not os.path.exists(postgres_dir):
-        os.makedirs(postgres_dir)
-    filename = f"{CURRENT_TIME_STR}.sql"
-    compressed_filename= f"{CURRENT_TIME_STR}.sql.gz"
-    try:
-        # Run the pg_dump command with --version to check if it exists
-        subprocess.run(["pg_dump", "--version"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("pg_dump is available.")
-    except subprocess.CalledProcessError as e:
-        print(f"pg_dump is not available. Error: {e}")
-    except FileNotFoundError:
-        print("pg_dump command not found. Please ensure PostgreSQL is installed and added to your PATH.")
-
-    command = [
-        "pg_dump", "-h", "localhost", "-U", "postgres", "-d", "reddit_data",
-        "-f", os.path.join(postgres_dir, filename)
-    ]
-    compressed_command = [
-        "pg_dump", "-h", "localhost", "-U", "postgres", "-d", "reddit_data",
-        "|", "gzip", ">", os.path.join(postgres_dir, compressed_filename)
-    ]
-    try:
-        print(f"Dumping Postgres data into {postgres_dir}.")
-        subprocess.run(command, check=True)
-        subprocess.run(compressed_command, check=True)
-        print(f"Successfully dumped Postgres data into {postgres_dir}.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-        print(f"Failed to dump Postgres data into {postgres_dir}.")
-
-
-def backup_postgres_data(func):
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        backup_postgres_data_to_sql()
-        return result
-
-    return wrapper
-
-
-if __name__ == "__main__":
-    backup_postgres_data_to_sql()

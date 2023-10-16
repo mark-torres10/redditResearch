@@ -6,11 +6,12 @@ import pandas as pd
 
 from data.helper import dump_df_to_csv
 from lib.db.sql.helper import (
-    check_if_table_exists, load_table_as_df, write_df_to_database
+    check_if_table_exists, load_table_as_df,
+    return_statuses_of_user_to_message_status_table, write_df_to_database
 )
+from lib.helper import BASE_REDDIT_URL, DENYLIST_AUTHORS
 from services.message_users.helper import table_fields, table_name
 
-DENYLIST_AUTHORS = ["AutoModerator", "PoliticsModeratorBot"]
 LABEL_COL = "label"
 TO_MESSAGE_COL = "to_message"
 AUTHOR_DM_SUBJECT_LINE = "Yale Researchers Looking to Learn More About Your Beliefs"
@@ -186,7 +187,7 @@ def create_author_phase_message(row: pd.Series) -> str:
         date=row["created_utc"],
         subreddit=row["subreddit_name_prefixed"],
         post=row["body"],
-        permalink=row["permalink"]
+        permalink="".join([BASE_REDDIT_URL, row["permalink"]])
     )
 
 
@@ -311,8 +312,10 @@ def create_author_phase_messages(
 def determine_who_to_message(
     batch_size: Optional[int] = None,
     use_only_pending_author_phase_messages: Optional[bool] = False,
+    add_pending_author_phase_messages: Optional[bool] = False,
     max_num_assign_to_message: Optional[int] = None,
-    max_ratio_assign_to_message: Optional[float] = None
+    max_ratio_assign_to_message: Optional[float] = None,
+    reassign_unmessaged_users: Optional[bool] = False
 ) -> list[dict]:
     if use_only_pending_author_phase_messages:
         print(f"Using only pending author phase messages...")
@@ -332,14 +335,28 @@ def determine_who_to_message(
     # load classified comments, but filter out comments whose authors have not
     # been messaged yet.
     select_fields = ["*"]
-    where_filter = """
+    if reassign_unmessaged_users:
+        print(f"Reassigning unmessaged users...")
+        where_clause = "WHERE message_status NOT IN ('not_messaged', 'pending_message')" # noqaa
+    else:
+        print(f"Only assigning users who have not been messaged yet...")
+        where_clause = "WHERE message_status != 'not_messaged'"
+    # get authors with IDs that are not in the subset of users in
+    # `user_to_message_status` who have been messaged (in the case of
+    # `reassign_unmessaged_users`) or who have neither been messaged nor
+    # pending message (in the default case). We use the NOT IN operator since
+    # the set of authors in the `users` table should be strictly a superset of
+    # the users in the `user_to_message_status` table, at least until we
+    # insert those users into the `user_to_message_status` table at the end of
+    # this script.
+    where_filter = f"""
         WHERE author_id NOT IN (
             SELECT
                 user_id
             FROM user_to_message_status
-            WHERE message_status != 'not_messaged'
+            {where_clause}
         )
-    """ if user_to_message_status_table_exists else ""
+    """ if user_to_message_status_table_exists else "" # noqa
     classified_comments_df = load_table_as_df(
         table_name="classified_comments",
         select_fields=select_fields,
@@ -366,17 +383,19 @@ def determine_who_to_message(
 
     # add any author-phase users that are pending message but haven't been
     # messaged yet.
-    users_pending_message_df = load_pending_author_phase_messages()
+    if add_pending_author_phase_messages:
+        print(f"Adding any pending author phase messages...")
+        users_pending_message_df = load_pending_author_phase_messages()
 
-    if batch_size:
-        print(f"Limiting the number of users to message to {batch_size}...") # noqa
-        users_pending_message_df = users_pending_message_df.head(batch_size)
+        if batch_size:
+            print(f"Limiting the number of users to message to {batch_size}...") # noqa
+            users_pending_message_df = users_pending_message_df.head(batch_size)
 
-    if len(users_pending_message_df) > 0:
-        print(f"Appending {len(users_pending_message_df)} users, with pending messages, to the list of users to message...") # noqa
-        user_to_message_status_df = pd.concat(
-            [user_to_message_status_df, users_pending_message_df]
-        )
+        if len(users_pending_message_df) > 0:
+            print(f"Appending {len(users_pending_message_df)} users, with pending messages, to the list of users to message...") # noqa
+            user_to_message_status_df = pd.concat(
+                [user_to_message_status_df, users_pending_message_df]
+            )
 
     # dump to .csv, upsert to DB (so that, for example, users who were not DMed
     # before will have their statuses updated.)
@@ -384,6 +403,7 @@ def determine_who_to_message(
     write_df_to_database(
         df=user_to_message_status_df, table_name=table_name, upsert=True
     )
+    return_statuses_of_user_to_message_status_table()
 
     number_of_new_users_to_message = (
         user_to_message_status_df["message_status"] == "pending_message"

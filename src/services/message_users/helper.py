@@ -7,7 +7,11 @@ from data.helper import (
     delete_tmp_json_data, dump_df_to_csv, dump_dict_as_tmp_json,
     load_tmp_json_data
 )
-from lib.db.sql.helper import load_table_as_df, write_df_to_database
+from lib.db.sql.helper import (
+    load_table_as_df, return_statuses_of_user_to_message_status_table,
+    write_df_to_database
+)
+from lib.helper import DENYLIST_AUTHORS
 from services.message_single_user.handler import main as message_single_user
 from services.message_single_user.helper import catch_rate_limit_and_sleep
 
@@ -48,10 +52,11 @@ def filter_payloads_by_valid_users_to_dm(payloads: list[dict]) -> list[dict]:
         payload
         for payload in payloads
         if payload["author_screen_name"] in valid_users_to_dm
+        and payload["author_screen_name"] not in DENYLIST_AUTHORS
     ]
     num_payloads_removed = len(payloads) - len(filtered_payloads)
     if num_payloads_removed > 0:
-        print(f"Removing {num_payloads_removed} possible DMs, since they would be to users who don't allow DMs.") # noqa
+        print(f"Removing {num_payloads_removed} possible DMs, since they would be to users who don't allow DMs or are users on the denylist.") # noqa
     return filtered_payloads
 
 
@@ -296,6 +301,7 @@ def handle_message_users(payloads: list[dict], phase: str) -> None:
     write_df_to_database(
         df=user_to_message_status_df, table_name=table_name, upsert=True
     )
+    return_statuses_of_user_to_message_status_table()
 
     # delete tmp json data (it exists solely in case there is an interruption
     # in the run, so that we don't lose data on which users we've DMed).
