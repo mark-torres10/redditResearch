@@ -29,14 +29,38 @@ if __name__ == "__main__":
     # TODO: then, write out what the payload should be once we've done this
     # assignment, the DB is updated, and all we want to do is send the DMs.
     # TODO: add these in the runbook.
+    """
     event = {
-        "batch_size": None, # change to 50 later.
+        "batch_size": 50, # change to 50 later.
+        "use_only_pending_author_phase_messages": True,
+        "add_pending_author_phase_messages": None,
+        "max_num_assign_to_message": None,
+        "max_ratio_assign_to_message": None,
+        "reassign_unmessaged_users": None,
+        "send_messages": True
+    }
+    """
+
+    # to reassign users that have been messaged, you need a payload like this:
+    event = {
         "use_only_pending_author_phase_messages": False,
         "add_pending_author_phase_messages": False,
-        "max_num_assign_to_message": 1000, # change to None later
+        "max_num_assign_to_message": 1000,
         "max_ratio_assign_to_message": None,
         "reassign_unmessaged_users": True,
-        "send_messages": False
+        "send_messages": False 
     }
+
+
+    # to send messages, you only need a payload like this:
+    # note: this assumes that the `determine_authors_to_message` function has
+    # been run already.
+    """
+    event = {
+        "batch_size": 50,
+        "use_only_pending_author_phase_messages": True,
+        "send_messages": True
+    }
+    """
     context = {}
     main(event=event, context=context)

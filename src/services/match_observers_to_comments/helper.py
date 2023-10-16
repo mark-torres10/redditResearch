@@ -5,7 +5,9 @@ from lib.db.sql.helper import (
     load_query_as_df, load_table_as_df,
     return_statuses_of_user_to_message_status_table, write_df_to_database
 )
-from lib.helper import BASE_REDDIT_URL
+from lib.helper import (
+    BASE_REDDIT_URL, convert_utc_timestamp_to_datetime_string
+)
 
 DEFAULT_RECENCY_FILTER = ""
 DEFAULT_NUMBER_OF_OBSERVERS_PER_COMMENT = 10
@@ -88,7 +90,9 @@ def map_comments_to_observers(
 def create_observer_phase_message(row: pd.Series) -> str:
     return OBSERVER_DM_SCRIPT.format(
         name=row["author_screen_name"],
-        date=row["created_utc"],
+        date=convert_utc_timestamp_to_datetime_string(
+            row["created_utc"]
+        ),
         subreddit=row["subreddit_name_prefixed"],
         post=row["comment_text"],
         permalink="".join([BASE_REDDIT_URL, row["permalink"]])

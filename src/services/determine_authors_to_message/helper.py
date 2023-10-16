@@ -9,7 +9,9 @@ from lib.db.sql.helper import (
     check_if_table_exists, load_table_as_df,
     return_statuses_of_user_to_message_status_table, write_df_to_database
 )
-from lib.helper import BASE_REDDIT_URL, DENYLIST_AUTHORS
+from lib.helper import (
+    BASE_REDDIT_URL, DENYLIST_AUTHORS, convert_utc_timestamp_to_datetime_string
+)
 from services.message_users.helper import table_fields, table_name
 
 LABEL_COL = "label"
@@ -184,7 +186,9 @@ def determine_which_posts_to_message(
 def create_author_phase_message(row: pd.Series) -> str:
     return AUTHOR_DM_SCRIPT.format(
         name=row["author_screen_name"],
-        date=row["created_utc"],
+        date=convert_utc_timestamp_to_datetime_string(
+            row["created_utc_string"]
+        ),
         subreddit=row["subreddit_name_prefixed"],
         post=row["body"],
         permalink="".join([BASE_REDDIT_URL, row["permalink"]])
