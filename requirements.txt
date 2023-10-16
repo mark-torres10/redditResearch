@@ -305,6 +305,8 @@ numpy==1.24.1
     #   tensorflow-intel
 oauthlib==3.2.2
     # via requests-oauthlib
+openai==0.28.1
+    # via -r requirements.in
 opt-einsum==3.3.0
     # via tensorflow-intel
 packaging==21.3
