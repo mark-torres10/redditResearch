@@ -64,17 +64,22 @@ def dump_postgres_db_schemas_to_file(
     table_cols_to_dtypes_maps: list[dict] = [
         get_table_col_to_dtype_map(table_name) for table_name in table_list
     ]
+    table_to_schema_map = [
+        {table: schema}
+        for (table, schema)
+        in zip(table_list, table_cols_to_dtypes_maps)
+    ]
     suffix = ".jsonl.gz" if zipped else ".jsonl"
     schemas_filename = f"schemas{suffix}"
     full_fp = os.path.join(timestamp_dir, schemas_filename)
     if zipped:
         with gzip.open(full_fp, "wt", encoding="utf-8") as gzipped_file:
-             for item in table_cols_to_dtypes_maps:
-                gzipped_file.write(json.dumps(item) + "\n")
+            for table_schema_dict in table_to_schema_map:
+                gzipped_file.write(json.dumps(table_schema_dict) + "\n")
     else:
         with open(full_fp, 'w', encoding="utf-8") as f:
-            for item in table_cols_to_dtypes_maps:
-                f.write(json.dumps(item) + "\n")
+            for table_schema_dict in table_to_schema_map:
+                f.write(json.dumps(table_schema_dict) + "\n")
     print(f"Finished dumping DB schema file to {full_fp}.")
 
 
