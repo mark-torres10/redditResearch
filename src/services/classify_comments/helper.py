@@ -1,3 +1,5 @@
+from typing import Optional
+
 from data.helper import dump_df_to_csv
 from lib.db.sql.helper import (
     check_if_table_exists, load_table_as_df, write_df_to_database
@@ -15,7 +17,10 @@ subset_columns = [
 embedding, tokenizer = load_default_embedding_and_tokenizer()
 
 
-def classify_comments(classify_new_comments_only: bool = True) -> None:
+def classify_comments(
+    classify_new_comments_only: bool = True,
+    num_comments_to_classify: Optional[int] = None
+) -> None:
     classified_comments_table_exists = check_if_table_exists(table_name)
     select_fields = ["*"]
     where_filter = f"""
@@ -26,10 +31,12 @@ def classify_comments(classify_new_comments_only: bool = True) -> None:
             WHERE is_classified = TRUE
         )
     """ if classified_comments_table_exists and classify_new_comments_only else "" # noqa
+    limit = f"LIMIT {num_comments_to_classify}" if num_comments_to_classify else "" # noqa
     comments_df = load_table_as_df(
         table_name="comments",
         select_fields=select_fields,
-        where_filter=where_filter
+        where_filter=where_filter,
+        limit_clause=limit
     )
     if comments_df.shape[0] == 0:
         print("No new comments to classify...")
@@ -55,11 +62,15 @@ def classify_comments(classify_new_comments_only: bool = True) -> None:
         prob, label = classify_text(text, embedding, tokenizer)
         probs.append(prob[0]) # returned as n=1 np.array, so need to extract
         labels.append(label)
-    
+
     comments_df["prob"] = probs
     comments_df["label"] = labels
     comments_df["is_classified"] = True
-    comments_df["classification_timestamp"] = CURRENT_TIME_STR 
+    comments_df["classification_timestamp"] = CURRENT_TIME_STR
+
+    print(f"Classified {comments_df.shape[0]} comments.")
+    print(f"Number of comments classified as having outrage: {sum(labels)}")
+    print(f"Number of comments classified as not having outrage: {len(labels) - sum(labels)}") # noqa
 
     # write to CSV, upload to DB. Should not have to upsert since we only
     # classify comments that we haven't seen before.

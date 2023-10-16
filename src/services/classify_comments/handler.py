@@ -10,5 +10,9 @@ from services.classify_comments.helper import classify_comments
 
 def main(event: dict, context: dict) -> int:
     classify_new_comments_only = event.get("classify_new_comments_only", True)
-    classify_comments(classify_new_comments_only=classify_new_comments_only)
+    num_comments_to_classify = event.get("num_comments_to_classify", None)
+    classify_comments(
+        classify_new_comments_only=classify_new_comments_only,
+        num_comments_to_classify=num_comments_to_classify
+    )
     return 0

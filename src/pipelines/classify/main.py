@@ -5,7 +5,7 @@ from services.classify_comments.handler import main as classify_comments
 
 @track_function_runtime
 def main() -> None:
-    event = {"classify_new_comments_only": True}
+    event = {"classify_new_comments_only": True, "num_comments_to_classify": 1000}
     context = {}
     classify_comments(event, context)
     print("Completed classification service.")
