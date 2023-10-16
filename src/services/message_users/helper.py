@@ -238,7 +238,7 @@ def handle_message_users(
 
     payloads = preprocess_payloads(payloads)
     cached_payloads = load_tmp_json_data(table_name=tmp_table_name)
-    payloads, successful_messages, messages_to_retry, failed_messages = (
+    payloads, cached_successes, cached_retries, cached_failed = (
         add_cached_payloads_to_session(
             payloads=payloads,
             cached_payloads=cached_payloads,
@@ -247,13 +247,17 @@ def handle_message_users(
             failed_messages=failed_messages
         )
     )
-    total_cached_messages = len(successful_messages) + len(messages_to_retry) + len(failed_messages) # noqa
+    successful_messages.extend(cached_successes)
+    messages_to_retry.extend(cached_retries)
+    failed_messages.extend(cached_failed)
+    total_cached_messages = len(cached_successes) + len(cached_retries) + len(cached_failed) # noqa
     if batch_size:
         print(f"Only sending {batch_size} DMs, since batch size is set.")
     if total_cached_messages >= batch_size:
         print(f"The number of cached messages already is at or exceeds the batch size. Returning these cached results.") # noqa
     else:
         num_to_message = batch_size - total_cached_messages
+        print(f"Batch size: {batch_size}\t Cached messages: {total_cached_messages}\t Number to message: {num_to_message}") # noqa
         if payloads:
             successes, retries, failures = (
                 message_users(payloads, num_to_message)
@@ -276,7 +280,7 @@ def handle_message_users(
         while len(messages_to_retry) > 0 and number_retries < MAX_NUMBER_RETRIES:
             print(f"Retrying {len(messages_to_retry)} messages...")
             number_retries += 1
-            total_messages = len(successful_messages) + len(messages_to_retry) + len(failed_messages) # noqa
+            total_messages = len(successful_messages) + len(failed_messages) # don't include the retry messages in count.
             num_to_message = batch_size - total_messages
             if num_to_message > 0:
                 retry_successful_messages, more_messages_to_retry, retry_failed_messages = ( # noqa
@@ -293,6 +297,7 @@ def handle_message_users(
                 print(f"Number of DMs to retry: {len(messages_to_retry)}")
                 print('-' * 10)
             else:
+                print(f"On retries, we have {total_messages}, which exceeds the batch size of {batch_size}. Returning these results.") # noqa
                 break
 
         print('-' * 20)

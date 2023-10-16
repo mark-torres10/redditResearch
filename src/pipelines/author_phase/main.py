@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # been run already.
 
     event = {
-        "batch_size": 40,
+        "batch_size": 50,
         "use_only_pending_author_phase_messages": True,
         "send_messages": True
     }
