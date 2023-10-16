@@ -15,30 +15,30 @@ DEFAULT_OBSERVER_LIMIT = 200
 DEFAULT_COMMENT_LIMIT = 20
 OBSERVER_DM_SUBJECT_LINE = "Yale Researchers Looking to Learn More About Your Beliefs" # noqa
 OBSERVER_DM_SCRIPT = """
-    Hi {name},
+Hi {name},
 
-    I'm a researcher at Yale University, and my research group is interested in
-    how people express themselves on social media. Would you like to answer a
-    few questions to help us with our research? Your response will remain
-    anonymous.
+I'm a researcher at Yale University, and my research group is interested in
+how people express themselves on social media. Would you like to answer a
+few questions to help us with our research? Your response will remain
+anonymous.
 
-    The following message was posted in the {subreddit_name} subreddit on {date}:
-    
-    {post}
+The following message was posted in the {subreddit_name} subreddit on {date}:
 
-    (link {permalink})
+{post}
 
-    Please answer the following:
+(link {permalink})
 
-    1. How outraged did you think the message author was on a 1-7 scale?
-    (1 = not at all, 4 = somewhat, 7 = very)
+Please answer the following:
 
-    2. How happy did you think the message author was on a 1-7?
-    (1 = not at all, 4 = somewhat, 7 = very)
+1. How outraged did you think the message author was on a 1-7 scale?
+(1 = not at all, 4 = somewhat, 7 = very)
 
-    You can simply respond with one answer per line such as:
-    5
-    1
+2. How happy did you think the message author was on a 1-7?
+(1 = not at all, 4 = somewhat, 7 = very)
+
+You can simply respond with one answer per line such as:
+5
+1
 """ # noqa
 OBSERVER_PHASE_MESSAGE_IDENTIFIER_STRING = (
     "How outraged did you think the message author was on a 1-7 scale"

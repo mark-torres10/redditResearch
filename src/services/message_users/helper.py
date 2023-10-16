@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 import pandas as pd
 from praw.exceptions import RedditAPIException
@@ -105,13 +106,23 @@ def is_valid_payload(payload: dict) -> bool:
 
 
 def message_users(
-    payloads: list[dict]
+    payloads: list[dict], num_to_message: Optional[int] = None
 ) -> tuple[list[dict], list[dict], list[dict]]:
+    """Send messages to users.
+    
+    Returns a tuple of (successful_messages, messages_to_retry, failed_messages).
+    Optionally takes a `num_to_message` parameter, which will limit the number
+    of DMs sent to the number specified.
+    """
     successful_messages = []
     messages_to_retry = []
     failed_messages = []
     context = {}
-    for payload in payloads:
+    if not num_to_message:
+        num_to_message = len(payloads)
+    for idx, payload in enumerate(payloads):
+        if idx >= num_to_message:
+            break
         if not is_valid_payload(payload):
             raise ValueError(f"Invalid payload (fields are not correct): {payload}") # noqa
         status = message_single_user(payload, context)
@@ -207,7 +218,9 @@ def add_cached_payloads_to_session(
     return (payloads, successful_messages, messages_to_retry, failed_messages)
 
 
-def handle_message_users(payloads: list[dict], phase: str) -> None:
+def handle_message_users(
+    payloads: list[dict], phase: str, batch_size: Optional[int] = None
+) -> None:
     if not payloads:
         print("No users to message. Exiting...")
         return
@@ -229,47 +242,61 @@ def handle_message_users(payloads: list[dict], phase: str) -> None:
             failed_messages=failed_messages
         )
     )
-
-    if payloads:
-        successful_messages, messages_to_retry, failed_messages = (
-            message_users(payloads)
-        )
+    total_cached_messages = len(successful_messages) + len(messages_to_retry) + len(failed_messages) # noqa
+    if batch_size:
+        print(f"Only sending {batch_size} DMs, since batch size is set.")
+    if total_cached_messages >= batch_size:
+        print(f"The number of cached messages already is at or exceeds the batch size. Returning these cached results.") # noqa
     else:
-        print("No more DMs to send, after filtering out cached DMs.")
+        num_to_message = batch_size - total_cached_messages
+        if payloads:
+            successes, retries, failures = (
+                message_users(payloads, num_to_message)
+            )
+            successful_messages.extend(successes)
+            messages_to_retry.extend(retries)
+            failed_messages.extend(failures)
+        else:
+            print("No more DMs to send, after filtering out cached DMs.")
 
-    print('-' * 10)
-    print(f"After initial DM attempt...")
-    print(f"Number of successful DMs: {len(successful_messages)}")
-    print(f"Number of DMs to retry: {len(messages_to_retry)}")
-    print(f"Number of failed DMs: {len(failed_messages)}")
-    print('-' * 10)
-
-    number_retries = 0
-
-    while len(messages_to_retry) > 0 and number_retries < MAX_NUMBER_RETRIES:
-        print(f"Retrying {len(messages_to_retry)} messages...")
-        number_retries += 1
-        retry_successful_messages, more_messages_to_retry, retry_failed_messages = ( # noqa
-            message_users(messages_to_retry)
-        )
-        successful_messages.extend(retry_successful_messages)
-        failed_messages.extend(retry_failed_messages)
-        messages_to_retry = more_messages_to_retry
-        print(f"After retry {number_retries}...")
-        print(f"Number of new successful DMs: {len(retry_successful_messages)}") # noqa
-        print(f"Number of total successful DMs: {len(successful_messages)}")
-        print(f"Number of new failed DMs: {len(retry_failed_messages)}")
-        print(f"Number of total failed DMs: {len(failed_messages)}")
+        print('-' * 10)
+        print(f"After initial DM attempt...")
+        print(f"Number of successful DMs: {len(successful_messages)}")
         print(f"Number of DMs to retry: {len(messages_to_retry)}")
+        print(f"Number of failed DMs: {len(failed_messages)}")
         print('-' * 10)
 
-    print('-' * 20)
-    print("Finished messaging service...")
-    print(f"Total number of original DMs to send: {len(payloads)}")
-    print(f"Total successfully sent: {len(successful_messages)}")
-    print(f"Total failed (not due to rate limit issues): {len(failed_messages)}")
-    print(f"Total failed after rate-limit retries: {len(messages_to_retry)}")
-    print('-' * 20)
+        number_retries = 0
+
+        while len(messages_to_retry) > 0 and number_retries < MAX_NUMBER_RETRIES:
+            print(f"Retrying {len(messages_to_retry)} messages...")
+            number_retries += 1
+            total_messages = len(successful_messages) + len(messages_to_retry) + len(failed_messages) # noqa
+            num_to_message = batch_size - total_messages
+            if num_to_message > 0:
+                retry_successful_messages, more_messages_to_retry, retry_failed_messages = ( # noqa
+                    message_users(messages_to_retry, num_to_message)
+                )
+                successful_messages.extend(retry_successful_messages)
+                failed_messages.extend(retry_failed_messages)
+                messages_to_retry = more_messages_to_retry
+                print(f"After retry {number_retries}...")
+                print(f"Number of new successful DMs: {len(retry_successful_messages)}") # noqa
+                print(f"Number of total successful DMs: {len(successful_messages)}")
+                print(f"Number of new failed DMs: {len(retry_failed_messages)}")
+                print(f"Number of total failed DMs: {len(failed_messages)}")
+                print(f"Number of DMs to retry: {len(messages_to_retry)}")
+                print('-' * 10)
+            else:
+                break
+
+        print('-' * 20)
+        print("Finished messaging service...")
+        print(f"Total number of original DMs to send: {len(payloads)}")
+        print(f"Total successfully sent: {len(successful_messages)}")
+        print(f"Total failed (not due to rate limit issues): {len(failed_messages)}")
+        print(f"Total failed after rate-limit retries: {len(messages_to_retry)}")
+        print('-' * 20)
 
     successful_messages_df = pd.DataFrame(successful_messages)
     failed_messages_df = pd.DataFrame(failed_messages)

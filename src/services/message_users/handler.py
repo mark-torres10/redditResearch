@@ -9,4 +9,5 @@ from services.message_users.helper import handle_message_users
 def main(event: dict, context: dict) -> None:
     payloads = event["user_message_payloads"]
     phase = event["phase"]
-    handle_message_users(payloads, phase)
+    batch_size = event.get("batch_size", None)
+    handle_message_users(payloasd=payloads, phase=phase, batch_size=batch_size)
