@@ -1,0 +1,499 @@
+display_name,_fetched,_path,user_flair_background_color,submit_text_html,restrict_posting,user_is_banned,free_form_reports,wiki_enabled,user_is_muted,user_can_flair_in_sr,header_img,title,allow_galleries,icon_size,primary_color,active_user_count,icon_img,display_name_prefixed,accounts_active,public_traffic,subscribers,user_flair_richtext,name,quarantine,hide_ads,prediction_leaderboard_entry_type,emojis_enabled,advertiser_category,public_description,comment_score_hide_mins,allow_predictions,user_has_favorited,user_flair_template_id,community_icon,banner_background_image,original_content_tag_enabled,community_reviewed,submit_text,description_html,spoilers_enabled,comment_contribution_settings,allow_talks,header_size,user_flair_position,all_original_content,has_menu_widget,is_enrolled_in_new_modmail,key_color,can_assign_user_flair,created,wls,show_media_preview,submission_type,user_is_subscriber,allowed_media_in_comments,allow_videogifs,should_archive_posts,user_flair_type,allow_polls,collapse_deleted_comments,emojis_custom_size,public_description_html,allow_videos,is_crosspostable_subreddit,notification_level,should_show_media_in_comments_setting,can_assign_link_flair,accounts_active_is_fuzzed,allow_prediction_contributors,submit_text_label,link_flair_position,user_sr_flair_enabled,user_flair_enabled_in_sr,allow_chat_post_creation,allow_discovery,accept_followers,user_sr_theme_enabled,link_flair_enabled,disable_contributor_requests,subreddit_type,suggested_comment_sort,banner_img,user_flair_text,banner_background_color,show_media,id,user_is_moderator,over18,header_title,description,is_chat_post_feature_enabled,submit_link_label,user_flair_text_color,restrict_commenting,user_flair_css_class,allow_images,lang,whitelist_status,url,created_utc,banner_size,mobile_banner_image,user_is_contributor,allow_predictions_tournament,synctimestamp,created_utc_string
+worldnews,True,r/worldnews/,,"<!-- SC_OFF --><div class=""md""><h6><a href=""#h6-red""></a></h6>
+
+<blockquote>
+<h1>DISALLOWED SUBMISSIONS</h1>
+
+<ul>
+<li>US internal news/US politics</li>
+<li>Editorialized titles</li>
+<li>Feature stories</li>
+<li>Editorials, opinion, analysis</li>
+<li>Non-English articles</li>
+<li>Raw images, videos or audio clips</li>
+<li>Petitions, advocacy, surveys</li>
+<li>No all caps words in titles</li>
+<li>Blogspam (if stolen content/direct copy)</li>
+<li>Twitter, Facebook, Tumblr</li>
+<li>Old news (≥1 week old) articles</li>
+</ul>
+</blockquote>
+</div><!-- SC_ON -->",True,False,True,True,False,False,,World News,False,,#0079d3,23846,,r/worldnews,23846,False,33319040,[],t5_2qh13,False,False,SUBREDDIT_HEADER,True,Lifestyles,"A place for major news from around the world, excluding US-internal news.",90,False,False,,https://styles.redditmedia.com/t5_2qh13/styles/communityIcon_pldiwqvsyns91.png?width=256&s=1e3f0453042ba59e08945b2beab03f408a4135e4,https://styles.redditmedia.com/t5_2qh13/styles/bannerBackgroundImage_5q0f5lsk6pu01.png?width=4000&s=e458bb009e1685c46f945a93af462cc2e252a6d6,False,True,"###### [](#h6-red)
+># DISALLOWED SUBMISSIONS
+>
+> * US internal news/US politics
+> * Editorialized titles
+> * Feature stories
+> * Editorials, opinion, analysis
+> * Non-English articles
+> * Raw images, videos or audio clips
+> * Petitions, advocacy, surveys
+> * No all caps words in titles
+> * Blogspam (if stolen content/direct copy)
+> * Twitter, Facebook, Tumblr
+> * Old news (≥1 week old) articles","<!-- SC_OFF --><div class=""md""><blockquote>
+<blockquote>
+<blockquote>
+<ul>
+<li><p><strong>Other Subs:</strong></p></li>
+<li><p><a href=""http://goo.gl/ztbbza"">Related</a></p>
+
+<ul>
+<li><a href=""/r/News"">/r/News</a></li>
+<li><a href=""/r/geopolitics"">/r/geopolitics</a></li>
+<li><a href=""/r/PoliticalDiscussion"">/r/PoliticalDiscussion</a></li>
+<li><a href=""/r/WorldEvents"">/r/WorldEvents</a></li>
+<li><a href=""/r/IntheNews"">/r/IntheNews</a></li>
+<li><a href=""/r/GlobalTalk"">/r/GlobalTalk</a> </li>
+<li><a href=""/r/Breakingnews"">/r/Breakingnews</a> </li>
+<li><a href=""/r/Business"">/r/Business</a></li>
+<li><a href=""/r/Economics"">/r/Economics</a></li>
+<li><a href=""/r/Environment"">/r/Environment</a></li>
+<li><a href=""/r/History"">/r/History</a></li>
+<li><a href=""/r/HumanRights"">/r/HumanRights</a></li>
+<li><a href=""/r/Features"">/r/Features</a></li>
+<li><a href=""/r/UpliftingNews"">/r/UpliftingNews</a></li>
+<li><a href=""/r/NewsOfTheWeird"">/r/NewsOfTheWeird</a></li>
+<li><a href=""/r/FakeNews"">/r/FakeNews</a></li>
+<li><a href=""/r/ID_News"">/r/ID_News</a> </li>
+</ul></li>
+<li><p><a href=""https://goo.gl/dkfVnB"">N. America</a></p>
+
+<ul>
+<li><a href=""/r/Politics"">/r/Politics</a></li>
+<li><a href=""/r/USA"">/r/USA</a></li>
+<li><a href=""/r/USANews"">/r/USANews</a></li>
+<li><a href=""/r/Canada"">/r/Canada</a></li>
+<li><a href=""/r/CanadaPolitics"">/r/CanadaPolitics</a></li>
+<li><a href=""/r/OnGuardForThee"">/r/OnGuardForThee</a></li>
+<li><a href=""/r/Cuba"">/r/Cuba</a></li>
+<li><a href=""/r/Mexico"">/r/Mexico</a></li>
+<li><a href=""/r/PuertoRico"">/r/PuertoRico</a></li>
+</ul></li>
+<li><p><a href=""https://goo.gl/DDaqmY"">S. America</a></p>
+
+<ul>
+<li><a href=""/r/Argentina"">/r/Argentina</a></li>
+<li><a href=""/r/Brasil"">/r/Brasil</a></li>
+<li><a href=""/r/Chile"">/r/Chile</a></li>
+<li><a href=""/r/Colombia"">/r/Colombia</a></li>
+<li><a href=""/r/Ecuador"">/r/Ecuador</a></li>
+<li><a href=""/r/Guyana"">/r/Guyana</a></li>
+<li><a href=""/r/Nicaragua"">/r/Nicaragua</a></li>
+<li><a href=""/r/PanAmerica"">/r/PanAmerica</a> </li>
+<li><a href=""/r/Suriname"">/r/Suriname</a> </li>
+<li><a href=""/r/Uruguay"">/r/Uruguay</a></li>
+<li><a href=""/r/vzla"">/r/Venezuela</a></li>
+</ul></li>
+<li><p><a href=""https://goo.gl/ZF5rou"">Europe</a></p>
+
+<ul>
+<li><a href=""/r/Armenia"">/r/Armenia</a></li>
+<li><a href=""/r/Austria"">/r/Austria</a></li>
+<li><a href=""/r/Azerbaijan"">/r/Azerbaijan</a></li>
+<li><a href=""/r/Belarus"">/r/Belarus</a></li>
+<li><a href=""/r/Belgium"">/r/Belgium</a></li>
+<li><a href=""/r/BiH"">/r/Bosnia</a></li>
+<li><a href=""/r/Bulgaria"">/r/Bulgaria</a></li>
+<li><a href=""/r/Croatia"">/r/Croatia</a></li>
+<li><a href=""/r/Denmark"">/r/Denmark</a></li>
+<li><a href=""/r/Europe"">/r/Europe</a></li>
+<li><a href=""/r/Finland"">/r/Finland</a></li>
+<li><a href=""/r/France"">/r/France</a></li>
+<li><a href=""/r/sakartvelo"">/r/Georgia</a></li>
+<li><a href=""/r/Germany"">/r/Germany</a></li>
+<li><a href=""/r/Greece"">/r/Greece</a></li>
+<li><a href=""/r/Hungary"">/r/Hungary</a></li>
+<li><a href=""/r/Ireland"">/r/Ireland</a></li>
+<li><a href=""/r/Italy"">/r/Italy</a></li>
+<li><a href=""/r/Lithuania"">/r/Lithuania</a></li>
+<li><a href=""/r/Moldova"">/r/Moldova</a></li>
+<li><a href=""/r/TheNetherlands"">/r/TheNetherlands</a></li>
+<li><a href=""/r/Poland"">/r/Poland</a></li>
+<li><a href=""/r/Polska"">/r/Polska</a></li>
+<li><a href=""/r/Portugal"">/r/Portugal</a></li>
+<li><a href=""/r/Romania"">/r/Romania</a></li>
+<li><a href=""/r/Scotland"">/r/Scotland</a></li>
+<li><a href=""/r/Serbia"">/r/Serbia</a></li>
+<li><a href=""/r/Spain"">/r/Spain</a></li>
+<li><a href=""/r/Sweden"">/r/Sweden</a></li>
+<li><a href=""/r/Switzerland"">/r/Switzerland</a></li>
+<li><a href=""/r/Turkey"">/r/Turkey</a></li>
+<li><a href=""/r/UnitedKingdom"">/r/UnitedKingdom</a></li>
+<li><a href=""/r/UKPolitics"">/r/UKPolitics</a></li>
+<li><a href=""/r/Ukraina"">/r/Ukraina</a></li>
+<li><a href=""/r/Ukraine"">/r/Ukraine</a></li>
+<li><a href=""/r/UkrainianConflict"">/r/UkrainianConflict</a></li>
+</ul></li>
+<li><p><a href=""https://goo.gl/az3Ygk"">Asia</a></p>
+
+<ul>
+<li><a href=""/r/Afghanistan"">/r/Afghanistan</a></li>
+<li><a href=""/r/Bangladesh"">/r/Bangladesh</a></li>
+<li><a href=""/r/China"">/r/China</a></li>
+<li><a href=""/r/India"">/r/India</a></li>
+<li><a href=""/r/Kazakhstan"">/r/Kazakhstan</a> </li>
+<li><a href=""/r/Malaysia"">/r/Malaysia</a></li>
+<li><a href=""/r/Myanmar"">/r/Myanmar</a></li>
+<li><a href=""/r/Nepal"">/r/Nepal</a></li>
+<li><a href=""/r/NorthKoreaNews"">/r/NorthKoreaNews</a></li>
+<li><a href=""/r/Pakistan"">/r/Pakistan</a></li>
+<li><a href=""/r/Philippines"">/r/Philippines</a></li>
+<li><a href=""/r/Singapore"">/r/Singapore</a></li>
+<li><a href=""/r/Thailand"">/r/Thailand</a></li>
+<li><a href=""/r/Turkey"">/r/Turkey</a></li>
+</ul></li>
+<li><p><a href=""https://goo.gl/Ut3syV"">Middle East</a></p>
+
+<ul>
+<li><a href=""/r/Assyria"">/r/Assyria</a></li>
+<li><a href=""/r/Iran"">/r/Iran</a></li>
+<li><a href=""/r/Iranian"">/r/Iranian</a></li>
+<li><a href=""/r/Iraq"">/r/Iraq</a></li>
+<li><a href=""/r/Israel"">/r/Israel</a></li>
+<li><a href=""/r/Kurdistan"">/r/Kurdistan</a></li>
+<li><a href=""/r/LevantineWar"">/r/LevantineWar</a></li>
+<li><a href=""/r/MiddleEastNews"">/r/MiddleEastNews</a></li>
+<li><a href=""/r/MideastPeace"">/r/MideastPeace</a></li>
+<li><a href=""/r/Palestine"">/r/Palestine</a></li>
+<li><a href=""/r/Syria"">/r/Syria</a></li>
+<li><a href=""/r/Yemen"">/r/Yemen</a></li>
+<li><a href=""/r/YemeniCrisis"">/r/YemeniCrisis</a></li>
+</ul></li>
+<li><p><a href=""https://goo.gl/FgJ4Na"">Africa</a></p>
+
+<ul>
+<li><a href=""/r/Africa"">/r/Africa</a></li>
+<li><a href=""/r/Namibia"">/r/Namibia</a> </li>
+<li><a href=""/r/SouthAfrica"">/r/SouthAfrica</a></li>
+</ul></li>
+<li><p><a href=""https://goo.gl/5pz9uS"">Oceania</a></p>
+
+<ul>
+<li><a href=""/r/Australia"">/r/Australia</a></li>
+<li><a href=""/r/Fijian"">/r/Fijian</a></li>
+<li><a href=""/r/NewZealand"">/r/NewZealand</a></li>
+<li><a href=""/r/Oceania"">/r/Oceania</a></li>
+<li><a href=""/r/Westpapua"">/r/Westpapua</a></li>
+</ul></li>
+</ul>
+</blockquote>
+</blockquote>
+</blockquote>
+
+<h2><strong>Filter out dominant topics:</strong></h2>
+
+<p><a href=""http://www.reddit.com/r/worldnews#nc"">Display COVID-19 submissions</a></p>
+
+<p><a href=""http://nc.reddit.com/r/worldnews#www"">Filter COVID-19</a></p>
+
+<p><a href=""http://www.reddit.com/r/worldnews#nr"">Display Russia/Ukraine submissions</a></p>
+
+<p><a href=""http://nr.reddit.com/r/worldnews#www"">Filter Russia/Ukraine</a></p>
+
+<p><a href=""http://www.reddit.com/r/worldnews#nk"">Display North Korea submissions</a></p>
+
+<p><a href=""http://nk.reddit.com/r/worldnews#www"">Filter North Korea</a></p>
+
+<p><a href=""http://www.reddit.com/r/worldnews#nh"">Display Afghanistan submissions</a></p>
+
+<p><a href=""http://www.reddit.com/r/worldnews#ni"">Display Israel/Palestine submissions</a></p>
+
+<p><a href=""http://ni.reddit.com/r/worldnews#www"">Filter Israel / Palestine</a></p>
+
+<p><a href=""http://www.reddit.com/r/worldnews#iu"">Display all submissions</a></p>
+
+<p><a href=""http://iu.reddit.com/r/worldnews#www"">Filter all dominant topics</a></p>
+
+<h4><a href=""#h4-green""></a></h4>
+
+<blockquote>
+<h1>Welcome!</h1>
+
+<p><a href=""/r/worldnews"">/r/worldnews</a> is for major news from around the world except US-internal news / US politics</p>
+
+<p><a href=""http://www.reddit.com/r/worldnews/wiki/ama"">See all of our AMA events here</a></p>
+</blockquote>
+
+<h6><a href=""#h6-red""></a></h6>
+
+<blockquote>
+<h1>Worldnews Rules</h1>
+
+<h3><strong>Disallowed submissions</strong></h3>
+
+<ul>
+<li>US internal news/US politics</li>
+<li>Editorialized titles</li>
+<li>Misleading titles</li>
+<li>Editorials, opinion, analysis</li>
+<li>Feature stories</li>
+<li>Non-English articles</li>
+<li>Images, videos or audio clips</li>
+<li>Petitions, advocacy, surveys</li>
+<li>All caps words in titles</li>
+<li>Blogspam (if stolen content/direct copy)</li>
+<li>Twitter, Facebook, Tumblr</li>
+<li>Old news (≥1 week old) articles</li>
+</ul>
+
+<p><a href=""/r/worldnews/wiki/rules#wiki_disallowed_submissions"">See the wiki</a> for details on each rule</p>
+
+<h3><strong>Disallowed comments</strong></h3>
+
+<ul>
+<li>Bigotry / Other offensive content</li>
+<li>Personal attacks on other users</li>
+<li>Memes/GIFs</li>
+<li>Unlabeled NSFW images/videos</li>
+<li>URL shorteners</li>
+<li>Celebrating death/Advocating violence</li>
+<li>Genocide denial/downplaying genocide</li>
+<li>Disinformation/misinformation</li>
+<li>Health disinformation/misinformation</li>
+</ul>
+
+<p><a href=""/r/worldnews/wiki/rules#wiki_disallowed_comments"">See the wiki</a> for details on each rule</p>
+
+<p><a href=""/r/worldnews/wiki/media"">Guidelines for the media</a></p>
+
+<p>Violation of our rules may result in a ban from this subreddit. Untimed bans may be lifted when the moderators are confident that you will not continue to infringe on the community rules.</p>
+
+<hr/>
+
+<p><strong>Please don&#39;t ever feed the trolls.</strong><br/>
+Downvote, report and move on.</p>
+
+<hr/>
+
+<ul>
+<li><a href=""/r/worldnews/wiki/whatmodsdo""><strong>What moderators do and can&#39;t do</strong></a></li>
+<li><a href=""http://www.reddit.com/message/compose?to=%2Fr%2Fworldnews""><strong>Message the moderators</strong></a></li>
+</ul>
+</blockquote>
+
+<h4><a href=""#h4-green""></a></h4>
+
+<blockquote>
+<h1>Sticky Posts</h1>
+
+<p>• <a href=""/r/worldnews/search?q=author%3AWorldNewsMods+OR+title%3A%22worldnews+live+thread%22+OR+self%3Ayes&amp;restrict_sr=on&amp;sort=new&amp;t=all"">A list of all recent stickied posts.</a></p>
+
+<p>• <strong><a href=""https://www.reddit.com/user/WorldNewsMods/submitted/?sort=new"">Daily Live Threads</a></strong></p>
+</blockquote>
+</div><!-- SC_ON -->",False,"{""allowed_media_types"": [""expression""]}",False,,right,False,True,,#0079d3,False,1201231119.0,6,False,link,False,"[""expression""]",False,True,text,False,True,,"<!-- SC_OFF --><div class=""md""><p>A place for major news from around the world, excluding US-internal news.</p>
+</div><!-- SC_ON -->",False,True,,True,False,False,False,,left,True,True,False,True,True,True,True,False,public,,,,#cee3f8,True,2qh13,False,False,News from Planet Earth,">>> - **Other Subs:**
+
+>>> - [Related](http://goo.gl/ztbbza)
+>>>     - /r/News
+>>>     - /r/geopolitics
+>>>     - /r/PoliticalDiscussion
+>>>     - /r/WorldEvents
+>>>     - /r/IntheNews
+>>>     - /r/GlobalTalk 
+>>>     - /r/Breakingnews 
+>>>     - /r/Business
+>>>     - /r/Economics
+>>>     - /r/Environment
+>>>     - /r/History
+>>>     - /r/HumanRights
+>>>     - /r/Features
+>>>     - /r/UpliftingNews
+>>>     - /r/NewsOfTheWeird
+>>>     - /r/FakeNews
+>>>     - /r/ID_News 
+
+>>> - [N. America](https://goo.gl/dkfVnB)
+>>>     - /r/Politics
+>>>     - /r/USA
+>>>     - /r/USANews
+>>>     - /r/Canada
+>>>     - /r/CanadaPolitics
+>>>     - /r/OnGuardForThee
+>>>     - /r/Cuba
+>>>     - /r/Mexico
+>>>     - /r/PuertoRico
+
+>>> - [S. America](https://goo.gl/DDaqmY)
+>>>     - /r/Argentina
+>>>     - /r/Brasil
+>>>     - /r/Chile
+>>>     - /r/Colombia
+>>>     - /r/Ecuador
+>>>     - /r/Guyana
+>>>     - /r/Nicaragua
+>>>     - /r/PanAmerica 
+>>>     - /r/Suriname 
+>>>     - /r/Uruguay
+>>>     - [/r/Venezuela](/r/vzla)
+
+>>> - [Europe](https://goo.gl/ZF5rou)
+>>>     - /r/Armenia
+>>>     - /r/Austria
+>>>     - /r/Azerbaijan
+>>>     - /r/Belarus
+>>>     - /r/Belgium
+>>>     - [/r/Bosnia](/r/BiH)
+>>>     - /r/Bulgaria
+>>>     - /r/Croatia
+>>>     - /r/Denmark
+>>>     - /r/Europe
+>>>     - /r/Finland
+>>>     - /r/France
+>>>     - [/r/Georgia](/r/sakartvelo)
+>>>     - /r/Germany
+>>>     - /r/Greece
+>>>     - /r/Hungary
+>>>     - /r/Ireland
+>>>     - /r/Italy
+>>>     - /r/Lithuania
+>>>     - /r/Moldova
+>>>     - /r/TheNetherlands
+>>>     - /r/Poland
+>>>     - /r/Polska
+>>>     - /r/Portugal
+>>>     - /r/Romania
+>>>     - /r/Scotland
+>>>     - /r/Serbia
+>>>     - /r/Spain
+>>>     - /r/Sweden
+>>>     - /r/Switzerland
+>>>     - /r/Turkey
+>>>     - /r/UnitedKingdom
+>>>     - /r/UKPolitics
+>>>     - /r/Ukraina
+>>>     - /r/Ukraine
+>>>     - /r/UkrainianConflict
+
+>>> - [Asia](https://goo.gl/az3Ygk)
+>>>     - /r/Afghanistan
+>>>     - /r/Bangladesh
+>>>     - /r/China
+>>>     - /r/India
+>>>     - /r/Kazakhstan 
+>>>     - /r/Malaysia
+>>>     - /r/Myanmar
+>>>     - /r/Nepal
+>>>     - /r/NorthKoreaNews
+>>>     - /r/Pakistan
+>>>     - /r/Philippines
+>>>     - /r/Singapore
+
+>>>     - /r/Thailand
+>>>     - /r/Turkey
+
+>>> - [Middle East](https://goo.gl/Ut3syV)
+>>>     - /r/Assyria
+>>>     - /r/Iran
+>>>     - /r/Iranian
+>>>     - /r/Iraq
+>>>     - /r/Israel
+>>>     - /r/Kurdistan
+>>>     - /r/LevantineWar
+>>>     - /r/MiddleEastNews
+>>>     - /r/MideastPeace
+>>>     - /r/Palestine
+>>>     - /r/Syria
+>>>     - /r/Yemen
+>>>     - /r/YemeniCrisis
+
+>>> - [Africa](https://goo.gl/FgJ4Na)
+>>>     - /r/Africa
+>>>     - /r/Namibia 
+>>>     - /r/SouthAfrica
+
+>>> - [Oceania](https://goo.gl/5pz9uS)
+>>>     - /r/Australia
+>>>     - /r/Fijian
+>>>     - /r/NewZealand
+>>>     - /r/Oceania
+>>>     - /r/Westpapua
+
+## **Filter out dominant topics:**
+
+[Display COVID-19 submissions](http://www.reddit.com/r/worldnews#nc)
+
+[Filter COVID-19](http://nc.reddit.com/r/worldnews#www)
+
+[Display Russia/Ukraine submissions](http://www.reddit.com/r/worldnews#nr)
+
+[Filter Russia/Ukraine](http://nr.reddit.com/r/worldnews#www)
+
+[Display North Korea submissions](http://www.reddit.com/r/worldnews#nk)
+
+[Filter North Korea](http://nk.reddit.com/r/worldnews#www)
+
+[Display Afghanistan submissions](http://www.reddit.com/r/worldnews#nh)
+
+[Display Israel/Palestine submissions](http://www.reddit.com/r/worldnews#ni)
+
+[Filter Israel / Palestine](http://ni.reddit.com/r/worldnews#www)
+
+[Display all submissions](http://www.reddit.com/r/worldnews#iu)
+
+[Filter all dominant topics](http://iu.reddit.com/r/worldnews#www)
+
+#### [](#h4-green)
+># Welcome!
+>
+> /r/worldnews is for major news from around the world except US-internal news / US politics
+
+> [See all of our AMA events here] (http://www.reddit.com/r/worldnews/wiki/ama)
+
+###### [](#h6-red)
+>#Worldnews Rules
+>
+>
+>### **Disallowed submissions**
+>
+> * US internal news/US politics
+> * Editorialized titles
+> * Misleading titles
+> * Editorials, opinion, analysis
+> * Feature stories
+> * Non-English articles
+> * Images, videos or audio clips
+> * Petitions, advocacy, surveys
+> * All caps words in titles
+> * Blogspam (if stolen content/direct copy)
+> * Twitter, Facebook, Tumblr
+> * Old news (≥1 week old) articles
+
+>[See the wiki](/r/worldnews/wiki/rules#wiki_disallowed_submissions) for details on each rule
+
+>### **Disallowed comments**
+>
+> * Bigotry / Other offensive content
+> * Personal attacks on other users
+> * Memes/GIFs
+> * Unlabeled NSFW images/videos
+> * URL shorteners
+> * Celebrating death/Advocating violence
+> * Genocide denial/downplaying genocide
+> * Disinformation/misinformation
+> * Health disinformation/misinformation
+
+>[See the wiki](/r/worldnews/wiki/rules#wiki_disallowed_comments) for details on each rule
+
+>[Guidelines for the media](/r/worldnews/wiki/media)
+
+> Violation of our rules may result in a ban from this subreddit. Untimed bans may be lifted when the moderators are confident that you will not continue to infringe on the community rules.
+
+>
+>----
+>
+>**Please don't ever feed the trolls.**    
+>Downvote, report and move on.
+>
+>----
+>
+>* [**What moderators do and can't do**](/r/worldnews/wiki/whatmodsdo)
+>* [**Message the moderators**](http://www.reddit.com/message/compose?to=%2Fr%2Fworldnews)
+
+#### [](#h4-green)
+># Sticky Posts
+
+> • [A list of all recent stickied posts.](/r/worldnews/search?q=author%3AWorldNewsMods+OR+title%3A%22worldnews+live+thread%22+OR+self%3Ayes&restrict_sr=on&sort=new&t=all)
+
+> • **[Daily Live Threads](https://www.reddit.com/user/WorldNewsMods/submitted/?sort=new)**
+>",True,,,False,,False,en,all_ads,/r/worldnews/,1201231119.0,,,False,False,2023-10-15T10:10:32.546245,"Friday, January 25, 2008, at 11:18:39 AM"

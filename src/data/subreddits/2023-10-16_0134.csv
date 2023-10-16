@@ -1,0 +1,376 @@
+display_name,_fetched,_path,user_flair_background_color,submit_text_html,restrict_posting,user_is_banned,free_form_reports,wiki_enabled,user_is_muted,user_can_flair_in_sr,header_img,title,allow_galleries,icon_size,primary_color,active_user_count,icon_img,display_name_prefixed,accounts_active,public_traffic,subscribers,user_flair_richtext,name,quarantine,hide_ads,prediction_leaderboard_entry_type,emojis_enabled,advertiser_category,public_description,comment_score_hide_mins,allow_predictions,user_has_favorited,user_flair_template_id,community_icon,banner_background_image,original_content_tag_enabled,community_reviewed,submit_text,description_html,spoilers_enabled,comment_contribution_settings,allow_talks,header_size,user_flair_position,all_original_content,has_menu_widget,is_enrolled_in_new_modmail,key_color,can_assign_user_flair,created,wls,show_media_preview,submission_type,user_is_subscriber,allowed_media_in_comments,allow_videogifs,should_archive_posts,user_flair_type,allow_polls,collapse_deleted_comments,emojis_custom_size,public_description_html,allow_videos,is_crosspostable_subreddit,notification_level,should_show_media_in_comments_setting,can_assign_link_flair,accounts_active_is_fuzzed,allow_prediction_contributors,submit_text_label,link_flair_position,user_sr_flair_enabled,user_flair_enabled_in_sr,allow_chat_post_creation,allow_discovery,accept_followers,user_sr_theme_enabled,link_flair_enabled,disable_contributor_requests,subreddit_type,suggested_comment_sort,banner_img,user_flair_text,banner_background_color,show_media,id,user_is_moderator,over18,header_title,description,is_chat_post_feature_enabled,submit_link_label,user_flair_text_color,restrict_commenting,user_flair_css_class,allow_images,lang,whitelist_status,url,created_utc,banner_size,mobile_banner_image,user_is_contributor,allow_predictions_tournament,synctimestamp,created_utc_string
+ukpolitics,True,r/ukpolitics/,,"<!-- SC_OFF --><div class=""md""><p>Please read the sidebar rules before posting.</p>
+
+<p>Headline titles should be changed only where it improves clarity. Headline changes that introduce editorialization or rhetoric will be removed. Please express your personal opinion in the comments, not the headline.</p>
+
+<p>Please do not re-post content.</p>
+</div><!-- SC_ON -->",True,False,True,True,False,True,https://b.thumbs.redditmedia.com/sIjmoP-D8ibCnn_msueTR2rafmTiRWtFQIXs6G__7iI.png,UK Politics,False,"[256, 256]",#61a9f5,573,https://b.thumbs.redditmedia.com/JhQMBrxcl0nwfa-Fg5TakzfWG8av12d6gEyuptl8wxk.png,r/ukpolitics,573,False,472603,[],t5_2qhcv,False,False,SUBREDDIT_HEADER,False,,"Political news and debate concerning the United Kingdom.
+
+Rules detailed here: https://www.reddit.com/r/ukpolitics/wiki/rules",720,False,False,,https://styles.redditmedia.com/t5_2qhcv/styles/communityIcon_hepykt9s4xy01.png?width=256&s=8f9ceca56b5a693fbcb4a217e6af1ce8b20bfa1e,,False,True,"Please read the sidebar rules before posting.
+
+Headline titles should be changed only where it improves clarity. Headline changes that introduce editorialization or rhetoric will be removed. Please express your personal opinion in the comments, not the headline.
+
+Please do not re-post content.","<!-- SC_OFF --><div class=""md""><p><strong>Political articles and debate concerning the United Kingdom.</strong></p>
+
+<h2></h2>
+
+<p><a href=""https://xa.reddit.com/r/ukpolitics""><strong>Exclude Twitter</strong></a>    </p>
+
+<h2></h2>
+
+<p><a href=""https://xb.reddit.com/r/ukpolitics""><strong>Exclude Student Politics</strong></a></p>
+
+<h2></h2>
+
+<p><a href=""https://www.reddit.com/message/compose/?to=/r/ukpolitics""><strong>Message the moderators</strong></a></p>
+
+<h2></h2>
+
+<p>Anything not <em>specifically</em> concerning politics in the UK or geopolitics involving the UK will be considered spam and removed.</p>
+
+<p>While robust debate is encouraged, at least try to keep things civil. This sub is for people with a wide variety of views, and as such you will come across content, views and people you don&#39;t agree with. Political views from a wide spectrum are tolerated here.</p>
+
+<p>Articles from paywalled sites should be linked to directly, and a copy/paste, screenshot or outline.com provided in the comments. Full credit to the author and publication should be given.</p>
+
+<h2></h2>
+
+<blockquote>
+<h1><a href=""#icon-exclamation""><strong><em>New:</em> you must bring ID</strong> when you vote in <strong>England or UK parliamentary elections</strong> </a></h1>
+
+<p><a href=""https://www.electoralcommission.org.uk/i-am-a/voter/voter-id""><strong>Learn what ID is accepted, and what to do if you don&#39;t have any</strong></a></p>
+
+<h2><a href=""#icon-exclamation"">You need to be on the electoral register to vote in elections and referendums.</a></h2>
+
+<p><a href=""https://www.gov.uk/register-to-vote""><strong>Register online to vote</strong></a></p>
+
+<p><a href=""https://www.gov.uk/voting-in-the-uk""><strong>Information on voting in the United Kingdom</strong></a></p>
+
+<p><a href=""https://www.gov.uk/browse/citizenship/voting""><strong>Voting Overview</strong></a></p>
+
+<p><a href=""https://www.aboutmyvote.co.uk""><strong>About My Vote</strong></a></p>
+</blockquote>
+
+<hr/>
+
+<blockquote>
+<h2>Resources</h2>
+
+<p><strong><a href=""https://commonslibrary.parliament.uk/local-data/constituency-dashboard/"">House of Commons Library Constituency Dashboard</a></strong></p>
+
+<ul>
+<li>Demographic and economic data for every UK parliamentary seat</li>
+</ul>
+
+<p><strong><a href=""https://hansard.parliament.uk/"">Hansard Online</a></strong></p>
+
+<ul>
+<li>Hansard (the Official Report) is the edited verbatim report of proceedings of both the House of Commons and the House of Lords.</li>
+</ul>
+
+<p><a href=""https://erskinemay.parliament.uk/""><strong>Erskine May online</strong></a></p>
+
+<ul>
+<li>Erskine May, often referred to as ‘the Bible of parliamentary procedure’ is the most authoritative and influential work on parliamentary procedure and constitutional conventions affecting Parliament. Now available to read for free and in full online.</li>
+</ul>
+
+<p><a href=""https://www.gov.uk/government/publications/illegal-migration-bill-factsheets/safe-and-legal-routes""><strong>Safe and legal routes</strong></a></p>
+
+<ul>
+<li>The UK operates safe and legal routes for the purpose of providing humanitarian and other forms of protection to vulnerable people. These are detailed here. </li>
+</ul>
+
+<h3><a href=""#icon-information"">Guidelines</a></h3>
+
+<hr/>
+
+<p><strong>1:</strong> Robust debate is encouraged, angry arguments are not. This sub is for people with a wide variety of views, and as such you will come across content, views and people you don&#39;t agree with. Political views from a wide spectrum are tolerated here. Persistent engagement in antagonistic, uncivil or abusive behavior will result in action being taken against your account.</p>
+
+<hr/>
+
+<p><strong>2:</strong> Anything not specifically concerning politics in the UK or geopolitics involving the UK will be removed.</p>
+
+<hr/>
+
+<p><strong>3:</strong> Submission titles should use the headline of the article (or the full, unaltered text of the Tweet) being submitted, and should be changed only where it improves clarity or is absolutely necessary. Changes that introduce editorialization or rhetoric will result in the submission being removed - please express your personal opinion in the comments, not the submission title. Please use the original publisher where possible.</p>
+
+<hr/>
+
+<p><strong>4a:</strong> News articles older than 28 days may be removed. If an older article has relevance to events being discussed today, you should outline this argument in a self post that links to said article. On days where events move particularly fast, moderators may remove outdated news regardless of age.</p>
+
+<p><strong>4b:</strong> Long form journalism published more than twelve months prior or before significant developments to the topic it discusses should be submitted as part of a self-post detailing why it is relevant today.</p>
+
+<hr/>
+
+<p><strong>5a:</strong> Articles from paywalled sites should be linked to directly, and a copy/paste of the article text provided in the comments. Full credit to the author and publication should be given. Some websites may have different conditions applied due to copyright issues or differences in the design of their paywall, and result in automated instructions being sent which explain how to submit their content correctly.</p>
+
+<p><strong>5b:</strong> You may use an archive site instead of copy/paste, but only if a copy/paste is not suitable for the paywalled content (e.g. if there are a number of supporting charts / diagrams).</p>
+
+<p><strong>5c:</strong> Articles which are submitted from non-paywalled sites should not be copy/pasted as a comment.</p>
+
+<hr/>
+
+<p><strong>6:</strong> If you want to discuss a specific point of an article rather than the article itself then please use a self post for this.</p>
+
+<hr/>
+
+<p><strong>7a:</strong> Tweets are acceptable, so long as they are from journalists, pollsters, politicians and so forth. Tweets from random members of the public are not. This is auto-moderated as per our whitelist, but tweets from non-white listed accounts may be approved depending on context and notability. </p>
+
+<p><strong>7b:</strong> Twitter posts which do not contribute substance or contain reactionary commentary regardless of author will generally be removed as &quot;hot takes&quot;</p>
+
+<p><strong>7c:</strong> Threads should be submitted as a link submission identifying the Twitter thread in the title where possible. The contents of a thread should be posted as a text comment or link to an appropriate Thread Reader url.</p>
+
+<p><strong>7d:</strong> Tweets that are just a link to an article and contain no commentary of substance will be removed. Said articles should submitted in place of the tweet with the accompanying tweet linked to in the comments.</p>
+
+<p><strong>7e:</strong> Other social media sources or accounts that don&#39;t fit the criteria will continue to be reviewed manually.</p>
+
+<hr/>
+
+<p><strong>8:</strong> Submitting your own content is perfectly fine, but make it clear that it&#39;s your own content and <a href=""https://www.reddit.com/wiki/selfpromotion"">read the site wide guidance on self promotion written by the admins</a>.</p>
+
+<hr/>
+
+<p><strong>9:</strong> Campaigning, fundraising, activism, e-begging and links to petitions will be removed. We all have issues that are close at heart, but the subreddit isn&#39;t the place for this. </p>
+
+<hr/>
+
+<p><strong>10:</strong> Self posts should be used as an invitation to discussion, not an opportunity to soapbox, tub-thump or showboat.</p>
+
+<hr/>
+
+<p><strong>11:</strong> No meme posts, no shitposts. </p>
+
+<hr/>
+
+<p><strong>12:</strong> Surveys must be submitted in the form of a self post explaining what it is about, not a direct link.</p>
+
+<hr/>
+
+<p><strong>13:</strong> No URL shorteners, your post or comment will be immediately removed.</p>
+
+<hr/>
+
+<p><strong>14:</strong> Flairs should not contain links or abuse/insults. User flair that contains either will be deleted without warning, repeat offenders will be banned.</p>
+
+<hr/>
+
+<p><strong>15a:</strong> Comments and submissions that contribute nothing more than personal insults or group based attacks will be removed, along with low effort top level replies to submissions. Persistent harassment targeted at other subreddit users will result in the accounts involved being banned.</p>
+
+<p><strong>15b:</strong> Persistent low-effort complaining about sources you disagree with, insulting the publication or trying to shame users for posting sources you disagree with is not acceptable. Either address the post in question, or ignore it.</p>
+
+<hr/>
+
+<p><strong>16:</strong> If you see racist, sexist, homophobic or other hateful comments, please report them. Taking issue with immigration or refugee policy is not automatically racist.</p>
+
+<hr/>
+
+<p><strong>17:</strong> Submissions or comments complaining about the moderation, biases or users of other subreddits / online communities will be removed and may result in a ban. This is not a meta subreddit.</p>
+
+<hr/>
+
+<p><strong>18:</strong> Posting in other subreddits with the express purpose of brigading, vote manipulation or harassment in this subreddit may result in a permanent ban.</p>
+
+<hr/>
+
+<p><strong>19a:</strong> Private messages to individual moderators regarding bans or removal of comments/posts will be ignored.</p>
+
+<p><strong>19b:</strong> If you have any further questions or concerns about <a href=""/r/ukpolitics"">/r/ukpolitics</a> moderation, feel free to ask, we&#39;ll be happy to discuss it publicly even if we can&#39;t reach agreement - although some issues (especially those involving complaints about other users) are best handled in modmail.</p>
+
+<p><strong>19c:</strong> Persistent uncivil or abusive complaints about moderation or moderators may result in moderation action being taken against you. </p>
+
+<p><strong>19d:</strong> If you do need to contact the moderators about anything, be descriptive and state what the issue is clearly. Please allow moderators sufficient time to respond.</p>
+
+<p><strong>19e:</strong> If you report a submission or comment, make it clear why you are making a report. </p>
+
+<hr/>
+
+<p><strong>20:</strong> The report button is not a super-downvote button nor a guarantee that something will be done - moderators may decide no further action is required after reviewing a user submitted report. </p>
+
+<hr/>
+
+<p><strong>21:</strong> Comments or submissions which call for/incite violence or threaten direct-action against political figures, journalists, commentators and media personalities in a way that constitutes illegal harassment or intimidation may result in a permanent ban and may be reported to the authorities.</p>
+
+<hr/>
+
+<p><strong>22:</strong> Mime artists are strictly forbidden.</p>
+
+<hr/>
+
+<p><strong>23:</strong> These rules are not exhaustive, moderators reserve the right to moderate (or not) where it is felt to be appropriate. Past moderation decisions are no guarantee of future mod decisions. Rules are subject to change without notice.</p>
+</blockquote>
+</div><!-- SC_ON -->",False,{},False,"[120, 40]",right,False,True,,#a5a4a4,True,1204985717.0,6,True,any,False,[],False,True,text,False,True,,"<!-- SC_OFF --><div class=""md""><p>Political news and debate concerning the United Kingdom.</p>
+
+<p>Rules detailed here: <a href=""https://www.reddit.com/r/ukpolitics/wiki/rules"">https://www.reddit.com/r/ukpolitics/wiki/rules</a></p>
+</div><!-- SC_ON -->",True,,,True,False,False,False,,left,True,True,False,False,True,True,True,True,public,,https://b.thumbs.redditmedia.com/DCPR1AISwkhlUfB9PwcNc1cLDAjMRfYDsB7cPggq7OU.png,,#61a9f5,False,2qhcv,False,False,,"**Political articles and debate concerning the United Kingdom.**
+
+-
+
+[**Exclude Twitter**](https://xa.reddit.com/r/ukpolitics)    
+
+-
+
+[**Exclude Student Politics**](https://xb.reddit.com/r/ukpolitics)
+
+-
+
+[**Message the moderators**](https://www.reddit.com/message/compose/?to=/r/ukpolitics)
+
+-
+Anything not *specifically* concerning politics in the UK or geopolitics involving the UK will be considered spam and removed.
+
+While robust debate is encouraged, at least try to keep things civil. This sub is for people with a wide variety of views, and as such you will come across content, views and people you don't agree with. Political views from a wide spectrum are tolerated here.
+
+Articles from paywalled sites should be linked to directly, and a copy/paste, screenshot or outline.com provided in the comments. Full credit to the author and publication should be given.
+
+-
+> #[***New:* you must bring ID** when you vote in **England or UK parliamentary elections** ](#icon-exclamation)
+>
+> [**Learn what ID is accepted, and what to do if you don't have any**](https://www.electoralcommission.org.uk/i-am-a/voter/voter-id)
+>
+> ##[You need to be on the electoral register to vote in elections and referendums.](#icon-exclamation)
+>
+> [**Register online to vote**](https://www.gov.uk/register-to-vote)
+>
+> [**Information on voting in the United Kingdom**](https://www.gov.uk/voting-in-the-uk)
+>
+> [**Voting Overview**](https://www.gov.uk/browse/citizenship/voting)
+>
+> [**About My Vote**](https://www.aboutmyvote.co.uk)
+
+---
+
+> ##Resources
+>
+> **[House of Commons Library Constituency Dashboard](https://commonslibrary.parliament.uk/local-data/constituency-dashboard/)**
+>
+> - Demographic and economic data for every UK parliamentary seat
+>
+> **[Hansard Online](https://hansard.parliament.uk/)**
+>
+> - Hansard (the Official Report) is the edited verbatim report of proceedings of both the House of Commons and the House of Lords.
+>
+> [**Erskine May online**](https://erskinemay.parliament.uk/)
+>
+> - Erskine May, often referred to as ‘the Bible of parliamentary procedure’ is the most authoritative and influential work on parliamentary procedure and constitutional conventions affecting Parliament. Now available to read for free and in full online.
+
+> [**Safe and legal routes**](https://www.gov.uk/government/publications/illegal-migration-bill-factsheets/safe-and-legal-routes)
+
+> - The UK operates safe and legal routes for the purpose of providing humanitarian and other forms of protection to vulnerable people. These are detailed here. 
+>
+> ###[Guidelines](#icon-information) 
+> 
+> ---
+> 
+> **1:** Robust debate is encouraged, angry arguments are not. This sub is for people with a wide variety of views, and as such you will come across content, views and people you don't agree with. Political views from a wide spectrum are tolerated here. Persistent engagement in antagonistic, uncivil or abusive behavior will result in action being taken against your account.
+> 
+> ---
+> 
+> **2:** Anything not specifically concerning politics in the UK or geopolitics involving the UK will be removed.
+> 
+> ---
+> 
+> **3:** Submission titles should use the headline of the article (or the full, unaltered text of the Tweet) being submitted, and should be changed only where it improves clarity or is absolutely necessary. Changes that introduce editorialization or rhetoric will result in the submission being removed - please express your personal opinion in the comments, not the submission title. Please use the original publisher where possible.
+> 
+> ---
+> 
+> **4a:** News articles older than 28 days may be removed. If an older article has relevance to events being discussed today, you should outline this argument in a self post that links to said article. On days where events move particularly fast, moderators may remove outdated news regardless of age.
+> 
+> **4b:** Long form journalism published more than twelve months prior or before significant developments to the topic it discusses should be submitted as part of a self-post detailing why it is relevant today.
+> 
+> ---
+> 
+> **5a:** Articles from paywalled sites should be linked to directly, and a copy/paste of the article text provided in the comments. Full credit to the author and publication should be given. Some websites may have different conditions applied due to copyright issues or differences in the design of their paywall, and result in automated instructions being sent which explain how to submit their content correctly.
+>
+> **5b:** You may use an archive site instead of copy/paste, but only if a copy/paste is not suitable for the paywalled content (e.g. if there are a number of supporting charts / diagrams).
+>
+> **5c:** Articles which are submitted from non-paywalled sites should not be copy/pasted as a comment.
+> 
+> ---
+>  
+> **6:** If you want to discuss a specific point of an article rather than the article itself then please use a self post for this.
+> 
+> ---
+> 
+> **7a:** Tweets are acceptable, so long as they are from journalists, pollsters, politicians and so forth. Tweets from random members of the public are not. This is auto-moderated as per our whitelist, but tweets from non-white listed accounts may be approved depending on context and notability. 
+> 
+> **7b:** Twitter posts which do not contribute substance or contain reactionary commentary regardless of author will generally be removed as ""hot takes""
+> 
+> **7c:** Threads should be submitted as a link submission identifying the Twitter thread in the title where possible. The contents of a thread should be posted as a text comment or link to an appropriate Thread Reader url.
+> 
+> **7d:** Tweets that are just a link to an article and contain no commentary of substance will be removed. Said articles should submitted in place of the tweet with the accompanying tweet linked to in the comments.
+> 
+> **7e:** Other social media sources or accounts that don't fit the criteria will continue to be reviewed manually.
+> 
+> ---
+> 
+> **8:** Submitting your own content is perfectly fine, but make it clear that it's your own content and [read the site wide guidance on self promotion written by the admins](https://www.reddit.com/wiki/selfpromotion).
+> 
+> ---
+>  
+> **9:** Campaigning, fundraising, activism, e-begging and links to petitions will be removed. We all have issues that are close at heart, but the subreddit isn't the place for this. 
+> 
+> ---
+> 
+> **10:** Self posts should be used as an invitation to discussion, not an opportunity to soapbox, tub-thump or showboat.
+> 
+> ---
+> 
+> **11:** No meme posts, no shitposts. 
+> 
+> ---
+> 
+> **12:** Surveys must be submitted in the form of a self post explaining what it is about, not a direct link.
+> 
+> ---
+>  
+> **13:** No URL shorteners, your post or comment will be immediately removed.
+> 
+> ---
+>  
+> **14:** Flairs should not contain links or abuse/insults. User flair that contains either will be deleted without warning, repeat offenders will be banned.
+> 
+> ---
+>  
+> **15a:** Comments and submissions that contribute nothing more than personal insults or group based attacks will be removed, along with low effort top level replies to submissions. Persistent harassment targeted at other subreddit users will result in the accounts involved being banned.
+> 
+> **15b:** Persistent low-effort complaining about sources you disagree with, insulting the publication or trying to shame users for posting sources you disagree with is not acceptable. Either address the post in question, or ignore it.
+>
+> ---
+>  
+> **16:** If you see racist, sexist, homophobic or other hateful comments, please report them. Taking issue with immigration or refugee policy is not automatically racist.
+> 
+> ---
+> 
+> **17:** Submissions or comments complaining about the moderation, biases or users of other subreddits / online communities will be removed and may result in a ban. This is not a meta subreddit.
+> 
+> ---
+> 
+> **18:** Posting in other subreddits with the express purpose of brigading, vote manipulation or harassment in this subreddit may result in a permanent ban.
+> 
+> ---
+>  
+> **19a:** Private messages to individual moderators regarding bans or removal of comments/posts will be ignored.
+> 
+> **19b:** If you have any further questions or concerns about /r/ukpolitics moderation, feel free to ask, we'll be happy to discuss it publicly even if we can't reach agreement - although some issues (especially those involving complaints about other users) are best handled in modmail.
+> 
+> **19c:** Persistent uncivil or abusive complaints about moderation or moderators may result in moderation action being taken against you. 
+> 
+> **19d:** If you do need to contact the moderators about anything, be descriptive and state what the issue is clearly. Please allow moderators sufficient time to respond.
+> 
+> **19e:** If you report a submission or comment, make it clear why you are making a report. 
+> 
+> ---
+> 
+> **20:** The report button is not a super-downvote button nor a guarantee that something will be done - moderators may decide no further action is required after reviewing a user submitted report. 
+> 
+> ---
+>  
+> **21:** Comments or submissions which call for/incite violence or threaten direct-action against political figures, journalists, commentators and media personalities in a way that constitutes illegal harassment or intimidation may result in a permanent ban and may be reported to the authorities.
+> 
+> ---
+> 
+> **22:** Mime artists are strictly forbidden.
+> 
+> ---
+> 
+> **23:** These rules are not exhaustive, moderators reserve the right to moderate (or not) where it is felt to be appropriate. Past moderation decisions are no guarantee of future mod decisions. Rules are subject to change without notice.
+>",True,,,False,,False,en,all_ads,/r/ukpolitics/,1204985717.0,"[1280, 384]",,False,False,2023-10-16T01:34:05.894591,"Saturday, March 08, 2008, at 10:15:17 PM"
