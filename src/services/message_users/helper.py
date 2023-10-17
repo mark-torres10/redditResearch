@@ -33,7 +33,9 @@ payload_required_fields = [
 ]
 
 
-def filter_payloads_by_valid_users_to_dm(payloads: list[dict]) -> list[dict]:
+def filter_payloads_by_valid_users_to_dm(
+    payloads: list[dict]
+) -> tuple[list[dict], list[dict]]:
     """Filter payloads so that we only DM the users who we will be allowed to
     DM. These are the users who haven't blocked us and who accept DMs.
     
@@ -49,16 +51,21 @@ def filter_payloads_by_valid_users_to_dm(payloads: list[dict]) -> list[dict]:
         where_filter=where_filter
     )
     valid_users_to_dm = set(filtered_users_df["name"].tolist())
-    filtered_payloads = [
-        payload
-        for payload in payloads
-        if payload["author_screen_name"] in valid_users_to_dm
-        and payload["author_screen_name"] not in DENYLIST_AUTHORS
-    ]
+    filtered_payloads: list[dict] = []
+    invalid_payloads: list[dict] = []
+
+    for payload in payloads:
+        if (
+            payload["author_screen_name"] in valid_users_to_dm
+            and payload["author_screen_name"] not in DENYLIST_AUTHORS
+        ):
+            filtered_payloads.append(payload)
+        else:
+            invalid_payloads.append(payload)
     num_payloads_removed = len(payloads) - len(filtered_payloads)
     if num_payloads_removed > 0:
         print(f"Removing {num_payloads_removed} possible DMs, since they would be to users who don't allow DMs or are users on the denylist.") # noqa
-    return filtered_payloads
+    return (filtered_payloads, invalid_payloads)
 
 
 def dedupe_payloads(payloads: list[dict]) -> list[dict]:
@@ -94,12 +101,12 @@ def dedupe_payloads(payloads: list[dict]) -> list[dict]:
     return deduped_payloads
 
 
-def preprocess_payloads(payloads: list[dict]) -> list[dict]:
+def preprocess_payloads(payloads: list[dict]) -> tuple[list[dict], list[dict]]:
     """Performs any necessary preprocessing and checks on the list of DMs to
     send."""
-    filtered_payloads = filter_payloads_by_valid_users_to_dm(payloads)
+    filtered_payloads, invalid_payloads = filter_payloads_by_valid_users_to_dm(payloads) # noqa
     deduped_payloads = dedupe_payloads(filtered_payloads)
-    return deduped_payloads
+    return (deduped_payloads, invalid_payloads)
 
 def is_valid_payload(payload: dict) -> bool:
     return set(payload.keys()) == set(payload_required_fields)
@@ -236,7 +243,14 @@ def handle_message_users(
     messages_to_retry: list[dict] = []
     failed_messages: list[dict] = []
 
-    payloads = preprocess_payloads(payloads)
+    payloads, invalid_payloads = preprocess_payloads(payloads)
+    if len(invalid_payloads) > 0:
+        print(f"{len(invalid_payloads)} invalid payloads. Not sending these. Adding to failed messages.") # noqa
+        updated_invalid_payloads = [
+            {**payload, **{"message_status": "message_failed_dm_forbidden"}}
+            for payload in invalid_payloads
+        ]
+        failed_messages.extend(updated_invalid_payloads)
     cached_payloads = load_tmp_json_data(table_name=tmp_table_name)
     payloads, cached_successes, cached_retries, cached_failed = (
         add_cached_payloads_to_session(
