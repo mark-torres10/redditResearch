@@ -270,7 +270,8 @@ def handle_message_users(
     if total_cached_messages >= batch_size:
         print(f"The number of cached messages already is at or exceeds the batch size. Returning these cached results.") # noqa
     else:
-        num_to_message = batch_size - total_cached_messages
+        # subtract cached messages + messages that are invalid/filtered out.
+        num_to_message = batch_size - total_cached_messages- len(failed_messages) # noqa
         print(f"Batch size: {batch_size}\t Cached messages: {total_cached_messages}\t Number to message: {num_to_message}") # noqa
         if payloads:
             successes, retries, failures = (
