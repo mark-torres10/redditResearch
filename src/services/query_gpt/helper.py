@@ -1,12 +1,27 @@
-import json
+"""Query DB using ChatGPT.
 
-import langchain
+https://python.langchain.com/docs/use_cases/qa_structured/sql
+https://python.langchain.com/docs/expression_language/cookbook/sql_db
+https://python.langchain.com/docs/use_cases/question_answering/
+https://python.langchain.com/docs/get_started/quickstart
+"""
+from dotenv import load_dotenv
+import json
+import os
+
+from langchain import PromptTemplate
+from langchain.llms import OpenAI
 import openai
 import pandas as pd
 
 from lib.db.sql.helper import load_query_as_df
 
+current_file_directory = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.abspath(os.path.join(current_file_directory, "../../../.env")) # noqa
+load_dotenv(dotenv_path=env_path)
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
+llm = OpenAI(model_name="text-davinci-003")
 # TODO: add schemas here.
 base_prompt = """
 TODO: add schemas here.
@@ -37,6 +52,12 @@ following format, with keys "valid_question", "sql_query", and "reason":
 
 """
 
+base_prompt_template = PromptTemplate(
+    input_variables=["question"],
+    template=base_prompt
+)
+
+
 interpret_db_response_prompt = """
 TODO: add schemas here.
 
@@ -58,6 +79,12 @@ the following format:
     3 sentences.
 }
 """
+
+db_response_template = PromptTemplate(
+    input_variables=["query", "db_response"],
+    template=interpret_db_response_prompt
+)
+
 def send_query_to_gpt(prompt: str) -> str:
     pass
 
@@ -88,7 +115,8 @@ def interpret_sql_query(query: str, df: pd.DataFrame) -> str:
     return response["response"]
 
 
-# TODO: rewrite in Langchain
+# TODO: rewrite in Langchain. Use SQL object
+# https://python.langchain.com/docs/use_cases/qa_structured/sql#case-3-sql-agents
 # TODO: run first prompt to get relevant SQL query. Run SQL query in DB. Get
 # result. Then pass it back to ChatGPT to interpret
 def answer_question(question: str) -> str:
