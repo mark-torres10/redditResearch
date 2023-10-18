@@ -97,5 +97,22 @@ TABLE_TO_KEYS_MAP = {
                 "on_delete": "CASCADE"
             }
         ]
+    },
+    "comment_to_observer_map": {
+        "primary_keys": ["comment_id", "user_id"],
+        "foreign_keys": [
+            {
+                "key": "comment_id",
+                "reference_table": "comments",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE"
+            },
+            {
+                "key": "user_id",
+                "reference_table": "users",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE"
+            }
+        ]
     }
 }

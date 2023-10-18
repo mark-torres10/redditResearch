@@ -8,3 +8,4 @@ payload_required_fields = [
     "author_screen_name", "user_id", "comment_id", "comment_text",
     "message_subject", "message_body", "phase"
 ]
+MAX_NUMBER_RETRIES = 3

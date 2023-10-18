@@ -26,13 +26,19 @@ def main(event: dict, context: dict) -> None:
     print("Starting observer phase...")
     message_observers = event.pop("message_observers", False)
     batch_size = event.pop("batch_size", None)
-    get_comments_to_observe()
-    get_valid_possible_observers()
-    match_observers_to_comments()
-    user_message_payloads = load_pending_message_payloads(
-        phase="observer", batch_size=batch_size
-    )
-    if message_observers:
+    match_observers_only = event.pop("match_observers_only", False)
+    message_observers_only = event.pop("message_observers_only", False)
+    if message_observers_only:
+        message_observers = True
+    if not message_observers_only:
+        if not match_observers_only:
+            get_comments_to_observe()
+            get_valid_possible_observers()
+        match_observers_to_comments()
+    if message_observers and not match_observers_only:
+        user_message_payloads = load_pending_message_payloads(
+            phase="observer", batch_size=batch_size
+        )
         message_event = {
             "phase": "observer",
             "user_message_payloads": user_message_payloads,
@@ -45,7 +51,7 @@ def main(event: dict, context: dict) -> None:
 
 if __name__ == "__main__":
     event = {
-        "message_observers": True,
+        "message_observers_only": True,
         "batch_size": 50
     }
     context = {}

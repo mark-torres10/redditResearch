@@ -77,7 +77,7 @@ def get_sql_cols_for_df_fields(
     return col_to_sql_type_map
 
 
-def drop_table(table_name: str, cascade: bool = True) -> None:
+def drop_table(table_name: str, cascade: bool = False) -> None:
     """Deletes a table from the database."""
     try:
         print(f"Dropping table {table_name}...")

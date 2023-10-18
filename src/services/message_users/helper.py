@@ -221,11 +221,20 @@ def load_pending_message_payloads(
     """Load the payloads for pending messages."""
     if phase not in ["author", "observer"]:
         raise ValueError(f"Invalid phase: {phase}")
+    # load rows that were last touched in the service that should assign
+    # users and comments to either the author or the observer phases.
+    last_update_step = (
+        "determine_authors_to_message" if phase == "author"
+        else "match_observers_to_comments"
+    )
+    last_update_step_clause = f"AND last_update_step = '{last_update_step}'" 
     df = load_table_as_df(
         table_name=table_name,
         select_fields=["*"],
         where_filter=f"""
-            WHERE phase = '{phase}' AND message_status = 'pending_message'
+            WHERE phase = '{phase}'
+            AND message_status = 'pending_message'
+            {last_update_step_clause}
         """
     )
     payloads = (
