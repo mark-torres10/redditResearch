@@ -2,6 +2,7 @@ apache-airflow==2.5.1
 emoji==2.2.0
 keras==2.11.0
 keras-preprocessing==1.1.2
+langchain==0.0.316
 logger==1.4
 matplotlib==3.7.2
 nltk==3.7
