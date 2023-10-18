@@ -135,17 +135,21 @@ def message_users(
     if not num_to_message:
         num_to_message = len(payloads)
     for idx, payload in enumerate(payloads):
+        if idx % 10 == 0:
+            print(f'-' * 10)
+            print(f"Sending message {idx} out of {num_to_message} messages to send...") # noqa
+            print(f'-' * 10)
         if idx >= num_to_message:
             break
         if not is_valid_payload(payload):
             raise ValueError(f"Invalid payload (fields are not correct): {payload}") # noqa
         status = message_single_user(payload, context)
         tmp_filename = f"{payload['user_id']}_{payload['comment_id']}.json" # noqa
+        # write DMs to a temporary table, so that in case the
+        # messaging service fails at any point, there will be a record of the
+        # DMs that have been successfully sent.
         if status == 0:
             successful_messages.append(payload)
-            # write successful DMs to a temporary table, so that in case the
-            # messaging service fails at any point, there will be a record of
-            # the DMs that have been successfully sent.
             updated_payload = {
                 **payload, **{"message_status": "messaged_successfully"}
             }
@@ -155,8 +159,6 @@ def message_users(
                 filename=tmp_filename
             )
         else:
-            # TODO: should make sure that if I hit a rate error, that this is
-            # caught and I sleep for the appropriate amount of time.
             if (
                 isinstance(status, RedditAPIException)
                 and status.error_type == "RATELIMIT"

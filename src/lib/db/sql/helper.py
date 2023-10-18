@@ -433,16 +433,35 @@ def return_statuses_of_user_to_message_status_table() -> None:
         WHERE message_status = 'messaged_successfully'
         GROUP BY phase
     """
+    num_users_per_status_per_phase = """
+        SELECT
+            phase,
+            message_status,
+            COUNT(*) as num_users
+        FROM user_to_message_status
+        WHERE (
+            phase = 'author'
+            OR (
+                phase = 'observer'
+                AND last_update_step IN ('match_observers_to_comments', 'message_users')
+            )
+        )
+        GROUP BY 1, 2
+    """ # noqa
     status_df = load_query_as_df(query=status_query)
     phase_df = load_query_as_df(query=num_users_per_phase_query)
     last_update_step_df = load_query_as_df(query=num_users_per_last_update_step) # noqa
     users_messaged_per_phase_df = load_query_as_df(
         query=num_users_messaged_per_phase
     )
+    users_per_status_per_phase = load_query_as_df(
+        query=num_users_per_status_per_phase
+    )
     print(f"After update, the number of users per message status is::\n{status_df}") # noqa
     print(f"After update, the number of users per phase is:\n{phase_df}")
     print(f"After update, the number of users per last update step is:\n{last_update_step_df}") # noqa
     print(f"After update, the number of users messaged per phase is:\n{users_messaged_per_phase_df}") # noqa
+    print(f"After update, the number of users per status per phase is:\n{users_per_status_per_phase}") # noqa
 
 
 if __name__ == "__main__":
