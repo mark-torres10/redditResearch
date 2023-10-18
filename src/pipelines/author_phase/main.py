@@ -4,20 +4,27 @@ relevant messages.
 from lib.helper import track_function_runtime
 from services.determine_authors_to_message.handler import main as determine_authors_to_message # noqa
 from services.message_users.handler import main as message_users
+from services.message_users.helper import load_pending_message_payloads
 
 
 @track_function_runtime
 def main(event: dict, context: dict) -> None:
-    send_messages = event.pop("send_messages")
+    send_messages = event.pop("send_messages", False)
+    batch_size = event.pop("batch_size", None)
+    use_only_pending_author_phase_messages = event.pop("use_only_pending_author_phase_messages", False) # noqa
     # determine who to message. Each payload has the metadata needed to message
     # the user as well as the DM to send to the user.
-    user_message_payloads: list[dict] = determine_authors_to_message(event, context) # noqa
+    if not use_only_pending_author_phase_messages:
+        determine_authors_to_message(event, context)
+    user_message_payloads = load_pending_message_payloads(
+        phase="observer", batch_size=batch_size
+    )
 
     if send_messages:
         message_event = {
             "phase": "author",
             "user_message_payloads": user_message_payloads,
-            "batch_size": event.get("batch_size", None)
+            "batch_size": batch_size
         }
         message_context = {}
         print(f"Running message_users with the event {message_event}")

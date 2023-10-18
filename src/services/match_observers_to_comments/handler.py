@@ -9,6 +9,5 @@ the list of authors and messages.
 from services.match_observers_to_comments.helper import match_observers_to_comments # noqa
 
 
-def main(event: dict, context: dict) -> list[dict]:
-    payloads: list[dict] = match_observers_to_comments()
-    return payloads
+def main() -> None:
+    match_observers_to_comments()

@@ -13,6 +13,8 @@ from lib.db.sql.helper import (
     write_df_to_database
 )
 from lib.helper import DENYLIST_AUTHORS
+from services.determine_authors_to_message.helper import create_author_phase_payloads # noqa
+from services.match_observers_to_comments.helper import create_observer_phase_payloads # noqa
 from services.message_single_user.handler import main as message_single_user
 from services.message_single_user.helper import catch_rate_limit_and_sleep
 
@@ -223,6 +225,27 @@ def add_cached_payloads_to_session(
     payloads = [item for item in map_key_to_data.values()]
 
     return (payloads, successful_messages, messages_to_retry, failed_messages)
+
+
+def load_pending_message_payloads(
+    phase: str, batch_size: Optional[int] = None
+) -> list[dict]:
+    """Load the payloads for pending messages."""
+    if phase not in ["author", "observer"]:
+        raise ValueError(f"Invalid phase: {phase}")
+    df = load_table_as_df(
+        table_name=table_name,
+        select_fields=["*"],
+        where_filter=f"""
+            WHERE phase = '{phase}' AND message_status = 'pending_message'
+        """
+    )
+    payloads = (
+        create_author_phase_payloads(df)
+        if phase == "author"
+        else create_observer_phase_payloads(df)
+    )
+    return payloads[:batch_size] if batch_size else payloads
 
 
 def handle_message_users(

@@ -288,7 +288,7 @@ def get_new_author_phase_messages(
     return balanced_classified_comments_df
 
 
-def create_author_phase_messages(
+def create_author_phase_payloads(
     user_to_message_status_df: pd.DataFrame
 ) -> list[dict]:
     user_to_message_list = [
@@ -318,23 +318,11 @@ def create_author_phase_messages(
 
 def determine_who_to_message(
     batch_size: Optional[int] = None,
-    use_only_pending_author_phase_messages: Optional[bool] = False,
     add_pending_author_phase_messages: Optional[bool] = False,
     max_num_assign_to_message: Optional[int] = None,
     max_ratio_assign_to_message: Optional[float] = None,
     reassign_unmessaged_users: Optional[bool] = False
-) -> list[dict]:
-    if use_only_pending_author_phase_messages:
-        print(f"Using only pending author phase messages...")
-        user_to_message_status_df = load_pending_author_phase_messages()
-        if batch_size:
-            print(f"Limiting the number of users to message to {batch_size}...") # noqa
-            user_to_message_status_df = user_to_message_status_df.head(batch_size) # noqa
-        user_to_message_list = create_author_phase_messages(
-            user_to_message_status_df
-        )
-        return user_to_message_list
-
+) -> None:
     user_to_message_status_table_exists = check_if_table_exists(table_name)
     if not user_to_message_status_table_exists:
         print(f"{table_name} doesn't exist. Creating new table.")
@@ -355,13 +343,20 @@ def determine_who_to_message(
     # the set of authors in the `users` table should be strictly a superset of
     # the users in the `user_to_message_status` table, at least until we
     # insert those users into the `user_to_message_status` table at the end of
-    # this script.
+    # this script. We also want to make sure that we don't reassign anyone
+    # who was assigned to the observer phase. Notably, this means that if we
+    # run an author phase and then an observer phase, if we run another data
+    # sync and then another author phase run, we can only message people for
+    # the author phase who we have not seen in either the author or observer
+    # phases (even if we've only assigned them to be messaged in the observer
+    # phase and haven't actually messaged them yet).
     where_filter = f"""
         WHERE author_id NOT IN (
             SELECT
                 user_id
             FROM user_to_message_status
             {where_clause}
+            OR phase = 'observer'
         )
     """ if user_to_message_status_table_exists else "" # noqa
     classified_comments_df = load_table_as_df(
@@ -416,8 +411,4 @@ def determine_who_to_message(
         user_to_message_status_df["message_status"] == "pending_message"
     ).sum()
     print(f"Marked {number_of_new_users_to_message} new users as pending message.")  # noqa
-
-    user_to_message_list = create_author_phase_messages(
-        user_to_message_status_df
-    )
-    return user_to_message_list
+    print("Completed determining who to message for author phase")

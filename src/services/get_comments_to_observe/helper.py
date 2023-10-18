@@ -25,7 +25,7 @@ def get_comments_to_observe() -> None:
         "c.created_utc_string", "is_valid_message"
     ]
     where_filter = f"""
-        WHERE comment_id NOT in (
+        WHERE comment_id NOT IN (
             SELECT comment_id FROM {table_name}
         )
     """ if comments_for_observer_phase_table_exists else ""
@@ -51,11 +51,17 @@ def get_comments_to_observe() -> None:
     )
     # filter out rows whose is_valid_message = False, so we only get rows
     # whose authors provided valid author-phase responses.
-    comments_to_observe_df = comments_to_observe_df[
-        comments_to_observe_df["is_valid_message"]
+    boolean_mask = [
+        True if bool_str == "true" else False
+        for bool_str in comments_to_observe_df["is_valid_message"]
     ]
-
+    comments_to_observe_df = comments_to_observe_df[boolean_mask]
+    num_valid_comments_to_observe = len(comments_to_observe_df)
+    if num_valid_comments_to_observe == 0:
+        print("No new annotated comments to make available for observer phase")
+        return
     # write to .csv and DB
     dump_df_to_csv(comments_to_observe_df, table_name)
     write_df_to_database(comments_to_observe_df, table_name)
     print("Completed getting comments to make available for observer phase.")
+    print(f"Making {len(comments_to_observe_df)} comments available for observer phase") # noqa

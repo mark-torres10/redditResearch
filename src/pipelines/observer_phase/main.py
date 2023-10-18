@@ -17,21 +17,36 @@ from services.match_observers_to_comments.handler import (
     main as match_observers_to_comments
 )
 from services.message_users.handler import main as message_users
+from services.message_users.helper import load_pending_message_payloads
 
 
 @track_function_runtime
-def main() -> None:
+def main(event: dict, context: dict) -> None:
     """Main function for observer phase."""
     print("Starting observer phase...")
-    event = {}
-    context = {}
-    get_comments_to_observe(event, context)
-    get_valid_possible_observers(event, context)
-    user_message_payloads: list[dict] = match_observers_to_comments(event, context) # noqa
-    message_event = {
-        "phase": "observer",
-        "user_message_payloads": user_message_payloads
-    }
-    message_context = {}
-    message_users(event=message_event, context=message_context)
+    message_observers = event.pop("message_observers", False)
+    batch_size = event.pop("batch_size", None)
+    get_comments_to_observe()
+    get_valid_possible_observers()
+    match_observers_to_comments()
+    user_message_payloads = load_pending_message_payloads(
+        phase="observer", batch_size=batch_size
+    )
+    if message_observers:
+        message_event = {
+            "phase": "observer",
+            "user_message_payloads": user_message_payloads,
+            "batch_size": batch_size
+        }
+        message_context = {}
+        message_users(event=message_event, context=message_context)
     print("Completed observer phase.")
+
+
+if __name__ == "__main__":
+    event = {
+        "message_observers": True,
+        "batch_size": 50
+    }
+    context = {}
+    main(event=event, context=context)

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 
 from data.helper import dump_df_to_csv
@@ -10,9 +12,9 @@ from lib.helper import (
 )
 
 DEFAULT_RECENCY_FILTER = ""
-DEFAULT_NUMBER_OF_OBSERVERS_PER_COMMENT = 10
-DEFAULT_OBSERVER_LIMIT = 200
-DEFAULT_COMMENT_LIMIT = 20
+DEFAULT_NUMBER_OF_OBSERVERS_PER_COMMENT = 30
+DEFAULT_COMMENT_LIMIT = 120 # number of comments to use for observer phase
+DEFAULT_OBSERVER_LIMIT = DEFAULT_NUMBER_OF_OBSERVERS_PER_COMMENT * DEFAULT_COMMENT_LIMIT # noqa
 OBSERVER_DM_SUBJECT_LINE = "Yale Researchers Looking to Learn More About Your Beliefs" # noqa
 OBSERVER_DM_SCRIPT = """
 Hi {name},
@@ -103,20 +105,40 @@ def create_observer_phase_message(row: pd.Series) -> str:
     )
 
 
-def match_observers_to_comments() -> list[dict]:
+def create_observer_phase_payloads(user_to_message_status_df: pd.DataFrame) -> list[dict]: # noqa
+    """Creates payloads for observer phase messages.
+
+    Returns list of dicts, each dict is a payload for the message_users
+    service.
+    """
+    user_to_message_list = []
+    for _, row in user_to_message_status_df.iterrows():
+        user_to_message_list.append({
+            "author_screen_name": row["author_screen_name"],
+            "user_id": row["user_id"],
+            "comment_id": row["comment_id"],
+            "comment_text": row["comment_text"],
+            "message_subject": OBSERVER_DM_SUBJECT_LINE,
+            "message_body": row["dm_text"],
+            "phase": "observer"
+        })
+    return user_to_message_list
+
+
+def match_observers_to_comments() -> None:
     # TODO: should a recency filter be added at some point?
     # TODO: maybe sort by comment date and just get the most recent?
     valid_comments_df = load_table_as_df(
         table_name="comments_available_to_evaluate_for_observer_phase",
         select_fields=["comment_id"],
         where_filter="",
-        order_by_clause="ORDER BY created_utc DESC",
         limit_clause=f"LIMIT {DEFAULT_COMMENT_LIMIT}"
     )
     valid_observers_df = load_table_as_df(
         table_name="user_to_message_status",
         select_fields=["user_id"],
-        where_filter="WHERE message_status = 'pending_message' AND phase = 'observer'" # noqa
+        where_filter="WHERE message_status = 'pending_message' AND phase = 'observer'", # noqa
+        limit_clause=f"LIMIT {DEFAULT_OBSERVER_LIMIT}"
     )
     print(f"Mapping {len(valid_comments_df)} comments to {len(valid_observers_df)} observers") # noqa
 
@@ -135,11 +157,11 @@ def match_observers_to_comments() -> list[dict]:
             u.user_id, u.message_status, u.phase, c.id as comment_id,
             c.body as comment_text, c.author as author_screen_name,
             c.created_utc, c.subreddit_name_prefixed, c.permalink
-        FROM {table_name}
+        FROM {table_name} t
         INNER JOIN user_to_message_status u
-        ON {table_name}.user_id = u.user_id
+        ON t.user_id = u.user_id
         INNER JOIN comment c
-        ON {table_name}.comment_id = c.id
+        ON t.comment_id = c.id
         WHERE u.message_status = 'pending_message'
         AND u.phase = 'observer'
     """
@@ -148,38 +170,22 @@ def match_observers_to_comments() -> list[dict]:
         create_observer_phase_message(row)
         for _, row in hydrated_observer_phase_df.iterrows()
     ]
+    user_to_message_status_df = hydrated_observer_phase_df
     # dump to .csv, upsert to DB (so that, for example, users who were not DMed
     # before will have their statuses updated.)
     dump_df_to_csv(
-        df=hydrated_observer_phase_df,
+        df=user_to_message_status_df,
         table_name="user_to_message_status"
     )
     write_df_to_database(
-        df=hydrated_observer_phase_df,
+        df=user_to_message_status_df,
         table_name="user_to_message_status",
         upsert=True
     )
     return_statuses_of_user_to_message_status_table()
-    user_to_message_list = [
-        {
-            "author_screen_name": author_screen_name,
-            "user_id": user_id,
-            "comment_id": comment_id,
-            "comment_text": comment_text,
-            "message_subject": OBSERVER_DM_SUBJECT_LINE,
-            "message_body": direct_message,
-            "phase": "observer"
-        }
-        for (
-            user_id, comment_id, comment_text, author_screen_name,
-            direct_message
-        )
-        in zip(
-            hydrated_observer_phase_df["user_id"],
-            hydrated_observer_phase_df["comment_id"],
-            hydrated_observer_phase_df["comment_text"],
-            hydrated_observer_phase_df["author_screen_name"],
-            hydrated_observer_phase_df["dm_text"]
-        )
-    ]
-    return user_to_message_list
+
+    number_of_new_users_to_message = (
+        user_to_message_status_df["message_status"] == "pending_message"
+    ).sum()
+    print(f"Marked {number_of_new_users_to_message} users as pending message for observer phase.")  # noqa
+    print("Completed matching observers to comments.")

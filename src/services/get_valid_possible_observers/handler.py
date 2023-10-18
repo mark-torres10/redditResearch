@@ -2,5 +2,5 @@
 from services.get_valid_possible_observers.helper import get_valid_possible_observers # noqa
 
 
-def main(event: dict, context: dict) -> None:
+def main() -> None:
     get_valid_possible_observers()

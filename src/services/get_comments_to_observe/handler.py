@@ -8,5 +8,5 @@ ones we then want our observers to score.
 from services.get_comments_to_observe.helper import get_comments_to_observe
 
 
-def main(event: dict, context: dict) -> None:
+def main() -> None:
     get_comments_to_observe()
