@@ -15,4 +15,4 @@ def main(annotation_only: bool=False) -> None:
 
 
 if __name__ == "__main__":
-    main(annotation_only=True)
+    main(annotation_only=False)

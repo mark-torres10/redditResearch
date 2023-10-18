@@ -8,6 +8,19 @@ from lib.db.sql.helper import (
 table_name = "annotated_messages"
 
 
+def is_score_a_number(score: str) -> bool:
+    try:
+        int(score)
+        return True
+    except ValueError:
+        return False
+
+
+def validate_score(score: str, phase: str) -> bool:
+    valid_score_len = 4 if phase == "author" else 2
+    return len(score) == valid_score_len and is_score_a_number(score)
+
+
 def annotate_message(
     text: str, phase: Literal["author", "observer"]
 ) -> tuple[bool, str]:
@@ -25,7 +38,12 @@ def annotate_message(
             score = ""
             submit_score = 'n'
             while submit_score == 'n':
-                score = input("Please enter their score (e.g., 1123):\t")
+                is_valid_score = False
+                while not is_valid_score:
+                    score = input("Please enter their score (e.g., 1123):\t")
+                    is_valid_score = validate_score(score=score, phase=phase) # noqa
+                    if not is_valid_score:
+                        print("Invalid score. Please try again.")
                 submit_score = input("Submit score? Press any key to enter, or 'n' to redo\t") # noqa
             return (True, score)
         elif user_input == 'n':
@@ -64,7 +82,12 @@ def annotate_messages() -> None:
         return
     print(f"Annotating {len(messages_to_annotate_df)} messages...")
     annotation_results: list[tuple] = []
-    for (text, phase) in zip(messages_to_annotate_df["body"], messages_to_annotate_df["phase"]): # noqa
+    total_num_messages_to_annotate = len(messages_to_annotate_df)
+    for idx, (text, phase) in enumerate(zip(messages_to_annotate_df["body"], messages_to_annotate_df["phase"])): # noqa
+        if idx % 10 == 0:
+            print('-' * 10)
+            print(f"Annotating message idx {idx} out of {total_num_messages_to_annotate}") # noqa
+            print('-' * 10)
         annotation_result = annotate_message(text, phase)
         annotation_results.append(annotation_result)
         if annotation_result[0] is None:
@@ -91,6 +114,7 @@ def annotate_messages() -> None:
     write_df_to_database(
         df=messages_to_annotate_df, table_name=table_name, upsert=True
     )
+    print(f"Annotated {len(is_valid_message_lst)} messages, with {sum(is_valid_message_lst)} valid messages.") # noqa
     print(f"Completed annotation for {len(messages_to_annotate_df)} messages.")
 
 

@@ -85,7 +85,15 @@ def get_messages() -> pd.DataFrame:
         if len(msg.replies) > 0 and is_valid_message_type(msg)
     ]
     message_dicts_list = [get_message_data(msg) for msg in messages_received]
-    messages_df = pd.DataFrame(message_dicts_list)
+    # drop duplicates on "id" field (shouldn't happen, but edge case where this
+    # can happen sometime and duplicate messages are returned via API)
+    seen_ids = set()
+    deduped_message_dicts_list: list[dict] = []
+    for message_dict in message_dicts_list:
+        if message_dict["id"] not in seen_ids:
+            seen_ids.add(message_dict["id"])
+            deduped_message_dicts_list.append(message_dict)
+    messages_df = pd.DataFrame(deduped_message_dicts_list)
     print(f"Collected {len(messages_df)} messages.")
     return messages_df
 
@@ -98,6 +106,7 @@ def handle_received_messages() -> None:
     # by that table.
     messages_received_table_exists = check_if_table_exists(table_name)
     if messages_received_table_exists:
+        print("Filtering received messages by timestamp of the most recent data collection run.") # noqa
         select_fields = ["MAX(synctimestamp)"]
         where_filter = ""
         most_recent_timestamp = load_table_as_df(
