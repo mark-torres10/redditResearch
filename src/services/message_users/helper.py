@@ -17,22 +17,10 @@ from services.determine_authors_to_message.helper import create_author_phase_pay
 from services.match_observers_to_comments.helper import create_observer_phase_payloads # noqa
 from services.message_single_user.handler import main as message_single_user
 from services.message_single_user.helper import catch_rate_limit_and_sleep
-
-
-MAX_NUMBER_RETRIES = 3
-# temporary holding table/path that will exist during the runtime of the
-# message code. At end of service, the `user_to_message_status` table will be
-# updated instead.
-tmp_table_name = "tmp_messaged_users"
-table_name = "user_to_message_status"
-table_fields = [
-    "user_id", "message_status", "last_update_timestamp", "last_update_step",
-    "phase", "comment_id", "comment_text", "dm_text", "author_screen_name"
-]
-payload_required_fields = [
-    "author_screen_name", "user_id", "comment_id", "comment_text",
-    "message_subject", "message_body", "phase"
-]
+from services.message_users.constants import (
+    MAX_NUMBER_RETRIES, payload_required_fields, table_fields, table_name,
+    tmp_table_name
+)
 
 
 def filter_payloads_by_valid_users_to_dm(

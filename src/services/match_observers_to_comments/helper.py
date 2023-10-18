@@ -10,47 +10,10 @@ from lib.db.sql.helper import (
 from lib.helper import (
     BASE_REDDIT_URL, convert_utc_timestamp_to_datetime_string
 )
-
-DEFAULT_RECENCY_FILTER = ""
-DEFAULT_NUMBER_OF_OBSERVERS_PER_COMMENT = 30
-DEFAULT_COMMENT_LIMIT = 120 # number of comments to use for observer phase
-DEFAULT_OBSERVER_LIMIT = DEFAULT_NUMBER_OF_OBSERVERS_PER_COMMENT * DEFAULT_COMMENT_LIMIT # noqa
-OBSERVER_DM_SUBJECT_LINE = "Yale Researchers Looking to Learn More About Your Beliefs" # noqa
-OBSERVER_DM_SCRIPT = """
-Hi {name},
-
-My research group at Yale University is interested in \
-how people express themselves on social media. Would you like to answer a \
-few questions to help us with our research? Your response will remain
-anonymous.
-
-The following message was posted in the {subreddit_name} subreddit on {date}:
-
-{post}
-
-(link {permalink})
-
-Please answer the following:
-
-1. How outraged did you think the message author was on a 1-7 scale?
-(1 = not at all, 4 = somewhat, 7 = very)
-
-2. How happy did you think the message author was on a 1-7?
-(1 = not at all, 4 = somewhat, 7 = very)
-
-You can simply respond with one answer per line such as:
-5
-1
-
-Thank you for helping us learn more about how people engage with others on social media!
-Please feel free to message us with any questions or if you're interested in learning more \
-about this research.
-""" # noqa
-OBSERVER_PHASE_MESSAGE_IDENTIFIER_STRING = (
-    "How outraged did you think the message author was on a 1-7 scale"
+from services.match_observers_to_comments.constants import (
+    DEFAULT_COMMENT_LIMIT, DEFAULT_OBSERVER_LIMIT, OBSERVER_DM_SCRIPT,
+    OBSERVER_DM_SUBJECT_LINE, table_name
 )
-
-table_name = "comment_to_observer_map"
 
 
 def map_comments_to_observers(
@@ -65,11 +28,12 @@ def map_comments_to_observers(
     works as intended), so we should only be DMing new people who we assigned
     to be a part of the observer phase.
     """
-    comment_to_observer_map: dict[str, list[str]] ={} # should be 1 to many, 1 comment to list of observers # noqa
+    # should be 1 to many, 1 comment to list of observers # noqa
+    comment_to_observer_map: dict[str, list[str]] ={}
     
     comment_ids = valid_comments_df["comment_id"].tolist()
     observer_ids = valid_observers_df["user_id"].tolist()
-
+    print(f"Mapping {len(comment_ids)} comments with {len(observer_ids)} observers in a round-robin fashion") # noqa
     for comment_id in comment_ids:
         comment_to_observer_map[comment_id] = []
     
@@ -82,6 +46,7 @@ def map_comments_to_observers(
             comment_to_observer_map[comment_id].append(observer_ids[idx])
             idx += 1
 
+    # unpack comment: list of observers to [(comment, observer)] tuples
     comment_observer_tuples = [
         (comment_id, user_id)
         for comment_id, observer_ids in comment_to_observer_map.items()
