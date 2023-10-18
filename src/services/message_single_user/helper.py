@@ -5,7 +5,6 @@ from praw import Reddit
 from praw.exceptions import RedditAPIException
 
 
-# TODO: add appropriate logging + retry logic.
 def send_message(api: Reddit, user: str, subject: str, body: str) -> None:
     """Send a message to a user."""
     api.redditor(user).message(subject=subject, message=body)

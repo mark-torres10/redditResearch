@@ -58,7 +58,7 @@ def filter_payloads_by_valid_users_to_dm(
     return (filtered_payloads, invalid_payloads)
 
 
-def dedupe_payloads(payloads: list[dict]) -> list[dict]:
+def dedupe_payloads(payloads: list[dict], phase: str) -> list[dict]:
     """Dedupes payloads by comment and user ID.
     
     Theoretically this shouldn't be necessary, but to avoid the possibility of
@@ -74,16 +74,29 @@ def dedupe_payloads(payloads: list[dict]) -> list[dict]:
     for payload in payloads:
         user_id = payload["user_id"]
         comment_id = payload["comment_id"]
-        if (
-            user_id not in seen_user_ids
-            and comment_id not in seen_comment_ids
-        ):
-            deduped_payloads.append(payload)
-            seen_user_ids.add(user_id)
-            seen_comment_ids.add(comment_id)
-        else:
-            print("Duplicate payload spotted. Removing...")
-            duplicate_payloads_count += 1
+        # author phase should be unique on (user_id, comment_id) since one
+        # user writes one comment
+        if phase == "author":
+            if (
+                user_id not in seen_user_ids
+                and comment_id not in seen_comment_ids
+            ):
+                deduped_payloads.append(payload)
+                seen_user_ids.add(user_id)
+                seen_comment_ids.add(comment_id)
+            else:
+                print("Duplicate payload spotted. Removing...")
+                duplicate_payloads_count += 1
+        # author phase should be unique on (user_id) since we want a user to
+        # respond to an author-phase comment but we want multiple observers to
+        # respond to one author-phase comment.
+        elif phase == "observer":
+            if user_id not in seen_user_ids:
+                deduped_payloads.append(payload)
+                seen_user_ids.add(user_id)
+            else:
+                print("Duplicate payload spotted. Removing...")
+                duplicate_payloads_count += 1
 
     if duplicate_payloads_count:
         print(f"Filtered out {duplicate_payloads_count} duplicate payloads.")
@@ -91,11 +104,15 @@ def dedupe_payloads(payloads: list[dict]) -> list[dict]:
     return deduped_payloads
 
 
-def preprocess_payloads(payloads: list[dict]) -> tuple[list[dict], list[dict]]:
+def preprocess_payloads(
+    payloads: list[dict], phase: str
+) -> tuple[list[dict], list[dict]]:
     """Performs any necessary preprocessing and checks on the list of DMs to
     send."""
     filtered_payloads, invalid_payloads = filter_payloads_by_valid_users_to_dm(payloads) # noqa
-    deduped_payloads = dedupe_payloads(filtered_payloads)
+    deduped_payloads = dedupe_payloads(
+        payloads=filtered_payloads, phase=phase
+    )
     return (deduped_payloads, invalid_payloads)
 
 def is_valid_payload(payload: dict) -> bool:
@@ -222,7 +239,7 @@ def load_pending_message_payloads(
     if phase not in ["author", "observer"]:
         raise ValueError(f"Invalid phase: {phase}")
     # load rows that were last touched in the service that should assign
-    # users and comments to either the author or the observer phases.
+    # users and comments to either the author or the observer phase.
     last_update_step = (
         "determine_authors_to_message" if phase == "author"
         else "match_observers_to_comments"
@@ -253,7 +270,7 @@ def handle_message_users(
         return
     if phase not in ["author", "observer"]:
         raise ValueError(f"Invalid phase: {phase}")
-
+    print(f"Starting to send DMs for {phase} phase...")
     if batch_size:
         print(f"Sending maximum of {batch_size} DMs, including cached DMs.")
     else:
@@ -263,7 +280,7 @@ def handle_message_users(
     messages_to_retry: list[dict] = []
     failed_messages: list[dict] = []
 
-    payloads, invalid_payloads = preprocess_payloads(payloads)
+    payloads, invalid_payloads = preprocess_payloads(payloads=payloads, phase=phase) # noqa
     if len(invalid_payloads) > 0:
         print(f"{len(invalid_payloads)} invalid payloads. Not sending these. Adding to failed messages.") # noqa
         updated_invalid_payloads = [
@@ -380,3 +397,4 @@ def handle_message_users(
     delete_tmp_json_data(table_name=tmp_table_name)
 
     print(f"Completed messaging users for {phase} phase.")
+    print("Done")

@@ -36,9 +36,9 @@ def main(event: dict, context: dict) -> None:
             get_valid_possible_observers()
         match_observers_to_comments()
     if message_observers and not match_observers_only:
-        user_message_payloads = load_pending_message_payloads(
-            phase="observer", batch_size=batch_size
-        )
+        user_message_payloads = load_pending_message_payloads(phase="observer")
+        # TODO: check for duplication? Filtered out duplicate payloads but that
+        # shouldn't exist???
         message_event = {
             "phase": "observer",
             "user_message_payloads": user_message_payloads,
