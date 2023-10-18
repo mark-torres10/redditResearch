@@ -28,9 +28,8 @@ conn = psycopg2.connect(**DB_PARAMS)
 cursor = conn.cursor()
 
 # https://saturncloud.io/blog/writing-dataframes-to-a-postgres-database-using-psycopg2/
-engine = create_engine(
-    f"postgresql+psycopg2://{DB_PARAMS['user']}:{DB_PARAMS['password']}@{DB_PARAMS['host']}:{DB_PARAMS['port']}/{DB_PARAMS['database']}"
-)
+db_uri = f"postgresql+psycopg2://{DB_PARAMS['user']}:{DB_PARAMS['password']}@{DB_PARAMS['host']}:{DB_PARAMS['port']}/{DB_PARAMS['database']}" # noqa 
+engine = create_engine(db_uri)
 
 
 dtype_to_sql_type_map = {
