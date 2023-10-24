@@ -18,7 +18,7 @@ load_dotenv(dotenv_path=env_path)
 
 DB_PARAMS = {
     'host': "localhost",
-    'port': os.getenv("DB_PORT"),
+    'port': os.getenv("DB_PORT", "5432"),
     'database': "reddit_data",
     'user': os.getenv("DB_USER"),
     'password': os.getenv("DB_PASSWORD")

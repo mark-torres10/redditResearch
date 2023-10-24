@@ -5,28 +5,9 @@ TABLE_TO_KEYS_MAP = {
         "primary_keys": ["id"],
         "foreign_keys": []
     },
-    "comments": {
+    "users": {
         "primary_keys": ["id"],
-        "foreign_keys": [
-            {
-                "key": "subreddit_id",
-                "reference_table": "subreddits",
-                "reference_table_key": "id",
-                "on_delete": "CASCADE",
-            },
-            {
-                "key": "parent_thread_id",
-                "reference_table": "threads",
-                "reference_table_key": "id",
-                "on_delete": "CASCADE",
-            },
-            {
-                "key": "author_id",
-                "reference_table": "users",
-                "reference_table_key": "id",
-                "on_delete": "CASCADE",
-            }
-        ]
+        "foreign_keys": []
     },
     "threads": {
         "primary_keys": ["id"],
@@ -39,9 +20,28 @@ TABLE_TO_KEYS_MAP = {
             }
         ]
     },
-    "users": {
+    "comments": {
         "primary_keys": ["id"],
-        "foreign_keys": []
+        "foreign_keys": [
+            {
+                "key": "subreddit_id",
+                "reference_table": "subreddits",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE",
+            },
+            # {
+            #     "key": "parent_thread_id",
+            #     "reference_table": "threads",
+            #     "reference_table_key": "id",
+            #     "on_delete": "CASCADE",
+            # },
+            {
+                "key": "author_id",
+                "reference_table": "users",
+                "reference_table_key": "id",
+                "on_delete": "CASCADE",
+            }
+        ]
     },
     "classified_comments": {
         "primary_keys": ["id"],
