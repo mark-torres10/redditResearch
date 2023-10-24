@@ -84,6 +84,8 @@ Use the SQL shell to create a new DB called `reddit_data`.
 
 `postgres=# CREATE DATABASE reddit_data;`
 
+For MacOS, you can also use the pgAdmin app to create the database yourself.
+
 ## How to run
 *For the latest information on how to run this code, check out the [runbook](https://torresmark.notion.site/Runbook-af1806fe333743bbb4c9932b0d3842f4?pvs=4) for this code.
 
