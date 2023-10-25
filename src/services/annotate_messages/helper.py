@@ -1,6 +1,8 @@
 import datetime
 from typing import Literal
 
+import pandas as pd
+
 from data.helper import dump_df_to_csv
 from lib.db.sql.helper import (
     check_if_table_exists, load_table_as_df, write_df_to_database
@@ -23,7 +25,7 @@ def validate_score(score: str, phase: str) -> bool:
 
 def annotate_message(
     text: str, phase: Literal["author", "observer"]
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     """Annotate a single message.
     
     Return whether it is a valid message and if so, the associated score.
@@ -32,6 +34,10 @@ def annotate_message(
     valid_inputs = ['y', 'n']
     while user_input not in valid_inputs:
         print(f"[Phase: {phase}]  Message: {text}")
+        valid_phase = input("Is the phase valid? y/n:\t")
+        while valid_phase == "n":
+            phase = input("Please enter the correct phase (author/observer):\t")
+            valid_phase = input("Is the phase valid? y/n:\t")
         user_input = input("Is this a valid message? ('y', 'n', or 'e' to exit)\t") # noqa
         if user_input == 'y':
             print("Valid message.")
@@ -45,13 +51,13 @@ def annotate_message(
                     if not is_valid_score:
                         print("Invalid score. Please try again.")
                 submit_score = input("Submit score? Press any key to enter, or 'n' to redo\t") # noqa
-            return (True, score)
+            return (True, score, phase)
         elif user_input == 'n':
             print("Invalid message")
-            return (False, "")
+            return (False, "", phase)
         elif user_input == 'e':
             print("Exiting session...")
-            return (None, None)
+            return (None, None, None)
         else:
             print(f"Invalid input: {user_input}")
 
@@ -80,6 +86,15 @@ def annotate_messages() -> None:
     if len(messages_to_annotate_df) == 0:
         print("No messages to annotate.")
         return
+    # make messages_to_annotate_df unique on author_id. Dedupe by taking
+    # the max of the "id" column (not an index). This will guarantee us the
+    # latest DM response.
+    message_ids_to_annotate: pd.Series = messages_to_annotate_df.groupby(
+        "author_id", as_index=False
+    ).agg({"id": "max"})["id"]
+    messages_to_annotate_df = messages_to_annotate_df[
+        messages_to_annotate_df["id"].isin(message_ids_to_annotate)
+    ]
     print(f"Annotating {len(messages_to_annotate_df)} messages...")
     annotation_results: list[tuple] = []
     total_num_messages_to_annotate = len(messages_to_annotate_df)
@@ -89,13 +104,14 @@ def annotate_messages() -> None:
             print(f"Annotating message idx {idx} out of {total_num_messages_to_annotate}") # noqa
             print('-' * 10)
         annotation_result = annotate_message(text, phase)
-        annotation_results.append(annotation_result)
         if annotation_result[0] is None:
             print(f"Stopping annotation session early, after {len(annotation_results)} annotations") # noqa
             break
+        annotation_results.append(annotation_result)
 
     is_valid_message_lst: list[bool] = [res[0] for res in annotation_results]
     score_lst: list[str] = [res[1] for res in annotation_results]
+    phase_lst: list[str] = [res[2] for res in annotation_results]
 
     # filter messages_to_annotate_df, return only the first x rows
     if len(annotation_results) != len(messages_to_annotate_df):
@@ -105,6 +121,7 @@ def annotate_messages() -> None:
 
     messages_to_annotate_df["is_valid_message"] = is_valid_message_lst
     messages_to_annotate_df["score"] = score_lst
+    messages_to_annotate_df["phase"] = phase_lst
     messages_to_annotate_df["annotation_timestamp"] = (
         datetime.datetime.utcnow().isoformat()
     )
