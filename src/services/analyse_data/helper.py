@@ -81,7 +81,16 @@ def get_author_phase_data() -> pd.DataFrame:
     return df
 
 
+def write_author_phase_scores(author_phase_df: pd.DataFrame) -> None:
+    pass
+
+
+def process_updated_author_phase_scores() -> None:
+    author_phase_df = get_author_phase_data()
+    write_author_phase_scores(author_phase_df)
+
+
 def analyse_data() -> None:
     author_phase_df = get_author_phase_data()
-    author_phase_df.to_csv(author_phase_fp, index=False)
+    #author_phase_df.to_csv(author_phase_fp, index=False)
     print(f"Successfully exported author phase data to {author_phase_fp}")
