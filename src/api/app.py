@@ -1,11 +1,21 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from services.classify_comments.inference import classify_text
 
 
+load_dotenv()
+
+flask_app = os.getenv("FLASK_APP")
+flask_run_port = os.getenv("FLASK_RUN_PORT")
+flask_run_host = os.getenv("FLASK_RUN_HOST")
+
 app = Flask(__name__)
 CORS(app)
+app.config["FLASK_APP"] = flask_app
 
 
 @app.route("/api/classify", method=["POST"])
@@ -23,4 +33,4 @@ def classify() -> tuple[dict, int]:
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=int(flask_run_port), host=flask_run_host, debug=True)
